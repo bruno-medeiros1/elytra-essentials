@@ -17,6 +17,7 @@ public class ConfigHandler {
 
     public ConfigHandler(FileConfiguration fileConfiguration) {
         this.fileConfiguration = fileConfiguration;
+        SetConfigVariables();
     }
 
     public final void SetConfigVariables() {
@@ -31,19 +32,19 @@ public class ConfigHandler {
         return this.developerModeIsEnabled;
     }
 
+    public final boolean getDisableAllElytraFlight() {
+        return this.disableAllElytraFlight;
+    }
+
     public final boolean getElytraSpeedLimitIsEnabled() {
         return this.elytraSpeedLimitIsEnabled;
     }
 
-    public final boolean getDisableAllElytraFlight() {
-        return disableAllElytraFlight;
-    }
-
     public final List getDisabledWorlds() {
-        return disabledWorlds;
+        return this.disabledWorlds;
     }
 
     public final double getElytraMaxSpeed() {
-        return elytraMaxSpeed;
+        return this.elytraMaxSpeed;
     }
 }

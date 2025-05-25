@@ -14,6 +14,7 @@ public final class MessagesHandler {
 
     public MessagesHandler(FileConfiguration fileConfiguration) {
         this.fileConfiguration = fileConfiguration;
+        SetMessages();
     }
 
     public final void SetMessages(){

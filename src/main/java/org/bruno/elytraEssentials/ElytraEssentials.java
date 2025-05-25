@@ -46,14 +46,12 @@ public final class ElytraEssentials extends JavaPlugin {
 
         Object obj = new ConfigHandler(this.getConfig());
         this.configHandler = (ConfigHandler) obj;
-        this.configHandler.SetConfigVariables();
 
         obj = new ColorHelper(this);
         this.colorHelper= (ColorHelper) obj;
 
         obj = new MessagesHandler(this.colorHelper.GetFileConfiguration());
         this.messagesHandler = (MessagesHandler) obj;
-        this.messagesHandler.SetMessages();
 
         MessagesHelper.SetDebugMode(this.configHandler.getDeveloperModeIsEnabled());
     }
@@ -146,12 +144,12 @@ public final class ElytraEssentials extends JavaPlugin {
         return this.configHandler;
     }
 
-    public final void setColorHelper(ColorHelper colorHelper) {
-        this.colorHelper = colorHelper;
+    public final ElytraFlightListener getElytraFlightListener() {
+        return this.elytraFlightListener;
     }
 
-    public final void SetElytraFlightListener(ElytraFlightListener listener) {
-        this.elytraFlightListener = listener;
+    public final void setColorHelper(ColorHelper colorHelper) {
+        this.colorHelper = colorHelper;
     }
 
     public final void setConfigHandler(ConfigHandler configHandler) {

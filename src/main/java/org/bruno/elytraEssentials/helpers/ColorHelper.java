@@ -1,6 +1,7 @@
 package org.bruno.elytraEssentials.helpers;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -14,7 +15,7 @@ public class ColorHelper {
 
     public ColorHelper(ElytraEssentials elytraEssentials) {
         this.elytraEssentials = elytraEssentials;
-        this.EnsureMessagesFileExists();
+        EnsureMessagesFileExists();
     }
 
     //TODO: Rever esta função
@@ -47,6 +48,7 @@ public class ColorHelper {
             this.file = new File(this.elytraEssentials.getDataFolder(), "messages.yml");
         }
 
+        //TODO: Add try catch block here maybe
         // Load the configuration file
         this.fileConfiguration = YamlConfiguration.loadConfiguration(this.file);
 
@@ -70,8 +72,9 @@ public class ColorHelper {
         return this.fileConfiguration;
     }
 
-    public void EnsureMessagesFileExists() {
+    private void EnsureMessagesFileExists() {
         if (this.file == null) {
+            Bukkit.getLogger().info("File does not exist, creating new messages.yml");
             this.file = new File(this.elytraEssentials.getDataFolder(), "messages.yml");
         }
         if (!this.file.exists()) {
