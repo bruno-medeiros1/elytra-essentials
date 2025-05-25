@@ -1,0 +1,36 @@
+name: ElytraEssentials
+version: 1.0.0
+main: org.bruno.elytraEssentials.ElytraEssentials
+api-version: '1.21'
+authors: [ CodingMaestro ]
+description: A cool plugin for managing elytra related features
+commands:
+  eereload:
+    description: Reloads the plugins main configuration file.
+    usage: /<command>
+    permission: elytraessentials.command.reload
+
+permissions:
+  elytraessentials.*:
+    default: op
+    description: "This node grants usage of all plugin features."
+    children:
+
+      elytraessentials.command.*:
+        default: op
+        description: "This node allows usage of all plugin commands."
+        children:
+          elytraessentials.command.help:
+            default: op
+            description: "This node allows use of the /eehelp command."
+          elytraessentials.command.reload:
+            default: op
+            description: "This node allows use of the /eereload command."
+
+      elytraessentials.bypass.*:
+        default: op
+        description: "This node allows bypassing of ALL plugin limits."
+        children:
+          elytraessentials.bypass.elytra:
+            default: op
+            description: "This node allows bypassing of the elytra flight limit."

@@ -1,0 +1,164 @@
+package org.bruno.elytraEssentials;
+
+import org.bruno.elytraEssentials.commands.ReloadCommand;
+import org.bruno.elytraEssentials.handlers.ConfigHandler;
+import org.bruno.elytraEssentials.handlers.MessagesHandler;
+import org.bruno.elytraEssentials.helpers.ColorHelper;
+import org.bruno.elytraEssentials.helpers.MessagesHelper;
+import org.bruno.elytraEssentials.listeners.ElytraBoostListener;
+import org.bruno.elytraEssentials.listeners.ElytraFlightListener;
+import org.bukkit.Bukkit;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.event.HandlerList;
+import org.bukkit.plugin.PluginDescriptionFile;
+import org.bukkit.plugin.java.JavaPlugin;
+
+//  TODO: [] Add UpdateHandler to check for newer versions of the plugin
+//  TODO: [] Add MaxSpeed in the configuration
+//  TODO: [] Review how to avoid using fireworks or other ways to propulse when close to max speed
+//  TODO: [] Reload not working
+//  TODO: [X] Review disabled elytra - allow to disable only in specific worlds (don't allow to equip elytra as well)
+//  TODO: [] Add multiple speed limits per world.
+//  TODO: [] Easily disable the ability for players to equip an Elytra.
+//  TODO: [] Restrict or completely disable Elytra flight on your server.
+//  TODO: [] Set individual flight time limits for players to ensure balanced gameplay.
+//  TODO: [] Enable automatic recovery of flight time or customize how players regain flight.
+//  TODO: [] Choose between a unique flight time display or show the exact remaining time for precision.
+//  TODO: [] Prevent fall damage when players run out of flight time, keeping them safe.
+//  TODO: [] Fully customize Elytra flight, firework boosting, and riptide boosting across different worlds.
+//  TODO: [] Disable firework boosting or set a customizable cooldown to balance Elytra flight.
+//  TODO: [x] Disable riptide boosting to prevent abuse.
+//  TODO: [] Reward players with awesome Elytra flight effects, perfect for in-game purchases or special achievements.
+public final class ElytraEssentials extends JavaPlugin {
+    private final PluginDescriptionFile pluginDescriptionFile = this.getDescription();
+    private final String pluginVersion = this.pluginDescriptionFile.getVersion();
+
+    private ElytraFlightListener elytraFlightListener;
+    private ElytraBoostListener elytraBoostListener;
+
+    private MessagesHandler messagesHandler;
+    private ColorHelper colorHelper;
+    private ConfigHandler configHandler;
+
+    public final void onLoad() {
+        this.getConfig().options().copyDefaults();
+        this.saveDefaultConfig();
+
+        Object obj = new ConfigHandler(this.getConfig());
+        this.configHandler = (ConfigHandler) obj;
+        this.configHandler.SetConfigVariables();
+
+        obj = new ColorHelper(this);
+        this.colorHelper= (ColorHelper) obj;
+
+        obj = new MessagesHandler(this.colorHelper.GetFileConfiguration());
+        this.messagesHandler = (MessagesHandler) obj;
+        this.messagesHandler.SetMessages();
+
+        MessagesHelper.SetDebugMode(this.configHandler.getDeveloperModeIsEnabled());
+    }
+
+    @Override
+    public void onEnable() {
+        MessagesHelper.sendConsoleMessage("&a-------------------------------------------");
+        MessagesHelper.sendConsoleMessage("&aDetected Version &d" + Bukkit.getVersion());
+        MessagesHelper.sendConsoleMessage("&aLoading settings for Version &d" + Bukkit.getVersion());
+
+        MessagesHelper.sendConsoleMessage("&aRegistering commands");
+        this.getCommand("eereload").setExecutor((CommandExecutor)new ReloadCommand(this));
+
+        MessagesHelper.sendConsoleMessage("&aRegistering event listeners");
+        this.elytraFlightListener = new ElytraFlightListener(this);
+        this.elytraBoostListener = new ElytraBoostListener(this);
+        Bukkit.getPluginManager().registerEvents(this.elytraFlightListener, this);
+        Bukkit.getPluginManager().registerEvents(this.elytraBoostListener, this);
+
+        MessagesHelper.sendConsoleMessage("###########################################");
+        MessagesHelper.sendConsoleMessage("&ePlugin by: &6&lCodingMaestro");
+        MessagesHelper.sendConsoleMessage("&eVersion: &6&l" + this.pluginVersion);
+        MessagesHelper.sendConsoleMessage("&ahas been loaded successfully");
+        MessagesHelper.sendConsoleMessage("###########################################");
+        MessagesHelper.SendDebugMessage("&eDeveloper debug mode enabled!");
+        MessagesHelper.SendDebugMessage("&eThis WILL fill the console");
+        MessagesHelper.SendDebugMessage("&ewith additional SpeedLimit information!");
+        MessagesHelper.SendDebugMessage("&eThis setting is not intended for ");
+        MessagesHelper.SendDebugMessage("&econtinous use!");
+    }
+
+    @Override
+    public final void onDisable() {
+        StackTraceElement[] stackTraceElementArray = Thread.currentThread().getStackTrace();
+        boolean isReloading;
+        block7: {
+            for (int i = 0; i < stackTraceElementArray.length; ++i) {
+                StackTraceElement stackTraceElement = stackTraceElementArray[i];
+                String className = stackTraceElement.getClassName();
+                if (!className.startsWith("org.bukkit.craftbukkit.") ||
+                        !className.endsWith(".CraftServer") ||
+                        !stackTraceElement.getMethodName().equals("reload"))
+                {
+                    continue;
+                }
+                isReloading = true;
+                break block7;
+            }
+            isReloading = false;
+        }
+        if (isReloading) {
+            MessagesHelper.sendConsoleLog("error", "&4\u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550");
+            MessagesHelper.sendConsoleLog("error", "&4\u2551                             WARNING                                    \u2551");
+            MessagesHelper.sendConsoleLog("error", "&4\u2551      RELOADING THE SERVER WHILE ELYTRAESSENTIALS IS ENABLED MIGHT      \u2551");
+            MessagesHelper.sendConsoleLog("error", "&4\u2551                    LEAD TO UNEXPECTED ERRORS!                          \u2551");
+            MessagesHelper.sendConsoleLog("error", "&4\u2551                                                                        \u2551");
+            MessagesHelper.sendConsoleLog("error", "&4\u2551   Please to fully restart your server if you encounter issues!         \u2551");
+            MessagesHelper.sendConsoleLog("error", "&4\u255a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550");
+        }
+        MessagesHelper.sendConsoleMessage("-------------------------------------------");
+        MessagesHelper.sendConsoleMessage("&aPlugin by CodingMaestro");
+        HandlerList.unregisterAll(this);
+        MessagesHelper.sendConsoleMessage("&aAll event listeners unregistered successfully!");
+        try {
+            MessagesHelper.sendConsoleMessage("&aAll background tasks disabled successfully!");
+        }
+        catch (Exception exception) {
+            MessagesHelper.sendConsoleMessage("&aAll background tasks disabled successfully!");
+        }
+        MessagesHelper.sendConsoleMessage("&aPlugin Version &d&l" + pluginVersion);
+        MessagesHelper.sendConsoleMessage("&aPlugin shutdown successfully!");
+        MessagesHelper.sendConsoleMessage("&aGoodbye");
+        MessagesHelper.sendConsoleMessage("-------------------------------------------");
+        this.elytraFlightListener = null;
+        this.elytraBoostListener = null;
+        this.messagesHandler = null;
+        this.colorHelper = null;
+        this.configHandler = null;
+    }
+
+    public final MessagesHandler getMessagesHandlerInstance() {
+        return this.messagesHandler;
+    }
+
+    public final ColorHelper getColorHelperInstance() {
+        return this.colorHelper;
+    }
+
+    public final ConfigHandler getConfigHandlerInstance() {
+        return this.configHandler;
+    }
+
+    public final void setColorHelper(ColorHelper colorHelper) {
+        this.colorHelper = colorHelper;
+    }
+
+    public final void SetElytraFlightListener(ElytraFlightListener listener) {
+        this.elytraFlightListener = listener;
+    }
+
+    public final void setConfigHandler(ConfigHandler configHandler) {
+        this.configHandler = configHandler;
+    }
+
+    public final void setMessagesHandler(MessagesHandler messagesHandler) {
+        this.messagesHandler = messagesHandler;
+    }
+}

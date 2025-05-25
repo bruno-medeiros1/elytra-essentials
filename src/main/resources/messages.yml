@@ -1,0 +1,7 @@
+prefix: "&6[&e&lElytraEssentials&6]"
+reload-begin: "&aBeginning plugin reload..."
+reload-successful: "&aConfiguration files have been successfully reloaded!"
+no-permission: "&4You don't have permission to execute this command!"
+elytra-disabled-warning: "&cYou are not allowed to use elytra in this server"
+elytra-world-disabled-warning: "&cYou are not allowed to use elytra in this world"
+equip-elytra-disabled: "&cYou are not allowed to equip an elytra"
