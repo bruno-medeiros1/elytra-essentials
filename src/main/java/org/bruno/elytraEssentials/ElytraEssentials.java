@@ -14,10 +14,11 @@ import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 
 //  TODO: [] Add UpdateHandler to check for newer versions of the plugin
-//  TODO: [] Add MaxSpeed in the configuration
+//  TODO: [X] Add MaxSpeed in the configuration
 //  TODO: [] Review how to avoid using fireworks or other ways to propulse when close to max speed
-//  TODO: [] Reload not working
-//  TODO: [X] Review disabled elytra - allow to disable only in specific worlds (don't allow to equip elytra as well)
+//  TODO: [X] Reload not working
+//  TODO: [X] Disabled elytra globally
+//  TODO: [X] Allow to disable elytra only in specific worlds
 //  TODO: [] Add multiple speed limits per world.
 //  TODO: [] Easily disable the ability for players to equip an Elytra.
 //  TODO: [] Restrict or completely disable Elytra flight on your server.
@@ -27,7 +28,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 //  TODO: [] Prevent fall damage when players run out of flight time, keeping them safe.
 //  TODO: [] Fully customize Elytra flight, firework boosting, and riptide boosting across different worlds.
 //  TODO: [] Disable firework boosting or set a customizable cooldown to balance Elytra flight.
-//  TODO: [x] Disable riptide boosting to prevent abuse.
+//  TODO: [X] Disable riptide boosting to prevent abuse.
 //  TODO: [] Reward players with awesome Elytra flight effects, perfect for in-game purchases or special achievements.
 public final class ElytraEssentials extends JavaPlugin {
     private final PluginDescriptionFile pluginDescriptionFile = this.getDescription();
@@ -78,7 +79,7 @@ public final class ElytraEssentials extends JavaPlugin {
         MessagesHelper.sendConsoleMessage("###########################################");
         MessagesHelper.SendDebugMessage("&eDeveloper debug mode enabled!");
         MessagesHelper.SendDebugMessage("&eThis WILL fill the console");
-        MessagesHelper.SendDebugMessage("&ewith additional SpeedLimit information!");
+        MessagesHelper.SendDebugMessage("&ewith additional ElytraEssentials information!");
         MessagesHelper.SendDebugMessage("&eThis setting is not intended for ");
         MessagesHelper.SendDebugMessage("&econtinous use!");
     }

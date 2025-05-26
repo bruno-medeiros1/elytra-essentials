@@ -14,6 +14,7 @@ import org.bukkit.event.entity.EntityToggleGlideEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.util.Vector;
 
+import java.util.HashMap;
 import java.util.List;
 
 /// Vanilla Speed Elytra:
@@ -30,7 +31,6 @@ public class ElytraFlightListener implements Listener
     private static final double SPEED_NORMAL_THRESHOLD = 125.0;
     private static final double SPEED_FAST_THRESHOLD = 180;
 
-
     private final ElytraEssentials elytraEssentials;
 
     //  config values
@@ -41,6 +41,7 @@ public class ElytraFlightListener implements Listener
     private boolean isElytraSpeedLimited;
 
     private List disabledElytraWorlds;
+    private HashMap<String, Double> perWorldSpeedLimits;
 
     public ElytraFlightListener(ElytraEssentials elytraEssentials) {
         this.elytraEssentials = elytraEssentials;
@@ -50,16 +51,24 @@ public class ElytraFlightListener implements Listener
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerGlide(EntityToggleGlideEvent e) {
         Player player = (Player) e.getEntity();
-        ConfigHandler configHandler = elytraEssentials.getConfigHandlerInstance();
+        String playerWorld = player.getWorld().getName();
 
         if (this.isElytraFlightDisabled) {
             MessagesHelper.sendPlayerMessage(player, elytraEssentials.getMessagesHandlerInstance().getElytraDisabledMessage());
             e.setCancelled(true);
+            return;
         }
 
-        if (this.disabledElytraWorlds != null && this.disabledElytraWorlds.contains(player.getWorld().getName())) {
+        if (this.disabledElytraWorlds != null && this.disabledElytraWorlds.contains(playerWorld)) {
             MessagesHelper.sendPlayerMessage(player, elytraEssentials.getMessagesHandlerInstance().getElytraWorldDisabledMessage());
             e.setCancelled(true);
+            return;
+        }
+
+        //  player is contained in a speed limited world
+        if (this.perWorldSpeedLimits != null && this.perWorldSpeedLimits.containsKey(playerWorld)) {
+            this.maxSpeed = perWorldSpeedLimits.get(playerWorld);
+            this.maxSpeedBlocksPerTick = this.maxSpeed / METERS_PER_SECOND_TO_KMH / TICKS_IN_ONE_SECOND;
         }
     }
 
@@ -77,16 +86,15 @@ public class ElytraFlightListener implements Listener
         String color = CalculateSpeedColor(speed);
 
         boolean playerBypassSpeedLimit = PlayerBypassSpeedLimit(player);
-        if (this.isElytraSpeedLimited && speed > this.maxSpeed && !playerBypassSpeedLimit)
+
+        if (!playerBypassSpeedLimit && this.isElytraSpeedLimited && speed > this.maxSpeed)
         {
             Bukkit.getLogger().info("Player " + player.getName() + " exceeded max speed: " + this.maxSpeed + " km/h");
+            color = CalculateSpeedColor(this.maxSpeed);
 
             // Snap velocity to max speed
             Vector snappedVelocity = velocity.normalize().multiply(this.maxSpeedBlocksPerTick);
             player.setVelocity(snappedVelocity);
-            speed = velocity.length();
-
-            color = CalculateSpeedColor(speed);
 
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
                     TextComponent.fromLegacy("§eSpeed: " + color + String.format("%.2f", this.maxSpeed) + " §ekm/h"));
@@ -103,7 +111,7 @@ public class ElytraFlightListener implements Listener
     }
 
     private String CalculateSpeedColor(double speed) {
-        if (speed > 0 && speed < SPEED_SLOW_THRESHOLD)
+        if (speed > 0 && speed <= SPEED_SLOW_THRESHOLD)
             return "§a";
         if (speed > SPEED_SLOW_THRESHOLD && speed <= SPEED_NORMAL_THRESHOLD)
             return "§6";
@@ -120,12 +128,14 @@ public class ElytraFlightListener implements Listener
 
         Bukkit.getLogger().info("Assigning config values for ElytraFlightListener ");
 
-        this.maxSpeed = configHandler.getElytraMaxSpeed();
+        this.maxSpeed = configHandler.getDefaultMaxSpeed();
         this.maxSpeedBlocksPerTick = this.maxSpeed / METERS_PER_SECOND_TO_KMH / TICKS_IN_ONE_SECOND;
 
         this.isElytraFlightDisabled = configHandler.getDisableAllElytraFlight();
         this.isElytraSpeedLimited = configHandler.getElytraSpeedLimitIsEnabled();
 
         this.disabledElytraWorlds = configHandler.getDisabledWorlds();
+
+        this.perWorldSpeedLimits = configHandler.getPerWorldSpeedLimits();
     }
 }

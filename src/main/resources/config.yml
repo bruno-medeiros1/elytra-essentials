@@ -1,11 +1,10 @@
 general:
   #Do you want to see a lot of debug messages in console when most actions are performed?
   developer-debug-mode:
-    enabled: false #[Default: false]
+    enabled: true #[Default: false]
 
 elytra-flight-event:
-  #Do you want to disable the use of elyta's completely?
-  ##THIS REQUIRES A SERVER RESTART TO TAKE EFFECT!##
+  #Do you want to disable the use of elytra's completely?
   disable-all-elytra-flight: false #[Default: false]
   #Do you wish to disable the elytra in certain worlds?
   #Enter the world names in the list below (THEY ARE CASE SENSITIVE)
@@ -17,4 +16,7 @@ elytra-flight-event:
     enabled: true #[Default: true]
     #This sets the maximum speed that the player can elytra fly at before the plugin
     #(Without rockets: ~36km/h, With rockets (normal flight): ~108 km/h, With rockets (steep dive): ~180 km/h max)
-    max-speed: 75 #[Default: 75]
+    default-max-speed: 75 #[Default: 75]
+    per-world:
+      world: 50
+      world_nether: 100
