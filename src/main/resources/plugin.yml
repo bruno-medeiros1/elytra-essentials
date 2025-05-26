@@ -20,9 +20,6 @@ permissions:
         default: op
         description: "This node allows usage of all plugin commands."
         children:
-          elytraessentials.command.help:
-            default: op
-            description: "This node allows use of the /eehelp command."
           elytraessentials.command.reload:
             default: op
             description: "This node allows use of the /eereload command."
@@ -31,6 +28,9 @@ permissions:
         default: op
         description: "This node allows bypassing of ALL plugin limits."
         children:
-          elytraessentials.bypass.elytra:
+          elytraessentials.bypass.speed.limit:
             default: op
-            description: "This node allows bypassing of the elytra flight limit."
+            description: "This node allows bypassing all related elytra speed limit."
+          elytraessentials.bypass.equip:
+            default: op
+            description: "This node allows bypassing elytra equip limitation."

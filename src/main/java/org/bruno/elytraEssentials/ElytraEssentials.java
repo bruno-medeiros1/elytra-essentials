@@ -1,11 +1,13 @@
 package org.bruno.elytraEssentials;
 
+import com.github.jewishbanana.playerarmorchangeevent.PlayerArmorListener;
 import org.bruno.elytraEssentials.commands.ReloadCommand;
 import org.bruno.elytraEssentials.handlers.ConfigHandler;
 import org.bruno.elytraEssentials.handlers.MessagesHandler;
 import org.bruno.elytraEssentials.helpers.ColorHelper;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.listeners.ElytraBoostListener;
+import org.bruno.elytraEssentials.listeners.ElytraEquipListener;
 import org.bruno.elytraEssentials.listeners.ElytraFlightListener;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandExecutor;
@@ -15,13 +17,12 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 //  TODO: [] Add UpdateHandler to check for newer versions of the plugin
 //  TODO: [X] Add MaxSpeed in the configuration
-//  TODO: [] Review how to avoid using fireworks or other ways to propulse when close to max speed
 //  TODO: [X] Reload not working
 //  TODO: [X] Disabled elytra globally
 //  TODO: [X] Allow to disable elytra only in specific worlds
-//  TODO: [] Add multiple speed limits per world.
-//  TODO: [] Easily disable the ability for players to equip an Elytra.
-//  TODO: [] Restrict or completely disable Elytra flight on your server.
+//  TODO: [X] Add multiple speed limits per world.
+//  TODO: [X] Easily disable the ability for players to equip an Elytra (add new config + permission to bypass that).
+//  TODO: [X] Restrict or completely disable Elytra flight on your server.
 //  TODO: [] Set individual flight time limits for players to ensure balanced gameplay.
 //  TODO: [] Enable automatic recovery of flight time or customize how players regain flight.
 //  TODO: [] Choose between a unique flight time display or show the exact remaining time for precision.
@@ -36,6 +37,7 @@ public final class ElytraEssentials extends JavaPlugin {
 
     private ElytraFlightListener elytraFlightListener;
     private ElytraBoostListener elytraBoostListener;
+    private ElytraEquipListener elytraEquipListener;
 
     private MessagesHandler messagesHandler;
     private ColorHelper colorHelper;
@@ -69,8 +71,12 @@ public final class ElytraEssentials extends JavaPlugin {
         MessagesHelper.sendConsoleMessage("&aRegistering event listeners");
         this.elytraFlightListener = new ElytraFlightListener(this);
         this.elytraBoostListener = new ElytraBoostListener(this);
+        this.elytraEquipListener = new ElytraEquipListener(this);
         Bukkit.getPluginManager().registerEvents(this.elytraFlightListener, this);
         Bukkit.getPluginManager().registerEvents(this.elytraBoostListener, this);
+        Bukkit.getPluginManager().registerEvents(this.elytraEquipListener, this);
+
+        new PlayerArmorListener(this);
 
         MessagesHelper.sendConsoleMessage("###########################################");
         MessagesHelper.sendConsoleMessage("&ePlugin by: &6&lCodingMaestro");
@@ -128,6 +134,7 @@ public final class ElytraEssentials extends JavaPlugin {
         MessagesHelper.sendConsoleMessage("-------------------------------------------");
         this.elytraFlightListener = null;
         this.elytraBoostListener = null;
+        this.elytraEquipListener = null;
         this.messagesHandler = null;
         this.colorHelper = null;
         this.configHandler = null;
@@ -135,10 +142,6 @@ public final class ElytraEssentials extends JavaPlugin {
 
     public final MessagesHandler getMessagesHandlerInstance() {
         return this.messagesHandler;
-    }
-
-    public final ColorHelper getColorHelperInstance() {
-        return this.colorHelper;
     }
 
     public final ConfigHandler getConfigHandlerInstance() {

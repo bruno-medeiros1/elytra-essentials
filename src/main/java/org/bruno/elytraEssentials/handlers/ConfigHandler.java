@@ -11,6 +11,7 @@ import java.util.List;
 public class ConfigHandler {
     private final FileConfiguration fileConfiguration;
 
+    private boolean isElytraEquipDisabled = false;
     private boolean developerModeIsEnabled = true;
     private boolean disableAllElytraFlight = false;
     private boolean elytraSpeedLimitIsEnabled = true;
@@ -26,6 +27,7 @@ public class ConfigHandler {
     }
 
     public final void SetConfigVariables() {
+        this.isElytraEquipDisabled = this.fileConfiguration.getBoolean("general.disable-elytra-equip", false);
         this.developerModeIsEnabled = this.fileConfiguration.getBoolean("general.developer-debug-mode.enabled", true);
         this.disableAllElytraFlight = this.fileConfiguration.getBoolean("elytra-flight-event.disable-all-elytra-flight", false);
         this.elytraSpeedLimitIsEnabled = this.fileConfiguration.getBoolean("elytra-flight-event.speed-limit.enabled", true);
@@ -76,4 +78,7 @@ public class ConfigHandler {
         return this.perWorldSpeedLimits;
     }
 
+    public final boolean getElytraEquipDisabled() {
+        return this.isElytraEquipDisabled;
+    }
 }

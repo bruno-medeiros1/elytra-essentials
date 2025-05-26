@@ -11,6 +11,8 @@ public final class MessagesHandler {
     private String elytraDisabledMessage;
     private String elytraWorldDisabledMessage;
     private String equipElytraDisabledMessage;
+    private String elytraRemovedToInventoryMessage;
+    private String elytraRemovedToFloorMessage;
 
     public MessagesHandler(FileConfiguration fileConfiguration) {
         this.fileConfiguration = fileConfiguration;
@@ -25,6 +27,8 @@ public final class MessagesHandler {
         this.elytraDisabledMessage = this.fileConfiguration.getString("elytra-disabled-warning", "&cYou are not allowed to use elytra in this server");
         this.elytraWorldDisabledMessage = this.fileConfiguration.getString("elytra-world-disabled-warning", "&cYou are not allowed to use elytra in this world");
         this.equipElytraDisabledMessage = this.fileConfiguration.getString("equip-elytra-disabled", "&cYou are not allowed to equip an elytra");
+        this.elytraRemovedToInventoryMessage = this.fileConfiguration.getString("elytra-returned-to-inventory", "&6The server disabled equipping elytra. Returned equipped one to your inventory...");
+        this.elytraRemovedToFloorMessage = this.fileConfiguration.getString("elytra-dropped", "&6The server disabled equipping elytra. Since your inventory is full, dropping equipped one...");
     }
 
     public final String getPrefixMessage() {
@@ -53,5 +57,13 @@ public final class MessagesHandler {
 
     public final String getEquipElytraDisabledMessage() {
         return equipElytraDisabledMessage;
+    }
+
+    public final String getElytraRemovedToInventoryMessage(){
+        return elytraRemovedToInventoryMessage;
+    }
+
+    public final String getElytraRemovedToFloorMessage(){
+        return elytraRemovedToFloorMessage;
     }
 }

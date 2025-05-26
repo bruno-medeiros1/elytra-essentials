@@ -105,7 +105,7 @@ public class ElytraFlightListener implements Listener
     }
 
     private boolean PlayerBypassSpeedLimit(Player player) {
-        return player.hasPermission("elytraessentials.bypass.elytra") ||
+        return player.hasPermission("elytraessentials.bypass.speed.limit") ||
                 player.hasPermission("elytraessentials.bypass.*") ||
                 player.hasPermission("elytraessentials.*");
     }

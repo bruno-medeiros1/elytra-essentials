@@ -1,4 +1,7 @@
 general:
+  #For a player or group to bypass this limit, give them 'elytraessentials.bypass.equip'.
+  #However every other check will perform as normal depending on what value you select
+  disable-elytra-equip: true #[Default: false]
   #Do you want to see a lot of debug messages in console when most actions are performed?
   developer-debug-mode:
     enabled: true #[Default: false]
@@ -12,7 +15,7 @@ elytra-flight-event:
     - 'world_nether'
     - 'world_the_end'
   speed-limit:
-    #For a player or group to bypass this limit, give them 'elytraessentials.bypass.elytra'.
+    #For a player or group to bypass this limit, give them 'elytraessentials.bypass.speed.limit'.
     enabled: true #[Default: true]
     #This sets the maximum speed that the player can elytra fly at before the plugin
     #(Without rockets: ~36km/h, With rockets (normal flight): ~108 km/h, With rockets (steep dive): ~180 km/h max)
