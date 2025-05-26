@@ -4,15 +4,16 @@ import org.bukkit.configuration.file.FileConfiguration;
 
 public final class MessagesHandler {
     private final FileConfiguration fileConfiguration;
-    private String prefixMessage;
-    private String noPermissionMessage;
-    private String reloadBeginMessage;
-    private String reloadSuccessMessage;
-    private String elytraDisabledMessage;
-    private String elytraWorldDisabledMessage;
-    private String equipElytraDisabledMessage;
-    private String elytraRemovedToInventoryMessage;
-    private String elytraRemovedToFloorMessage;
+    private String prefix;
+    private String reloadStart;
+    private String reloadSuccess;
+    private String noPermission;
+
+    private String elytraUsageDisabled;
+    private String elytraUsageWorldDisabled;
+    private String elytraEquipDisabled;
+    private String elytraEquipReturned;
+    private String elytraEquipDropped;
 
     public MessagesHandler(FileConfiguration fileConfiguration) {
         this.fileConfiguration = fileConfiguration;
@@ -20,50 +21,26 @@ public final class MessagesHandler {
     }
 
     public final void SetMessages(){
-        this.prefixMessage = this.fileConfiguration.getString("prefix", "&6[&e&lElytraEssentials&6]");
-        this.noPermissionMessage = this.fileConfiguration.getString("no-permission", "&4You do not have permission to execute this command!");
-        this.reloadBeginMessage = this.fileConfiguration.getString("reload-begin", "&aBeginning plugin reload...");
-        this.reloadSuccessMessage = this.fileConfiguration.getString("reload-successful", "&aConfiguration files have been successfully reloaded!");
-        this.elytraDisabledMessage = this.fileConfiguration.getString("elytra-disabled-warning", "&cYou are not allowed to use elytra in this server");
-        this.elytraWorldDisabledMessage = this.fileConfiguration.getString("elytra-world-disabled-warning", "&cYou are not allowed to use elytra in this world");
-        this.equipElytraDisabledMessage = this.fileConfiguration.getString("equip-elytra-disabled", "&cYou are not allowed to equip an elytra");
-        this.elytraRemovedToInventoryMessage = this.fileConfiguration.getString("elytra-returned-to-inventory", "&6The server disabled equipping elytra. Returned equipped one to your inventory...");
-        this.elytraRemovedToFloorMessage = this.fileConfiguration.getString("elytra-dropped", "&6The server disabled equipping elytra. Since your inventory is full, dropping equipped one...");
+        this.prefix = this.fileConfiguration.getString("prefix", "&6[&eElytraEssentials&6]");
+        this.reloadStart = this.fileConfiguration.getString("reload-start", "&aReloading ElytraEssentials... Please wait.");
+        this.reloadSuccess = this.fileConfiguration.getString("reload-success", "&aPlugin successfully reloaded! All configuration files are up to date.");
+        this.noPermission = this.fileConfiguration.getString("no-permission", "&cYou lack the required permission to perform this action.");
+
+        this.elytraUsageDisabled = this.fileConfiguration.getString("elytra-usage-disabled", "&cElytra usage is disabled on this server.");
+        this.elytraUsageWorldDisabled = this.fileConfiguration.getString("elytra-usage-world-disabled", "&cElytra usage is not allowed in this world.");
+        this.elytraEquipDisabled = this.fileConfiguration.getString("elytra-equip-disabled", "&cYou are not allowed to equip an elytra.");
+        this.elytraEquipReturned = this.fileConfiguration.getString("elytra-equip-returned", "&&6Elytra equipping is disabled. The equipped elytra has been safely returned to your inventory.");
+        this.elytraEquipDropped = this.fileConfiguration.getString("elytra-equip-dropped", "&6Elytra equipping is disabled. Your inventory is full, so the equipped elytra has been dropped on the ground.");
     }
 
-    public final String getPrefixMessage() {
-        return prefixMessage;
-    }
+    public final String getPrefixMessage() { return this.prefix; }
+    public final String getReloadStartMessage() { return this.reloadStart; }
+    public final String getReloadSuccessMessage() { return this.reloadSuccess; }
+    public final String getNoPermissionMessage() { return this.noPermission; }
 
-    public final String getNoPermissionMessage() {
-        return noPermissionMessage;
-    }
-
-    public final String getReloadBeginMessage() {
-        return reloadBeginMessage;
-    }
-
-    public final String getReloadSuccessMessage() {
-        return reloadSuccessMessage;
-    }
-
-    public final String getElytraDisabledMessage() {
-        return elytraDisabledMessage;
-    }
-
-    public final String getElytraWorldDisabledMessage() {
-        return elytraWorldDisabledMessage;
-    }
-
-    public final String getEquipElytraDisabledMessage() {
-        return equipElytraDisabledMessage;
-    }
-
-    public final String getElytraRemovedToInventoryMessage(){
-        return elytraRemovedToInventoryMessage;
-    }
-
-    public final String getElytraRemovedToFloorMessage(){
-        return elytraRemovedToFloorMessage;
-    }
+    public final String getElytraUsageDisabledMessage() { return this.elytraUsageDisabled; }
+    public final String getElytraUsageWorldDisabledMessage() { return this.elytraUsageWorldDisabled; }
+    public final String getElytraEquipDisabledMessage() { return this.elytraEquipDisabled; }
+    public final String getElytraEquipReturnedMessage() { return this.elytraEquipReturned; }
+    public final String getElytraEquipDroppedMessage() { return this.elytraEquipDropped; }
 }

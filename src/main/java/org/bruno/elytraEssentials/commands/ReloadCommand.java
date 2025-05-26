@@ -30,11 +30,11 @@ public class ReloadCommand implements CommandExecutor {
                 MessagesHelper.sendPlayerMessage((Player)commandSender, messagesHandler.getNoPermissionMessage());
                 return true;
             }
-            MessagesHelper.sendPlayerMessage((Player)commandSender, messagesHandler.getReloadBeginMessage());
+            MessagesHelper.sendPlayerMessage((Player)commandSender, messagesHandler.getReloadStartMessage());
             this.ReloadPlugin();
         }
         else if (commandSender instanceof ConsoleCommandSender) {
-            MessagesHelper.sendConsoleMessage(messagesHandler.getReloadBeginMessage());
+            MessagesHelper.sendConsoleMessage(messagesHandler.getReloadStartMessage());
             this.ReloadPlugin();
             MessagesHelper.sendConsoleMessage(messagesHandler.getReloadSuccessMessage());
         }
@@ -66,7 +66,7 @@ public class ReloadCommand implements CommandExecutor {
 
         this.elytraEssentials.getElytraFlightListener().AssignConfigVariables();
 
-        MessagesHelper.SetDebugMode(this.elytraEssentials.getConfigHandlerInstance().getDeveloperModeIsEnabled());
+        MessagesHelper.SetDebugMode(this.elytraEssentials.getConfigHandlerInstance().getIsDebugModeEnabled());
 
     }
 }

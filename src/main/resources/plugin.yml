@@ -3,7 +3,7 @@ version: 1.0.0
 main: org.bruno.elytraEssentials.ElytraEssentials
 api-version: '1.21'
 authors: [ CodingMaestro ]
-description: A cool plugin for managing elytra related features
+description: A powerful plugin to manage Elytra flight and equipment features.
 commands:
   eereload:
     description: Reloads the plugins main configuration file.
@@ -13,24 +13,24 @@ commands:
 permissions:
   elytraessentials.*:
     default: op
-    description: "This node grants usage of all plugin features."
+    description: "Grants access to all ElytraEssentials plugin features and commands."
     children:
 
       elytraessentials.command.*:
         default: op
-        description: "This node allows usage of all plugin commands."
+        description: "Allows use of all ElytraEssentials commands."
         children:
           elytraessentials.command.reload:
             default: op
-            description: "This node allows use of the /eereload command."
+            description: "Allows reloading the plugin configuration with /eereload."
 
       elytraessentials.bypass.*:
         default: op
-        description: "This node allows bypassing of ALL plugin limits."
+        description: "Allows bypassing all ElytraEssentials plugin restrictions and limits."
         children:
-          elytraessentials.bypass.speed.limit:
+          elytraessentials.bypass.speedlimit:
             default: op
-            description: "This node allows bypassing all related elytra speed limit."
-          elytraessentials.bypass.equip:
+            description: "Bypasses the Elytra flight speed limits."
+          elytraessentials.bypass.equipment:
             default: op
-            description: "This node allows bypassing elytra equip limitation."
+            description: "Bypasses restrictions on equipping Elytras."

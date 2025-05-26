@@ -30,6 +30,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 //  TODO: [] Fully customize Elytra flight, firework boosting, and riptide boosting across different worlds.
 //  TODO: [] Disable firework boosting or set a customizable cooldown to balance Elytra flight.
 //  TODO: [X] Disable riptide boosting to prevent abuse.
+//  TODO: [] Review the plugin commands
 //  TODO: [] Reward players with awesome Elytra flight effects, perfect for in-game purchases or special achievements.
 public final class ElytraEssentials extends JavaPlugin {
     private final PluginDescriptionFile pluginDescriptionFile = this.getDescription();
@@ -56,7 +57,7 @@ public final class ElytraEssentials extends JavaPlugin {
         obj = new MessagesHandler(this.colorHelper.GetFileConfiguration());
         this.messagesHandler = (MessagesHandler) obj;
 
-        MessagesHelper.SetDebugMode(this.configHandler.getDeveloperModeIsEnabled());
+        MessagesHelper.SetDebugMode(this.configHandler.getIsDebugModeEnabled());
     }
 
     @Override

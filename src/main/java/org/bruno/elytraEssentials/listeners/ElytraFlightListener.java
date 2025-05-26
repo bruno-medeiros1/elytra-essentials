@@ -37,8 +37,8 @@ public class ElytraFlightListener implements Listener
     private double maxSpeed;
     private double maxSpeedBlocksPerTick;
 
-    private boolean isElytraFlightDisabled;
-    private boolean isElytraSpeedLimited;
+    private boolean isGlobalFlightDisabled;
+    private boolean isSpeedLimitEnabled;
 
     private List disabledElytraWorlds;
     private HashMap<String, Double> perWorldSpeedLimits;
@@ -53,14 +53,14 @@ public class ElytraFlightListener implements Listener
         Player player = (Player) e.getEntity();
         String playerWorld = player.getWorld().getName();
 
-        if (this.isElytraFlightDisabled) {
-            MessagesHelper.sendPlayerMessage(player, elytraEssentials.getMessagesHandlerInstance().getElytraDisabledMessage());
+        if (this.isGlobalFlightDisabled) {
+            MessagesHelper.sendPlayerMessage(player, elytraEssentials.getMessagesHandlerInstance().getElytraUsageDisabledMessage());
             e.setCancelled(true);
             return;
         }
 
         if (this.disabledElytraWorlds != null && this.disabledElytraWorlds.contains(playerWorld)) {
-            MessagesHelper.sendPlayerMessage(player, elytraEssentials.getMessagesHandlerInstance().getElytraWorldDisabledMessage());
+            MessagesHelper.sendPlayerMessage(player, elytraEssentials.getMessagesHandlerInstance().getElytraUsageWorldDisabledMessage());
             e.setCancelled(true);
             return;
         }
@@ -87,7 +87,7 @@ public class ElytraFlightListener implements Listener
 
         boolean playerBypassSpeedLimit = PlayerBypassSpeedLimit(player);
 
-        if (!playerBypassSpeedLimit && this.isElytraSpeedLimited && speed > this.maxSpeed)
+        if (!playerBypassSpeedLimit && this.isSpeedLimitEnabled && speed > this.maxSpeed)
         {
             Bukkit.getLogger().info("Player " + player.getName() + " exceeded max speed: " + this.maxSpeed + " km/h");
             color = CalculateSpeedColor(this.maxSpeed);
@@ -105,7 +105,7 @@ public class ElytraFlightListener implements Listener
     }
 
     private boolean PlayerBypassSpeedLimit(Player player) {
-        return player.hasPermission("elytraessentials.bypass.speed.limit") ||
+        return player.hasPermission("elytraessentials.bypass.speedlimit") ||
                 player.hasPermission("elytraessentials.bypass.*") ||
                 player.hasPermission("elytraessentials.*");
     }
@@ -128,11 +128,11 @@ public class ElytraFlightListener implements Listener
 
         Bukkit.getLogger().info("Assigning config values for ElytraFlightListener ");
 
-        this.maxSpeed = configHandler.getDefaultMaxSpeed();
+        this.maxSpeed = configHandler.getDefaultSpeedLimit();
         this.maxSpeedBlocksPerTick = this.maxSpeed / METERS_PER_SECOND_TO_KMH / TICKS_IN_ONE_SECOND;
 
-        this.isElytraFlightDisabled = configHandler.getDisableAllElytraFlight();
-        this.isElytraSpeedLimited = configHandler.getElytraSpeedLimitIsEnabled();
+        this.isGlobalFlightDisabled = configHandler.getIsGlobalFlightDisabled();
+        this.isSpeedLimitEnabled = configHandler.getIsSpeedLimitEnabled();
 
         this.disabledElytraWorlds = configHandler.getDisabledWorlds();
 

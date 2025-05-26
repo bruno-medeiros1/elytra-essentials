@@ -1,25 +1,31 @@
 general:
-  #For a player or group to bypass this limit, give them 'elytraessentials.bypass.equip'.
-  #However every other check will perform as normal depending on what value you select
-  disable-elytra-equip: true #[Default: false]
-  #Do you want to see a lot of debug messages in console when most actions are performed?
-  developer-debug-mode:
-    enabled: true #[Default: false]
+  # Disable players to equip Elytras.
+  # Players or groups with the permission 'elytraessentials.bypass.equipment' can bypass this restriction.
+  disable-elytra-equip: false # [Default: true]
 
-elytra-flight-event:
-  #Do you want to disable the use of elytra's completely?
-  disable-all-elytra-flight: false #[Default: false]
-  #Do you wish to disable the elytra in certain worlds?
-  #Enter the world names in the list below (THEY ARE CASE SENSITIVE)
+  # Enable detailed debug messages in the server console.
+  debug-mode: true # [Default: false]
+
+flight:
+  # Completely disable Elytra flight across all worlds.
+  disable-global: false # [Default: false]
+
+  # Specify worlds where Elytra flight is disabled.
+  # World names are case-sensitive.
   disabled-worlds:
-    - 'world_nether'
-    - 'world_the_end'
+    - "custom_world"
+
   speed-limit:
-    #For a player or group to bypass this limit, give them 'elytraessentials.bypass.speed.limit'.
-    enabled: true #[Default: true]
-    #This sets the maximum speed that the player can elytra fly at before the plugin
-    #(Without rockets: ~36km/h, With rockets (normal flight): ~108 km/h, With rockets (steep dive): ~180 km/h max)
-    default-max-speed: 75 #[Default: 75]
+    # Enforce a speed limit for Elytra flight.
+    # Players or groups with the permission 'elytraessentials.bypass.speedlimit' can bypass this limit.
+    enabled: true # [Default: true]
+
+    # Default maximum flight speed in km/h.
+    # Without rockets: ~36 km/h
+    # With rockets (normal flight): ~108 km/h
+    # With rockets (steep dive): ~180 km/h
+    default: 75 # [Default: 75]
+
+    # Per-world flight speed limits (overrides the default).
     per-world:
-      world: 50
-      world_nether: 100
+      custom_world: 50

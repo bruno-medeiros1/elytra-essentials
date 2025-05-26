@@ -11,15 +11,16 @@ import java.util.List;
 public class ConfigHandler {
     private final FileConfiguration fileConfiguration;
 
-    private boolean isElytraEquipDisabled = false;
-    private boolean developerModeIsEnabled = true;
-    private boolean disableAllElytraFlight = false;
-    private boolean elytraSpeedLimitIsEnabled = true;
+    // General section
+    private boolean isElytraEquipDisabled;
+    private boolean isDebugModeEnabled;
 
-    private List disabledWorlds;
+    // Flight section
+    private boolean isGlobalFlightDisabled;
+    private List<String> disabledWorlds;
+    private boolean isSpeedLimitEnabled;
+    private double defaultSpeedLimit;
     private HashMap<String, Double> perWorldSpeedLimits;
-
-    private double defaultMaxSpeed = 75;
 
     public ConfigHandler(FileConfiguration fileConfiguration) {
         this.fileConfiguration = fileConfiguration;
@@ -27,26 +28,27 @@ public class ConfigHandler {
     }
 
     public final void SetConfigVariables() {
-        this.isElytraEquipDisabled = this.fileConfiguration.getBoolean("general.disable-elytra-equip", false);
-        this.developerModeIsEnabled = this.fileConfiguration.getBoolean("general.developer-debug-mode.enabled", true);
-        this.disableAllElytraFlight = this.fileConfiguration.getBoolean("elytra-flight-event.disable-all-elytra-flight", false);
-        this.elytraSpeedLimitIsEnabled = this.fileConfiguration.getBoolean("elytra-flight-event.speed-limit.enabled", true);
-        this.defaultMaxSpeed = this.fileConfiguration.getDouble("elytra-flight-event.speed-limit.default-max-speed", 75);
-        this.disabledWorlds = this.fileConfiguration.getStringList("elytra-flight-event.disabled-worlds");
+        this.isElytraEquipDisabled = this.fileConfiguration.getBoolean("general.disable-elytra-equip", true);
+        this.isDebugModeEnabled = this.fileConfiguration.getBoolean("general.debug-mode", false);
 
-        ConfigurationSection perWorldSection = this.fileConfiguration.getConfigurationSection("elytra-flight-event.speed-limit.per-world");
+        this.isGlobalFlightDisabled = this.fileConfiguration.getBoolean("flight.disable-global", false);
+        this.disabledWorlds = this.fileConfiguration.getStringList("flight.disabled-worlds");
+        this.isSpeedLimitEnabled = this.fileConfiguration.getBoolean("flight.speed-limit.enabled", true);
+        this.defaultSpeedLimit = this.fileConfiguration.getDouble("flight.speed-limit.default", 75);
+
+        ConfigurationSection perWorldSection = this.fileConfiguration.getConfigurationSection("flight.speed-limit.per-world");
         this.perWorldSpeedLimits = new HashMap<>();
 
         if (perWorldSection != null) {
             for (String worldName : perWorldSection.getKeys(false)) {
                 try {
                     // Try to parse the value as a double
-                    double worldSpeedLimit = perWorldSection.getDouble(worldName, this.defaultMaxSpeed);
+                    double worldSpeedLimit = perWorldSection.getDouble(worldName, this.defaultSpeedLimit);
                     Bukkit.getLogger().info("World Speed Limit for " + worldName + " : " + worldSpeedLimit);
                     this.perWorldSpeedLimits.put(worldName, worldSpeedLimit);
                 } catch (Exception e) {
                     MessagesHelper.SendDebugMessage("Invalid speed limit for world '" + worldName + "' in config.yml. Using default speed limit.");
-                    this.perWorldSpeedLimits.put(worldName, this.defaultMaxSpeed);
+                    this.perWorldSpeedLimits.put(worldName, this.defaultSpeedLimit);
                 }
             }
         } else {
@@ -54,31 +56,20 @@ public class ConfigHandler {
         }
     }
 
-    public final boolean getDeveloperModeIsEnabled() {
-        return this.developerModeIsEnabled;
+    public final boolean getIsElytraEquipDisabled() { return this.isElytraEquipDisabled; }
+    public final boolean getIsDebugModeEnabled() {
+        return this.isDebugModeEnabled;
     }
 
-    public final boolean getDisableAllElytraFlight() {
-        return this.disableAllElytraFlight;
+    public final boolean getIsGlobalFlightDisabled() {
+        return this.isGlobalFlightDisabled;
     }
-
-    public final boolean getElytraSpeedLimitIsEnabled() {
-        return this.elytraSpeedLimitIsEnabled;
-    }
-
     public final List getDisabledWorlds() {
         return this.disabledWorlds;
     }
-
-    public final double getDefaultMaxSpeed() {
-        return this.defaultMaxSpeed;
+    public final boolean getIsSpeedLimitEnabled() { return this.isSpeedLimitEnabled; }
+    public final double getDefaultSpeedLimit() {
+        return this.defaultSpeedLimit;
     }
-
-    public final HashMap<String, Double> getPerWorldSpeedLimits(){
-        return this.perWorldSpeedLimits;
-    }
-
-    public final boolean getElytraEquipDisabled() {
-        return this.isElytraEquipDisabled;
-    }
+    public final HashMap<String, Double> getPerWorldSpeedLimits(){ return this.perWorldSpeedLimits; }
 }
