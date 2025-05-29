@@ -25,7 +25,7 @@ public class ElytraEquipListener implements Listener {
         Player player = e.getPlayer();
         ConfigHandler configHandler = elytraEssentials.getConfigHandlerInstance();
 
-        if (e.getNewItem().getType() == Material.ELYTRA && configHandler.getIsElytraEquipDisabled() && !PlayerBypassEquipElytraRestriction(player)) {
+        if (e.getNewItem().getType() == Material.ELYTRA && configHandler.getIsElytraEquipDisabled() && !PlayerBypassEquipElytra(player)) {
             e.setCancelled(true);
             MessagesHelper.sendPlayerMessage(player, this.elytraEssentials.getMessagesHandlerInstance().getElytraEquipDisabledMessage());
         }
@@ -37,7 +37,7 @@ public class ElytraEquipListener implements Listener {
         Player player = event.getPlayer();
         ConfigHandler configHandler = elytraEssentials.getConfigHandlerInstance();
 
-        if (configHandler.getIsElytraEquipDisabled() && !PlayerBypassEquipElytraRestriction(player)) {
+        if (configHandler.getIsElytraEquipDisabled() && !PlayerBypassEquipElytra(player)) {
             ItemStack chestplate = player.getInventory().getChestplate();
 
             // Check if the chestplate is an Elytra
@@ -57,7 +57,7 @@ public class ElytraEquipListener implements Listener {
         }
     }
 
-    private boolean PlayerBypassEquipElytraRestriction(Player player) {
+    private boolean PlayerBypassEquipElytra(Player player) {
         return player.hasPermission("elytraessentials.bypass.equipment") ||
                 player.hasPermission("elytraessentials.bypass.*") ||
                 player.hasPermission("elytraessentials.*");

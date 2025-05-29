@@ -1,7 +1,7 @@
 general:
   # Disable players to equip Elytras.
   # Players or groups with the permission 'elytraessentials.bypass.equipment' can bypass this restriction.
-  disable-elytra-equip: false # [Default: true]
+  disable-elytra-equipment: false # [Default: false]
 
   # Enable detailed debug messages in the server console.
   debug-mode: true # [Default: false]
@@ -16,7 +16,6 @@ flight:
     - "custom_world"
 
   speed-limit:
-    # Enforce a speed limit for Elytra flight.
     # Players or groups with the permission 'elytraessentials.bypass.speedlimit' can bypass this limit.
     enabled: true # [Default: true]
 
@@ -29,3 +28,14 @@ flight:
     # Per-world flight speed limits (overrides the default).
     per-world:
       custom_world: 50
+
+  time-limit:
+    # Players or groups with the permission 'elytraessentials.bypass.timelimit' can bypass this limit.
+    enabled: false # [Default: false]
+
+    database:
+      host: localhost
+      port: 3306
+      database: elytraessentials
+      username: root
+      password:

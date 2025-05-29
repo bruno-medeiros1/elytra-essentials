@@ -3,6 +3,7 @@ package org.bruno.elytraEssentials;
 import com.github.jewishbanana.playerarmorchangeevent.PlayerArmorListener;
 import org.bruno.elytraEssentials.commands.ReloadCommand;
 import org.bruno.elytraEssentials.handlers.ConfigHandler;
+import org.bruno.elytraEssentials.handlers.DatabaseHandler;
 import org.bruno.elytraEssentials.handlers.MessagesHandler;
 import org.bruno.elytraEssentials.helpers.ColorHelper;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
@@ -15,6 +16,10 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.sql.SQLException;
+import java.util.Map;
+import java.util.UUID;
+
 //  TODO: [] Add UpdateHandler to check for newer versions of the plugin
 //  TODO: [X] Add MaxSpeed in the configuration
 //  TODO: [X] Reload not working
@@ -23,15 +28,21 @@ import org.bukkit.plugin.java.JavaPlugin;
 //  TODO: [X] Add multiple speed limits per world.
 //  TODO: [X] Easily disable the ability for players to equip an Elytra (add new config + permission to bypass that).
 //  TODO: [X] Restrict or completely disable Elytra flight on your server.
-//  TODO: [] Set individual flight time limits for players to ensure balanced gameplay.
+
+//  TODO: [] Add/set/remove flight time limits for players to ensure balanced gameplay.
 //  TODO: [] Enable automatic recovery of flight time or customize how players regain flight.
 //  TODO: [] Choose between a unique flight time display or show the exact remaining time for precision.
 //  TODO: [] Prevent fall damage when players run out of flight time, keeping them safe.
+
 //  TODO: [] Fully customize Elytra flight, firework boosting, and riptide boosting across different worlds.
 //  TODO: [] Disable firework boosting or set a customizable cooldown to balance Elytra flight.
-//  TODO: [X] Disable riptide boosting to prevent abuse.
+//  TODO: [] Disable riptide boosting to prevent abuse.
 //  TODO: [] Review the plugin commands
 //  TODO: [] Reward players with awesome Elytra flight effects, perfect for in-game purchases or special achievements.
+
+//  TODO: Add placeholders (Placeholders API)
+//  TODO: Add support for multiple versions (1.20 >)
+
 public final class ElytraEssentials extends JavaPlugin {
     private final PluginDescriptionFile pluginDescriptionFile = this.getDescription();
     private final String pluginVersion = this.pluginDescriptionFile.getVersion();
@@ -44,12 +55,23 @@ public final class ElytraEssentials extends JavaPlugin {
     private ColorHelper colorHelper;
     private ConfigHandler configHandler;
 
+    private DatabaseHandler databaseHandler;
+
     public final void onLoad() {
         this.getConfig().options().copyDefaults();
         this.saveDefaultConfig();
 
         Object obj = new ConfigHandler(this.getConfig());
         this.configHandler = (ConfigHandler) obj;
+
+        obj = new DatabaseHandler(this);
+        this.databaseHandler = (DatabaseHandler) obj;
+        try {
+            databaseHandler.Initialize();
+        } catch (SQLException e) {
+            //TODO: If database was not able to connect, disable plugin
+            throw new RuntimeException(e);
+        }
 
         obj = new ColorHelper(this);
         this.colorHelper= (ColorHelper) obj;
@@ -121,8 +143,22 @@ public final class ElytraEssentials extends JavaPlugin {
         }
         MessagesHelper.sendConsoleMessage("-------------------------------------------");
         MessagesHelper.sendConsoleMessage("&aPlugin by CodingMaestro");
+
+        MessagesHelper.sendConsoleMessage("&aClosing database connection...");
+        for (Map.Entry<UUID,Integer> entry : this.elytraFlightListener.GetAllActiveFlights().entrySet()) {
+            try {
+                databaseHandler.SetPlayerFlightTime(entry.getKey(), entry.getValue());
+            } catch (SQLException e) {
+                MessagesHelper.SendDebugMessage("Something went wrong while trying to set flight time");
+                throw new RuntimeException(e);
+            }
+        }
+
+        databaseHandler.Disconnect();
+
         HandlerList.unregisterAll(this);
         MessagesHelper.sendConsoleMessage("&aAll event listeners unregistered successfully!");
+
         try {
             MessagesHelper.sendConsoleMessage("&aAll background tasks disabled successfully!");
         }
@@ -145,12 +181,14 @@ public final class ElytraEssentials extends JavaPlugin {
         return this.messagesHandler;
     }
 
-    public final ConfigHandler getConfigHandlerInstance() {
-        return this.configHandler;
-    }
+    public final ConfigHandler getConfigHandlerInstance() { return this.configHandler;}
 
     public final ElytraFlightListener getElytraFlightListener() {
         return this.elytraFlightListener;
+    }
+
+    public final DatabaseHandler getDatabaseHandler() {
+        return this.databaseHandler;
     }
 
     public final void setColorHelper(ColorHelper colorHelper) {

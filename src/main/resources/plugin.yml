@@ -31,6 +31,9 @@ permissions:
           elytraessentials.bypass.speedlimit:
             default: op
             description: "Bypasses the Elytra flight speed limits."
+          elytraessentials.bypass.timelimit:
+            default: op
+            description: "Bypasses the Elytra flight time limits."
           elytraessentials.bypass.equipment:
             default: op
             description: "Bypasses restrictions on equipping Elytras."

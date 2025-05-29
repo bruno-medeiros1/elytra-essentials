@@ -9,6 +9,7 @@ public class MessagesHelper {
     private static final ConsoleCommandSender consoleCommandSender = Bukkit.getConsoleSender();
 
     private static final String pluginPrefix = ElytraEssentials.getPlugin(ElytraEssentials.class).getMessagesHandlerInstance().getPrefixMessage();
+
     private static String messageColor;
 
     private static boolean debugEnabled;

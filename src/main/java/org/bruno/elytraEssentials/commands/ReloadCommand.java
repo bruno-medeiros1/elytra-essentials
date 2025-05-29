@@ -12,6 +12,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 
+import java.sql.SQLException;
+
 public class ReloadCommand implements CommandExecutor {
 
     private final ElytraEssentials elytraEssentials;
@@ -44,6 +46,8 @@ public class ReloadCommand implements CommandExecutor {
     private void ReloadPlugin() {
         try {
             Bukkit.getScheduler().cancelTasks(this.elytraEssentials);
+            this.elytraEssentials.getDatabaseHandler().Disconnect();
+
             MessagesHelper.sendConsoleMessage("&aAll background tasks disabled successfully!");
         } catch (Exception exception) {
             MessagesHelper.sendConsoleMessage("&aAll background tasks disabled successfully!");
@@ -60,11 +64,19 @@ public class ReloadCommand implements CommandExecutor {
         ConfigHandler configHandler = new ConfigHandler(this.elytraEssentials.getConfig());
         this.elytraEssentials.setConfigHandler(configHandler);
 
-
         MessagesHandler messagesHandler = new MessagesHandler(colorHelper.GetFileConfiguration());
         this.elytraEssentials.setMessagesHandler(messagesHandler);
 
         this.elytraEssentials.getElytraFlightListener().AssignConfigVariables();
+
+        //  handle database on reload
+        var database = this.elytraEssentials.getDatabaseHandler();
+        database.SetDatabaseVariables();
+        try {
+            database.Initialize();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
 
         MessagesHelper.SetDebugMode(this.elytraEssentials.getConfigHandlerInstance().getIsDebugModeEnabled());
 
