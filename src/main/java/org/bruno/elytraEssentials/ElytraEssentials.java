@@ -1,15 +1,23 @@
 package org.bruno.elytraEssentials;
 
+/* Licensed under the MIT License
+ * @author CodingMaestro © 2025
+ * @link https://github.com/bruno-medeiros1/elytra-essentials
+*/
+
 import com.github.jewishbanana.playerarmorchangeevent.PlayerArmorListener;
 import org.bruno.elytraEssentials.commands.ElytraEssentialsCommand;
 import org.bruno.elytraEssentials.handlers.ConfigHandler;
 import org.bruno.elytraEssentials.handlers.DatabaseHandler;
 import org.bruno.elytraEssentials.handlers.MessagesHandler;
+import org.bruno.elytraEssentials.handlers.UpdaterHandler;
 import org.bruno.elytraEssentials.helpers.ColorHelper;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
+import org.bruno.elytraEssentials.helpers.VersionHelper;
 import org.bruno.elytraEssentials.listeners.ElytraBoostListener;
 import org.bruno.elytraEssentials.listeners.ElytraEquipListener;
 import org.bruno.elytraEssentials.listeners.ElytraFlightListener;
+import org.bruno.elytraEssentials.listeners.ElytraUpdaterListener;
 import org.bukkit.Bukkit;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -28,15 +36,15 @@ import java.util.UUID;
 //  TODO: [X] Easily disable the ability for players to equip an Elytra (add new config + permission to bypass that).
 //  TODO: [X] Restrict or completely disable Elytra flight on your server.
 
-//  TODO: [] Add/set/remove flight time limits for players to ensure balanced gameplay.
+//  TODO: [X] Add/set/remove flight time limits for players to ensure balanced gameplay.
 //  TODO: [] Enable automatic recovery of flight time or customize how players regain flight.
 //  TODO: [] Choose between a unique flight time display or show the exact remaining time for precision.
-//  TODO: [] Prevent fall damage when players run out of flight time, keeping them safe.
+//  TODO: [X] Prevent fall damage when players run out of flight time, keeping them safe.
 
 //  TODO: [] Fully customize Elytra flight, firework boosting, and riptide boosting across different worlds.
 //  TODO: [] Disable firework boosting or set a customizable cooldown to balance Elytra flight.
 //  TODO: [] Disable riptide boosting to prevent abuse.
-//  TODO: [] Review the plugin commands
+//  TODO: [X] Review the plugin commands
 //  TODO: [] Reward players with awesome Elytra flight effects, perfect for in-game purchases or special achievements.
 
 //  TODO: Add placeholders (Placeholders API)
@@ -49,6 +57,7 @@ public final class ElytraEssentials extends JavaPlugin {
     private ElytraFlightListener elytraFlightListener;
     private ElytraBoostListener elytraBoostListener;
     private ElytraEquipListener elytraEquipListener;
+    private ElytraUpdaterListener elytraUpdaterListener;
 
     private MessagesHandler messagesHandler;
     private ColorHelper colorHelper;
@@ -59,6 +68,7 @@ public final class ElytraEssentials extends JavaPlugin {
 
     private boolean databaseConnectionSuccessful = false;
 
+    public boolean newerVersion = false;
 
     public final void onLoad() {
         this.getConfig().options().copyDefaults();
@@ -113,9 +123,11 @@ public final class ElytraEssentials extends JavaPlugin {
         this.elytraFlightListener = new ElytraFlightListener(this);
         this.elytraBoostListener = new ElytraBoostListener(this);
         this.elytraEquipListener = new ElytraEquipListener(this);
+        this.elytraUpdaterListener = new ElytraUpdaterListener(this);
         Bukkit.getPluginManager().registerEvents(this.elytraFlightListener, this);
         Bukkit.getPluginManager().registerEvents(this.elytraBoostListener, this);
         Bukkit.getPluginManager().registerEvents(this.elytraEquipListener, this);
+        Bukkit.getPluginManager().registerEvents(this.elytraUpdaterListener, this);
 
         new PlayerArmorListener(this);
 
@@ -129,6 +141,20 @@ public final class ElytraEssentials extends JavaPlugin {
         this.messagesHelper.SendDebugMessage("&ewith additional ElytraEssentials information!");
         this.messagesHelper.SendDebugMessage("&eThis setting is not intended for ");
         this.messagesHelper.SendDebugMessage("&econtinous use!");
+
+        boolean checkForUpdatesEnabled = this.configHandler.getIsCheckForUpdatesEnabled();
+        if (checkForUpdatesEnabled) {
+            new UpdaterHandler(this, 126002).getVersion(latestVersion -> {
+                String currentVersion = this.getDescription().getVersion();
+                if (VersionHelper.isNewerVersion(currentVersion, latestVersion)) {
+                    this.messagesHelper.sendConsoleMessage("&eA new version is available! &6https://www.spigotmc.org/resources/126002/");
+                    this.newerVersion = true;
+                } else {
+                    this.messagesHelper.sendConsoleMessage("&aThe plugin is up-to-date.");
+                }
+            });
+        }
+
     }
 
     @Override
@@ -192,6 +218,7 @@ public final class ElytraEssentials extends JavaPlugin {
         this.elytraFlightListener = null;
         this.elytraBoostListener = null;
         this.elytraEquipListener = null;
+        this.elytraUpdaterListener = null;
         this.messagesHandler = null;
         this.colorHelper = null;
         this.messagesHelper = null;

@@ -13,6 +13,7 @@ public class ConfigHandler {
     // General section
     private boolean isElytraEquipDisabled;
     private boolean isDebugModeEnabled;
+    private boolean isCheckForUpdatesEnabled;
 
     // Flight section
     private boolean isGlobalFlightDisabled;
@@ -39,6 +40,7 @@ public class ConfigHandler {
     public final void SetConfigVariables() {
         this.isElytraEquipDisabled = this.fileConfiguration.getBoolean("general.disable-elytra-equipment", false);
         this.isDebugModeEnabled = this.fileConfiguration.getBoolean("general.debug-mode", true);
+        this.isCheckForUpdatesEnabled = this.fileConfiguration.getBoolean("general.check-for-updates", true);
 
         this.isGlobalFlightDisabled = this.fileConfiguration.getBoolean("flight.disable-global", false);
         this.disabledWorlds = this.fileConfiguration.getStringList("flight.disabled-worlds");
@@ -96,6 +98,7 @@ public class ConfigHandler {
     public final boolean getIsDebugModeEnabled() {
         return this.isDebugModeEnabled;
     }
+    public final boolean getIsCheckForUpdatesEnabled() { return this.isCheckForUpdatesEnabled; }
 
     public final boolean getIsGlobalFlightDisabled() {
         return this.isGlobalFlightDisabled;

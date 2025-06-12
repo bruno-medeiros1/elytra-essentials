@@ -4,7 +4,10 @@ general:
   disable-elytra-equipment: false # [Default: false]
 
   # Enable detailed debug messages in the server console.
-  debug-mode: true # [Default: false]
+  debug-mode: false # [Default: false]
+
+  # Enables checking for newer versions of the plugin
+  check-for-updates: true # [Default: true]
 
 flight:
   # Completely disable Elytra flight across all worlds.
