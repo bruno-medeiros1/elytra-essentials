@@ -324,4 +324,9 @@ public class ElytraFlightListener implements Listener
     }
 
     public Map<UUID, Integer> GetAllActiveFlights() { return flightTimeLeft; }
+
+    public void UpdatePlayerFlightTime(UUID player, int flightTime){
+        initialFlightTimeLeft.put(player, flightTime);
+        flightTimeLeft.put(player, flightTime);
+    }
 }

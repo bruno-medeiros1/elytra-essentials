@@ -17,6 +17,10 @@ public final class MessagesHandler {
     private String elytraTimeLimit;
     private String elytraBypassTimeLimit;
     private String elytraFlightTimeExpired;
+    private String elytraFlightTimeAdded;
+    private String elytraFlightTimeRemoved;
+    private String elytraFlightTimeCleared;
+    private String elytraFlightTimeSet;
 
     public MessagesHandler(FileConfiguration fileConfiguration) {
         this.fileConfiguration = fileConfiguration;
@@ -37,6 +41,10 @@ public final class MessagesHandler {
         this.elytraTimeLimit = this.fileConfiguration.getString("elytra-time-limit", "&eRemaining Flight Time: &6{0}s");
         this.elytraBypassTimeLimit = this.fileConfiguration.getString("elytra-bypass-time-limit", "&eYou have infinite time!");
         this.elytraFlightTimeExpired = this.fileConfiguration.getString("elytra-flight-time-expired", "&cYour elytra flight time has expired...");
+        this.elytraFlightTimeAdded = this.fileConfiguration.getString("elytra-flight-time-added", "&aYou have received {0} extra seconds of flight time.");
+        this.elytraFlightTimeRemoved = this.fileConfiguration.getString("elytra-flight-time-removed", "&cYou have lost {0} seconds of flight time.");
+        this.elytraFlightTimeCleared = this.fileConfiguration.getString("elytra-flight-time-cleared", "&cYour flight time has been cleared.");
+        this.elytraFlightTimeSet = this.fileConfiguration.getString("elytra-flight-time-set", "&aYour flight time has been set to {0} seconds.");
     }
 
     public final String getPrefixMessage() { return this.prefix; }
@@ -52,4 +60,8 @@ public final class MessagesHandler {
     public final String getElytraTimeLimitMessage() { return this.elytraTimeLimit; }
     public final String getElytraBypassTimeLimitMessage() { return this.elytraBypassTimeLimit; }
     public final String getElytraFlightTimeExpired() { return this.elytraFlightTimeExpired; }
+    public final String getElytraFlightTimeAdded() { return this.elytraFlightTimeAdded; }
+    public final String getElytraFlightTimeRemoved() { return this.elytraFlightTimeRemoved; }
+    public final String getElytraFlightTimeCleared() { return this.elytraFlightTimeCleared; }
+    public final String getElytraFlightTimeSet() { return this.elytraFlightTimeSet; }
 }

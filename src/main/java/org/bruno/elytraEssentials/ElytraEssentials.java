@@ -1,7 +1,7 @@
 package org.bruno.elytraEssentials;
 
 import com.github.jewishbanana.playerarmorchangeevent.PlayerArmorListener;
-import org.bruno.elytraEssentials.commands.ReloadCommand;
+import org.bruno.elytraEssentials.commands.ElytraEssentialsCommand;
 import org.bruno.elytraEssentials.handlers.ConfigHandler;
 import org.bruno.elytraEssentials.handlers.DatabaseHandler;
 import org.bruno.elytraEssentials.handlers.MessagesHandler;
@@ -11,7 +11,6 @@ import org.bruno.elytraEssentials.listeners.ElytraBoostListener;
 import org.bruno.elytraEssentials.listeners.ElytraEquipListener;
 import org.bruno.elytraEssentials.listeners.ElytraFlightListener;
 import org.bukkit.Bukkit;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -108,7 +107,7 @@ public final class ElytraEssentials extends JavaPlugin {
         this.messagesHelper.sendConsoleMessage("&aLoading settings for Version &d" + Bukkit.getVersion());
 
         this.messagesHelper.sendConsoleMessage("&aRegistering commands");
-        this.getCommand("eereload").setExecutor((CommandExecutor)new ReloadCommand(this));
+        this.getCommand("ee").setExecutor(new ElytraEssentialsCommand(this));
 
         this.messagesHelper.sendConsoleMessage("&aRegistering event listeners");
         this.elytraFlightListener = new ElytraFlightListener(this);

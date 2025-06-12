@@ -5,10 +5,11 @@ api-version: '1.21'
 authors: [ CodingMaestro ]
 description: A powerful plugin to manage Elytra flight and equipment features.
 commands:
-  eereload:
-    description: Reloads the plugins main configuration file.
-    usage: /<command>
-    permission: elytraessentials.command.reload
+  elytraessentials:
+    description: Main command for ElytraEssentials.
+    usage: /ee <subcommand>
+    aliases: [ ee ]
+    permission: elytraessentials.command.use
 
 permissions:
   elytraessentials.*:
@@ -20,9 +21,15 @@ permissions:
         default: op
         description: "Allows use of all ElytraEssentials commands."
         children:
+          elytraessentials.command.use:
+            default: true
+            description: "Allows the use of the /ee base command and subcommands."
           elytraessentials.command.reload:
             default: op
-            description: "Allows reloading the plugin configuration with /eereload."
+            description: "Allows reloading the plugin configuration with /ee reload."
+          elytraessentials.command.flighttime:
+            default: op
+            description: "Allows managing the flight time of a player with /ee flighttime add <player> <seconds>"
 
       elytraessentials.bypass.*:
         default: op

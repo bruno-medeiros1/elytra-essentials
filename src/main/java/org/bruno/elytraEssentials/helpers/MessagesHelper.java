@@ -17,7 +17,7 @@ public class MessagesHelper {
 
     public MessagesHelper(ElytraEssentials elytraEssentials) {
         this.elytraEssentials = elytraEssentials;
-//        this.pluginPrefix = "test";//elytraEssentials.getMessagesHandlerInstance().getPrefixMessage();
+//        this.pluginPrefix = elytraEssentials.getMessagesHandlerInstance().getPrefixMessage();
     }
 
     public void sendConsoleMessage(String string) {
