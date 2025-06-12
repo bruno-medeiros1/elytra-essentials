@@ -53,9 +53,13 @@ public final class ElytraEssentials extends JavaPlugin {
 
     private MessagesHandler messagesHandler;
     private ColorHelper colorHelper;
+    private MessagesHelper messagesHelper;
     private ConfigHandler configHandler;
 
     private DatabaseHandler databaseHandler;
+
+    private boolean databaseConnectionSuccessful = false;
+
 
     public final void onLoad() {
         this.getConfig().options().copyDefaults();
@@ -68,9 +72,15 @@ public final class ElytraEssentials extends JavaPlugin {
         this.databaseHandler = (DatabaseHandler) obj;
         try {
             databaseHandler.Initialize();
+            databaseConnectionSuccessful = true;
         } catch (SQLException e) {
-            //TODO: If database was not able to connect, disable plugin
-            throw new RuntimeException(e);
+            getLogger().severe("Failed to connect to the database during plugin loading. Plugin will not be enabled.");
+            getLogger().severe("Error: " + e.getMessage());
+            getLogger().severe("Stack Trace:");
+            for (StackTraceElement element : e.getStackTrace()) {
+                getLogger().severe("  at " + element.toString());
+            }
+            databaseConnectionSuccessful = false;
         }
 
         obj = new ColorHelper(this);
@@ -79,19 +89,28 @@ public final class ElytraEssentials extends JavaPlugin {
         obj = new MessagesHandler(this.colorHelper.GetFileConfiguration());
         this.messagesHandler = (MessagesHandler) obj;
 
-        MessagesHelper.SetDebugMode(this.configHandler.getIsDebugModeEnabled());
+        obj = new MessagesHelper(this);
+        this.messagesHelper = (MessagesHelper) obj;
+
+        this.messagesHelper.SetDebugMode(this.configHandler.getIsDebugModeEnabled());
     }
 
     @Override
     public void onEnable() {
-        MessagesHelper.sendConsoleMessage("&a-------------------------------------------");
-        MessagesHelper.sendConsoleMessage("&aDetected Version &d" + Bukkit.getVersion());
-        MessagesHelper.sendConsoleMessage("&aLoading settings for Version &d" + Bukkit.getVersion());
+        if (!databaseConnectionSuccessful) {
+            getLogger().severe("Database connection was not established. Disabling plugin...");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
 
-        MessagesHelper.sendConsoleMessage("&aRegistering commands");
+        this.messagesHelper.sendConsoleMessage("&a-------------------------------------------");
+        this.messagesHelper.sendConsoleMessage("&aDetected Version &d" + Bukkit.getVersion());
+        this.messagesHelper.sendConsoleMessage("&aLoading settings for Version &d" + Bukkit.getVersion());
+
+        this.messagesHelper.sendConsoleMessage("&aRegistering commands");
         this.getCommand("eereload").setExecutor((CommandExecutor)new ReloadCommand(this));
 
-        MessagesHelper.sendConsoleMessage("&aRegistering event listeners");
+        this.messagesHelper.sendConsoleMessage("&aRegistering event listeners");
         this.elytraFlightListener = new ElytraFlightListener(this);
         this.elytraBoostListener = new ElytraBoostListener(this);
         this.elytraEquipListener = new ElytraEquipListener(this);
@@ -101,16 +120,16 @@ public final class ElytraEssentials extends JavaPlugin {
 
         new PlayerArmorListener(this);
 
-        MessagesHelper.sendConsoleMessage("###########################################");
-        MessagesHelper.sendConsoleMessage("&ePlugin by: &6&lCodingMaestro");
-        MessagesHelper.sendConsoleMessage("&eVersion: &6&l" + this.pluginVersion);
-        MessagesHelper.sendConsoleMessage("&ahas been loaded successfully");
-        MessagesHelper.sendConsoleMessage("###########################################");
-        MessagesHelper.SendDebugMessage("&eDeveloper debug mode enabled!");
-        MessagesHelper.SendDebugMessage("&eThis WILL fill the console");
-        MessagesHelper.SendDebugMessage("&ewith additional ElytraEssentials information!");
-        MessagesHelper.SendDebugMessage("&eThis setting is not intended for ");
-        MessagesHelper.SendDebugMessage("&econtinous use!");
+        this.messagesHelper.sendConsoleMessage("###########################################");
+        this.messagesHelper.sendConsoleMessage("&ePlugin by: &6&lCodingMaestro");
+        this.messagesHelper.sendConsoleMessage("&eVersion: &6&l" + this.pluginVersion);
+        this.messagesHelper.sendConsoleMessage("&ahas been loaded successfully");
+        this.messagesHelper.sendConsoleMessage("###########################################");
+        this.messagesHelper.SendDebugMessage("&eDeveloper debug mode enabled!");
+        this.messagesHelper.SendDebugMessage("&eThis WILL fill the console");
+        this.messagesHelper.SendDebugMessage("&ewith additional ElytraEssentials information!");
+        this.messagesHelper.SendDebugMessage("&eThis setting is not intended for ");
+        this.messagesHelper.SendDebugMessage("&econtinous use!");
     }
 
     @Override
@@ -133,55 +152,58 @@ public final class ElytraEssentials extends JavaPlugin {
             isReloading = false;
         }
         if (isReloading) {
-            MessagesHelper.sendConsoleLog("error", "&4\u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550");
-            MessagesHelper.sendConsoleLog("error", "&4\u2551                             WARNING                                    \u2551");
-            MessagesHelper.sendConsoleLog("error", "&4\u2551      RELOADING THE SERVER WHILE ELYTRAESSENTIALS IS ENABLED MIGHT      \u2551");
-            MessagesHelper.sendConsoleLog("error", "&4\u2551                    LEAD TO UNEXPECTED ERRORS!                          \u2551");
-            MessagesHelper.sendConsoleLog("error", "&4\u2551                                                                        \u2551");
-            MessagesHelper.sendConsoleLog("error", "&4\u2551   Please to fully restart your server if you encounter issues!         \u2551");
-            MessagesHelper.sendConsoleLog("error", "&4\u255a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550");
+            this.messagesHelper.sendConsoleLog("error", "&4\u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550");
+            this.messagesHelper.sendConsoleLog("error", "&4\u2551                             WARNING                                    \u2551");
+            this.messagesHelper.sendConsoleLog("error", "&4\u2551      RELOADING THE SERVER WHILE ELYTRAESSENTIALS IS ENABLED MIGHT      \u2551");
+            this.messagesHelper.sendConsoleLog("error", "&4\u2551                    LEAD TO UNEXPECTED ERRORS!                          \u2551");
+            this.messagesHelper.sendConsoleLog("error", "&4\u2551                                                                        \u2551");
+            this.messagesHelper.sendConsoleLog("error", "&4\u2551   Please to fully restart your server if you encounter issues!         \u2551");
+            this.messagesHelper.sendConsoleLog("error", "&4\u255a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550");
         }
-        MessagesHelper.sendConsoleMessage("-------------------------------------------");
-        MessagesHelper.sendConsoleMessage("&aPlugin by CodingMaestro");
+        this.messagesHelper.sendConsoleMessage("-------------------------------------------");
+        this.messagesHelper.sendConsoleMessage("&aPlugin by CodingMaestro");
 
-        MessagesHelper.sendConsoleMessage("&aClosing database connection...");
-        for (Map.Entry<UUID,Integer> entry : this.elytraFlightListener.GetAllActiveFlights().entrySet()) {
-            try {
-                databaseHandler.SetPlayerFlightTime(entry.getKey(), entry.getValue());
-            } catch (SQLException e) {
-                MessagesHelper.SendDebugMessage("Something went wrong while trying to set flight time");
-                throw new RuntimeException(e);
+        if (databaseConnectionSuccessful){
+            this.messagesHelper.sendConsoleMessage("&aClosing database connection...");
+            for (Map.Entry<UUID,Integer> entry : this.elytraFlightListener.GetAllActiveFlights().entrySet()) {
+                try {
+                    databaseHandler.SetPlayerFlightTime(entry.getKey(), entry.getValue());
+                } catch (SQLException e) {
+                    this.messagesHelper.SendDebugMessage("Something went wrong while trying to set flight time");
+                    throw new RuntimeException(e);
+                }
             }
-        }
 
-        databaseHandler.Disconnect();
+            databaseHandler.Disconnect();
+        }
 
         HandlerList.unregisterAll(this);
-        MessagesHelper.sendConsoleMessage("&aAll event listeners unregistered successfully!");
+        this.messagesHelper.sendConsoleMessage("&aAll event listeners unregistered successfully!");
 
         try {
-            MessagesHelper.sendConsoleMessage("&aAll background tasks disabled successfully!");
+            this.messagesHelper.sendConsoleMessage("&aAll background tasks disabled successfully!");
         }
         catch (Exception exception) {
-            MessagesHelper.sendConsoleMessage("&aAll background tasks disabled successfully!");
+            this.messagesHelper.sendConsoleMessage("&aAll background tasks disabled successfully!");
         }
-        MessagesHelper.sendConsoleMessage("&aPlugin Version &d&l" + pluginVersion);
-        MessagesHelper.sendConsoleMessage("&aPlugin shutdown successfully!");
-        MessagesHelper.sendConsoleMessage("&aGoodbye");
-        MessagesHelper.sendConsoleMessage("-------------------------------------------");
+        this.messagesHelper.sendConsoleMessage("&aPlugin Version &d&l" + pluginVersion);
+        this.messagesHelper.sendConsoleMessage("&aPlugin shutdown successfully!");
+        this.messagesHelper.sendConsoleMessage("&aGoodbye");
+        this.messagesHelper.sendConsoleMessage("-------------------------------------------");
         this.elytraFlightListener = null;
         this.elytraBoostListener = null;
         this.elytraEquipListener = null;
         this.messagesHandler = null;
         this.colorHelper = null;
+        this.messagesHelper = null;
         this.configHandler = null;
     }
 
-    public final MessagesHandler getMessagesHandlerInstance() {
-        return this.messagesHandler;
-    }
+    public final MessagesHelper getMessagesHelper() { return this.messagesHelper; }
 
-    public final ConfigHandler getConfigHandlerInstance() { return this.configHandler;}
+    public final MessagesHandler getMessagesHandlerInstance() { return this.messagesHandler; }
+
+    public final ConfigHandler getConfigHandlerInstance() { return this.configHandler; }
 
     public final ElytraFlightListener getElytraFlightListener() {
         return this.elytraFlightListener;
@@ -202,4 +224,6 @@ public final class ElytraEssentials extends JavaPlugin {
     public final void setMessagesHandler(MessagesHandler messagesHandler) {
         this.messagesHandler = messagesHandler;
     }
+
+    public final void SetMessagesHelper(MessagesHelper messagesHelper) { this.messagesHelper = messagesHelper; }
 }

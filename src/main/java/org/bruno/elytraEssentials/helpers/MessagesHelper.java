@@ -6,23 +6,41 @@ import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 
 public class MessagesHelper {
-    private static final ConsoleCommandSender consoleCommandSender = Bukkit.getConsoleSender();
 
-    private static final String pluginPrefix = ElytraEssentials.getPlugin(ElytraEssentials.class).getMessagesHandlerInstance().getPrefixMessage();
+    private final ElytraEssentials elytraEssentials;
+
+    private static final ConsoleCommandSender consoleCommandSender = Bukkit.getConsoleSender();
+    private String pluginPrefix = null;
 
     private static String messageColor;
-
     private static boolean debugEnabled;
 
-    public static void sendConsoleMessage(String string) {
+    public MessagesHelper(ElytraEssentials elytraEssentials) {
+        this.elytraEssentials = elytraEssentials;
+//        this.pluginPrefix = "test";//elytraEssentials.getMessagesHandlerInstance().getPrefixMessage();
+    }
+
+    public void sendConsoleMessage(String string) {
+        if (pluginPrefix == null) {
+            pluginPrefix = elytraEssentials.getMessagesHandlerInstance().getPrefixMessage();
+        }
+
         consoleCommandSender.sendMessage(ColorHelper.ParseColoredString(pluginPrefix + " &r" + string));
     }
 
-    public static void sendPlayerMessage(Player player, String string) {
+    public void sendPlayerMessage(Player player, String string) {
+        if (pluginPrefix == null) {
+            pluginPrefix = elytraEssentials.getMessagesHandlerInstance().getPrefixMessage();
+        }
+
         player.sendMessage(ColorHelper.ParseColoredString(pluginPrefix + " &r" + string));
     }
 
-    public static void sendConsoleLog(String object, String string) {
+    public void sendConsoleLog(String object, String string) {
+        if (pluginPrefix == null) {
+            pluginPrefix = elytraEssentials.getMessagesHandlerInstance().getPrefixMessage();
+        }
+
         if (object.equalsIgnoreCase("info")) {
             messageColor = "&a";
             object = "&a" + object;
@@ -42,13 +60,13 @@ public class MessagesHelper {
         consoleCommandSender.sendMessage(ColorHelper.ParseColoredString(pluginPrefix + " &r[" + object + "&r] - " + messageColor + string));
     }
 
-    public static void SendDebugMessage(String string) {
+    public void SendDebugMessage(String string) {
         if (debugEnabled) {
             consoleCommandSender.sendMessage(ColorHelper.ParseColoredString("&CDebug&7: " + string));
         }
     }
 
-    public static void SetDebugMode(boolean value) {
+    public void SetDebugMode(boolean value) {
         debugEnabled = value;
     }
 }

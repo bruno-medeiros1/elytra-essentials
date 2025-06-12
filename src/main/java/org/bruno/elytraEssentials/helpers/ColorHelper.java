@@ -59,8 +59,12 @@ public class ColorHelper {
                 YamlConfiguration defaultConfig = YamlConfiguration.loadConfiguration(reader);
                 this.fileConfiguration.setDefaults(defaultConfig);
             } catch (IOException e) {
-                e.printStackTrace();
-                // Log the error or handle it as appropriate
+                Bukkit.getLogger().severe("Failed to read messages.yml");
+                Bukkit.getLogger().severe("Error: " + e.getMessage());
+                Bukkit.getLogger().severe("Stack Trace:");
+                for (StackTraceElement element : e.getStackTrace()) {
+                    Bukkit.getLogger().severe("  at " + element.toString());
+                }
             }
         }
     }

@@ -4,7 +4,6 @@ import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.handlers.ConfigHandler;
-import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.boss.BarColor;
@@ -95,7 +94,7 @@ public class ElytraFlightListener implements Listener
 
             Bukkit.getLogger().info("flightTimeLeft: " + this.flightTimeLeft);
         } catch (SQLException ex) {
-            MessagesHelper.SendDebugMessage("Something went wrong while trying to get " + e.getPlayer().getName() + " flight time");
+            this.elytraEssentials.getMessagesHelper().SendDebugMessage("Something went wrong while trying to get " + e.getPlayer().getName() + " flight time");
             throw new RuntimeException(ex);
         }
     }
@@ -116,7 +115,7 @@ public class ElytraFlightListener implements Listener
             flightTimeLeft.remove(uuid);
 
         } catch (SQLException ex) {
-            MessagesHelper.SendDebugMessage("Something went wrong while trying to set " + e.getPlayer().getName() + " flight time");
+            this.elytraEssentials.getMessagesHelper().SendDebugMessage("Something went wrong while trying to set " + e.getPlayer().getName() + " flight time");
             throw new RuntimeException(ex);
         }
     }
@@ -127,13 +126,13 @@ public class ElytraFlightListener implements Listener
         String playerWorld = player.getWorld().getName();
 
         if (this.isGlobalFlightDisabled) {
-            MessagesHelper.sendPlayerMessage(player, elytraEssentials.getMessagesHandlerInstance().getElytraUsageDisabledMessage());
+            this.elytraEssentials.getMessagesHelper().sendPlayerMessage(player, elytraEssentials.getMessagesHandlerInstance().getElytraUsageDisabledMessage());
             e.setCancelled(true);
             return;
         }
 
         if (this.disabledElytraWorlds != null && this.disabledElytraWorlds.contains(playerWorld)) {
-            MessagesHelper.sendPlayerMessage(player, elytraEssentials.getMessagesHandlerInstance().getElytraUsageWorldDisabledMessage());
+            this.elytraEssentials.getMessagesHelper().sendPlayerMessage(player, elytraEssentials.getMessagesHandlerInstance().getElytraUsageWorldDisabledMessage());
             e.setCancelled(true);
             return;
         }

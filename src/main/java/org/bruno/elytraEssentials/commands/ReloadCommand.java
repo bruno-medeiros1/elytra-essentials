@@ -29,16 +29,16 @@ public class ReloadCommand implements CommandExecutor {
         if (commandSender instanceof Player) {
             if (!(commandSender.hasPermission("elytraEssentials.command.reload") && commandSender.hasPermission("elytraEssentials.command.*")
                     && commandSender.hasPermission("elytraEssentials.*"))) {
-                MessagesHelper.sendPlayerMessage((Player)commandSender, messagesHandler.getNoPermissionMessage());
+                this.elytraEssentials.getMessagesHelper().sendPlayerMessage((Player)commandSender, messagesHandler.getNoPermissionMessage());
                 return true;
             }
-            MessagesHelper.sendPlayerMessage((Player)commandSender, messagesHandler.getReloadStartMessage());
+            this.elytraEssentials.getMessagesHelper().sendPlayerMessage((Player)commandSender, messagesHandler.getReloadStartMessage());
             this.ReloadPlugin();
         }
         else if (commandSender instanceof ConsoleCommandSender) {
-            MessagesHelper.sendConsoleMessage(messagesHandler.getReloadStartMessage());
+            this.elytraEssentials.getMessagesHelper().sendConsoleMessage(messagesHandler.getReloadStartMessage());
             this.ReloadPlugin();
-            MessagesHelper.sendConsoleMessage(messagesHandler.getReloadSuccessMessage());
+            this.elytraEssentials.getMessagesHelper().sendConsoleMessage(messagesHandler.getReloadSuccessMessage());
         }
         return true;
     }
@@ -48,24 +48,27 @@ public class ReloadCommand implements CommandExecutor {
             Bukkit.getScheduler().cancelTasks(this.elytraEssentials);
             this.elytraEssentials.getDatabaseHandler().Disconnect();
 
-            MessagesHelper.sendConsoleMessage("&aAll background tasks disabled successfully!");
+            this.elytraEssentials.getMessagesHelper().sendConsoleMessage("&aAll background tasks disabled successfully!");
         } catch (Exception exception) {
-            MessagesHelper.sendConsoleMessage("&aAll background tasks disabled successfully!");
+            this.elytraEssentials.getMessagesHelper().sendConsoleMessage("&aAll background tasks disabled successfully!");
         }
 
-        MessagesHelper.sendConsoleMessage("&aReloading config.yml...");
+        this.elytraEssentials.getMessagesHelper().sendConsoleMessage("&aReloading config.yml...");
         this.elytraEssentials.reloadConfig();
 
         //  We update colorHelper reference since messages.yml could have changed
         ColorHelper colorHelper = new ColorHelper(this.elytraEssentials);
         this.elytraEssentials.setColorHelper(colorHelper);
 
-        MessagesHelper.sendConsoleMessage("&aReloading messages.yml...");
+        this.elytraEssentials.getMessagesHelper().sendConsoleMessage("&aReloading messages.yml...");
         ConfigHandler configHandler = new ConfigHandler(this.elytraEssentials.getConfig());
         this.elytraEssentials.setConfigHandler(configHandler);
 
         MessagesHandler messagesHandler = new MessagesHandler(colorHelper.GetFileConfiguration());
         this.elytraEssentials.setMessagesHandler(messagesHandler);
+
+        MessagesHelper messagesHelper = new MessagesHelper(this.elytraEssentials);
+        this.elytraEssentials.SetMessagesHelper(messagesHelper);
 
         this.elytraEssentials.getElytraFlightListener().AssignConfigVariables();
 
@@ -78,7 +81,6 @@ public class ReloadCommand implements CommandExecutor {
             throw new RuntimeException(e);
         }
 
-        MessagesHelper.SetDebugMode(this.elytraEssentials.getConfigHandlerInstance().getIsDebugModeEnabled());
-
+        this.elytraEssentials.getMessagesHelper().SetDebugMode(this.elytraEssentials.getConfigHandlerInstance().getIsDebugModeEnabled());
     }
 }

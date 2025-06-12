@@ -2,6 +2,7 @@ package org.bruno.elytraEssentials.handlers;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
+import org.bukkit.Bukkit;
 
 import java.sql.*;
 import java.util.UUID;
@@ -46,11 +47,14 @@ public class DatabaseHandler {
         if (IsConnected()) {
             try {
                 connection.close();
-                MessagesHelper.SendDebugMessage("Database was closed successfully!");
+                this.elytraEssentials.getMessagesHelper().SendDebugMessage("Database was closed successfully!");
             } catch (SQLException e){
-                e.printStackTrace();
-                MessagesHelper.SendDebugMessage("Something went wrong when trying to close database connection...");
-                MessagesHelper.SendDebugMessage(e.getMessage());
+                Bukkit.getLogger().severe("Failed to close the connection to the database.");
+                Bukkit.getLogger().severe("Error: " + e.getMessage());
+                Bukkit.getLogger().severe("Stack Trace:");
+                for (StackTraceElement element : e.getStackTrace()) {
+                    Bukkit.getLogger().severe("  at " + element.toString());
+                }
             }
         }
     }

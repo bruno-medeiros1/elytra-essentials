@@ -3,7 +3,6 @@ package org.bruno.elytraEssentials.listeners;
 import com.github.jewishbanana.playerarmorchangeevent.PlayerArmorChangeEvent;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.handlers.ConfigHandler;
-import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -27,7 +26,7 @@ public class ElytraEquipListener implements Listener {
 
         if (e.getNewItem().getType() == Material.ELYTRA && configHandler.getIsElytraEquipDisabled() && !PlayerBypassEquipElytra(player)) {
             e.setCancelled(true);
-            MessagesHelper.sendPlayerMessage(player, this.elytraEssentials.getMessagesHandlerInstance().getElytraEquipDisabledMessage());
+            this.elytraEssentials.getMessagesHelper().sendPlayerMessage(player, this.elytraEssentials.getMessagesHandlerInstance().getElytraEquipDisabledMessage());
         }
     }
 
@@ -48,10 +47,10 @@ public class ElytraEquipListener implements Listener {
                 // If there are leftovers (no space in inventory), drop the Elytra on the ground
                 if (!leftover.isEmpty()) {
                     player.getWorld().dropItemNaturally(player.getLocation(), chestplate);
-                    MessagesHelper.sendPlayerMessage(player, elytraEssentials.getMessagesHandlerInstance().getElytraEquipDroppedMessage());
+                    this.elytraEssentials.getMessagesHelper().sendPlayerMessage(player, elytraEssentials.getMessagesHandlerInstance().getElytraEquipDroppedMessage());
                 }
                 else{
-                    MessagesHelper.sendPlayerMessage(player, elytraEssentials.getMessagesHandlerInstance().getElytraEquipReturnedMessage());
+                    this.elytraEssentials.getMessagesHelper().sendPlayerMessage(player, elytraEssentials.getMessagesHandlerInstance().getElytraEquipReturnedMessage());
                 }
             }
         }
