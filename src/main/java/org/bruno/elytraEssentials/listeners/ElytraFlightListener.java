@@ -219,7 +219,7 @@ public class ElytraFlightListener implements Listener
 
             if (currentTime - lastUpdateTime >= 1000) { // 1 second debounce interval
                 // Update flight time
-                Bukkit.getLogger().info("Updating flight time for player: " + player.getName() + ", Time Left: " + flightTime);
+                //Bukkit.getLogger().info("Updating flight time for player: " + player.getName() + ", Time Left: " + flightTime);
 
                 flightTime--;
                 flightTimeLeft.put(playerId, flightTime);
@@ -227,12 +227,12 @@ public class ElytraFlightListener implements Listener
                 BossBar bossBar = flightBossBars.get(playerId);
                 if (bossBar != null) {
                     int initialTime = initialFlightTimeLeft.getOrDefault(playerId, 1); // Avoid division by zero
-                    Bukkit.getLogger().info("Initial Time: " + initialTime + "s | Flight time Left: " + flightTime + "s");
+                    //Bukkit.getLogger().info("Initial Time: " + initialTime + "s | Flight time Left: " + flightTime + "s");
 
                     float progress = Math.max(0f, Math.min(1f, (float) flightTime / initialTime));
                     bossBar.setProgress(progress);
 
-                    //TODO: Review Bar colors indicating flight time is finishing
+                    // Bar colors indicating flight time is finishing
                     if (progress > 0.5f)
                         bossBar.setColor(BarColor.GREEN);
                     else if (progress <= 0.5f && progress >= 0.2)

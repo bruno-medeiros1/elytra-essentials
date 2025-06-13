@@ -18,6 +18,7 @@ import org.bruno.elytraEssentials.listeners.ElytraBoostListener;
 import org.bruno.elytraEssentials.listeners.ElytraEquipListener;
 import org.bruno.elytraEssentials.listeners.ElytraFlightListener;
 import org.bruno.elytraEssentials.listeners.ElytraUpdaterListener;
+import org.bruno.elytraEssentials.placeholders.FlightTimePlaceholder;
 import org.bukkit.Bukkit;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -27,7 +28,7 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.UUID;
 
-//  TODO: [] Add UpdateHandler to check for newer versions of the plugin
+//  TODO: [X] Add UpdateHandler to check for newer versions of the plugin
 //  TODO: [X] Add MaxSpeed in the configuration
 //  TODO: [X] Reload not working
 //  TODO: [X] Disabled elytra globally
@@ -47,7 +48,7 @@ import java.util.UUID;
 //  TODO: [X] Review the plugin commands
 //  TODO: [] Reward players with awesome Elytra flight effects, perfect for in-game purchases or special achievements.
 
-//  TODO: Add placeholders (Placeholders API)
+//  TODO: [X] Add placeholders (Placeholders API)
 //  TODO: Add support for multiple versions (1.20 >)
 
 public final class ElytraEssentials extends JavaPlugin {
@@ -131,16 +132,12 @@ public final class ElytraEssentials extends JavaPlugin {
 
         new PlayerArmorListener(this);
 
-        this.messagesHelper.sendConsoleMessage("###########################################");
-        this.messagesHelper.sendConsoleMessage("&ePlugin by: &6&lCodingMaestro");
-        this.messagesHelper.sendConsoleMessage("&eVersion: &6&l" + this.pluginVersion);
-        this.messagesHelper.sendConsoleMessage("&ahas been loaded successfully");
-        this.messagesHelper.sendConsoleMessage("###########################################");
-        this.messagesHelper.SendDebugMessage("&eDeveloper debug mode enabled!");
-        this.messagesHelper.SendDebugMessage("&eThis WILL fill the console");
-        this.messagesHelper.SendDebugMessage("&ewith additional ElytraEssentials information!");
-        this.messagesHelper.SendDebugMessage("&eThis setting is not intended for ");
-        this.messagesHelper.SendDebugMessage("&econtinous use!");
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            new FlightTimePlaceholder(this).register();
+            this.messagesHelper.sendConsoleMessage("PlaceholderAPI support enabled!");
+        } else {
+            getLogger().warning("PlaceholderAPI not found. Placeholder support is disabled.");
+        }
 
         boolean checkForUpdatesEnabled = this.configHandler.getIsCheckForUpdatesEnabled();
         if (checkForUpdatesEnabled) {
@@ -155,6 +152,16 @@ public final class ElytraEssentials extends JavaPlugin {
             });
         }
 
+        this.messagesHelper.sendConsoleMessage("###########################################");
+        this.messagesHelper.sendConsoleMessage("&ePlugin by: &6&lCodingMaestro");
+        this.messagesHelper.sendConsoleMessage("&eVersion: &6&l" + this.pluginVersion);
+        this.messagesHelper.sendConsoleMessage("&ahas been loaded successfully");
+        this.messagesHelper.sendConsoleMessage("###########################################");
+        this.messagesHelper.SendDebugMessage("&eDeveloper debug mode enabled!");
+        this.messagesHelper.SendDebugMessage("&eThis WILL fill the console");
+        this.messagesHelper.SendDebugMessage("&ewith additional ElytraEssentials information!");
+        this.messagesHelper.SendDebugMessage("&eThis setting is not intended for ");
+        this.messagesHelper.SendDebugMessage("&econtinous use!");
     }
 
     @Override
