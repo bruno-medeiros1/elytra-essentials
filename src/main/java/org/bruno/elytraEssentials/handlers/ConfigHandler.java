@@ -11,9 +11,9 @@ public class ConfigHandler {
     private final FileConfiguration fileConfiguration;
 
     // General section
-    private boolean isElytraEquipDisabled;
     private boolean isDebugModeEnabled;
     private boolean isCheckForUpdatesEnabled;
+    private boolean isElytraEquipDisabled;
 
     // Flight section
     private boolean isGlobalFlightDisabled;
@@ -38,9 +38,9 @@ public class ConfigHandler {
     }
 
     public final void SetConfigVariables() {
-        this.isElytraEquipDisabled = this.fileConfiguration.getBoolean("general.disable-elytra-equipment", false);
         this.isDebugModeEnabled = this.fileConfiguration.getBoolean("general.debug-mode", true);
         this.isCheckForUpdatesEnabled = this.fileConfiguration.getBoolean("general.check-for-updates", true);
+        this.isElytraEquipDisabled = this.fileConfiguration.getBoolean("general.disable-elytra-equipment", false);
 
         this.isGlobalFlightDisabled = this.fileConfiguration.getBoolean("flight.disable-global", false);
         this.disabledWorlds = this.fileConfiguration.getStringList("flight.disabled-worlds");
@@ -94,11 +94,11 @@ public class ConfigHandler {
         this.password = this.fileConfiguration.getString("flight.time-limit.database.password", "");
     }
 
-    public final boolean getIsElytraEquipDisabled() { return this.isElytraEquipDisabled; }
     public final boolean getIsDebugModeEnabled() {
         return this.isDebugModeEnabled;
     }
     public final boolean getIsCheckForUpdatesEnabled() { return this.isCheckForUpdatesEnabled; }
+    public final boolean getIsElytraEquipDisabled() { return this.isElytraEquipDisabled; }
 
     public final boolean getIsGlobalFlightDisabled() {
         return this.isGlobalFlightDisabled;

@@ -23,6 +23,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bstats.bukkit.Metrics;
 
 import java.sql.SQLException;
 import java.util.Map;
@@ -48,7 +49,8 @@ import java.util.UUID;
 //  TODO: [X] Review the plugin commands
 //  TODO: [] Reward players with awesome Elytra flight effects, perfect for in-game purchases or special achievements.
 
-//  TODO: [X] Add placeholders (Placeholders API)
+//  TODO: [X] Placeholders API support
+//  TODO: [X] Add BStats support
 //  TODO: Add support for multiple versions (1.20 >)
 
 public final class ElytraEssentials extends JavaPlugin {
@@ -151,6 +153,9 @@ public final class ElytraEssentials extends JavaPlugin {
                 }
             });
         }
+
+        //  bStats
+        new Metrics(this, 26164);
 
         this.messagesHelper.sendConsoleMessage("###########################################");
         this.messagesHelper.sendConsoleMessage("&ePlugin by: &6&lCodingMaestro");

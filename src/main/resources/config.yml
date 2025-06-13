@@ -1,13 +1,13 @@
 general:
-  # Disable players to equip Elytras.
-  # Players or groups with the permission 'elytraessentials.bypass.equipment' can bypass this restriction.
-  disable-elytra-equipment: false # [Default: false]
-
   # Enable detailed debug messages in the server console.
   debug-mode: false # [Default: false]
 
   # Enables checking for newer versions of the plugin
   check-for-updates: true # [Default: true]
+
+  # Disable players from equipping Elytras.
+  # Players or groups with the permission 'elytraessentials.bypass.equipment' can bypass this restriction.
+  disable-elytra-equipment: false # [Default: false]
 
 flight:
   # Completely disable Elytra flight across all worlds.
