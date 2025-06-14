@@ -30,8 +30,6 @@ import java.util.Map;
 import java.util.UUID;
 
 //  TODO: [X] Add UpdateHandler to check for newer versions of the plugin
-//  TODO: [X] Add MaxSpeed in the configuration
-//  TODO: [X] Reload not working
 //  TODO: [X] Disabled elytra globally
 //  TODO: [X] Allow to disable elytra only in specific worlds
 //  TODO: [X] Add multiple speed limits per world.
@@ -51,7 +49,7 @@ import java.util.UUID;
 
 //  TODO: [X] Placeholders API support
 //  TODO: [X] Add BStats support
-//  TODO: Add support for multiple versions (1.20 >)
+//  TODO: [] Add support for multiple versions (1.20 >)
 
 public final class ElytraEssentials extends JavaPlugin {
     private final PluginDescriptionFile pluginDescriptionFile = this.getDescription();

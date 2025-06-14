@@ -21,6 +21,7 @@ public final class MessagesHandler {
     private String elytraFlightTimeRemoved;
     private String elytraFlightTimeCleared;
     private String elytraFlightTimeSet;
+    private String elytraBoostCooldown;
 
     public MessagesHandler(FileConfiguration fileConfiguration) {
         this.fileConfiguration = fileConfiguration;
@@ -45,6 +46,7 @@ public final class MessagesHandler {
         this.elytraFlightTimeRemoved = this.fileConfiguration.getString("elytra-flight-time-removed", "&cYou have lost {0} seconds of flight time.");
         this.elytraFlightTimeCleared = this.fileConfiguration.getString("elytra-flight-time-cleared", "&cYour flight time has been cleared.");
         this.elytraFlightTimeSet = this.fileConfiguration.getString("elytra-flight-time-set", "&aYour flight time has been set to {0} seconds.");
+        this.elytraBoostCooldown = this.fileConfiguration.getString("elytra-boost-cooldown", "&cBoost is on cooldown! &6{0}s &cremaining...");
     }
 
     public final String getPrefixMessage() { return this.prefix; }
@@ -64,4 +66,5 @@ public final class MessagesHandler {
     public final String getElytraFlightTimeRemoved() { return this.elytraFlightTimeRemoved; }
     public final String getElytraFlightTimeCleared() { return this.elytraFlightTimeCleared; }
     public final String getElytraFlightTimeSet() { return this.elytraFlightTimeSet; }
+    public final String getElytraBoostCooldown() { return this.elytraBoostCooldown; }
 }

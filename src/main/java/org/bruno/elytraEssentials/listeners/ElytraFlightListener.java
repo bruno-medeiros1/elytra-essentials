@@ -257,7 +257,6 @@ public class ElytraFlightListener implements Listener
         String color = CalculateSpeedColor(speed);
 
         boolean playerBypassSpeedLimit = PlayerBypassSpeedLimit(player);
-
         if (!playerBypassSpeedLimit && this.isSpeedLimitEnabled && speed > this.maxSpeed)
         {
             color = CalculateSpeedColor(this.maxSpeed);

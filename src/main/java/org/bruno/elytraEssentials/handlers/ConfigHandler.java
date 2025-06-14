@@ -32,13 +32,18 @@ public class ConfigHandler {
     private String username;
     private String password;
 
+    //  Boost section
+    private String boostItem;
+    private int boostCooldown;
+    private String boostSound;
+
     public ConfigHandler(FileConfiguration fileConfiguration) {
         this.fileConfiguration = fileConfiguration;
         SetConfigVariables();
     }
 
     public final void SetConfigVariables() {
-        this.isDebugModeEnabled = this.fileConfiguration.getBoolean("general.debug-mode", true);
+        this.isDebugModeEnabled = this.fileConfiguration.getBoolean("general.debug-mode", false);
         this.isCheckForUpdatesEnabled = this.fileConfiguration.getBoolean("general.check-for-updates", true);
         this.isElytraEquipDisabled = this.fileConfiguration.getBoolean("general.disable-elytra-equipment", false);
 
@@ -92,6 +97,10 @@ public class ConfigHandler {
         this.database = this.fileConfiguration.getString("flight.time-limit.database.database", "elytraessentials");
         this.username = this.fileConfiguration.getString("flight.time-limit.database.user", "root");
         this.password = this.fileConfiguration.getString("flight.time-limit.database.password", "");
+
+        this.boostItem = this.fileConfiguration.getString("flight.boost.item", "FEATHER");
+        this.boostCooldown = this.fileConfiguration.getInt("flight.boost.cooldown", 2000);
+        this.boostSound = this.fileConfiguration.getString("flight.boost.sound", "ENTITY_FIREWORK_ROCKET_LAUNCH");
     }
 
     public final boolean getIsDebugModeEnabled() {
@@ -118,4 +127,9 @@ public class ConfigHandler {
     public String getDatabase() { return this.database; }
     public String getUsername() { return this.username; }
     public String getPassword() { return this.password; }
+
+    public final String getBoostItem() { return this.boostItem; }
+    public final Integer getBoostCooldown() { return this.boostCooldown; }
+    public final String getBoostSound() { return this.boostSound; }
+
 }

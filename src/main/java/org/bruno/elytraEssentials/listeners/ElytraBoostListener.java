@@ -4,14 +4,12 @@ import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import java.util.HashMap;
@@ -19,18 +17,15 @@ import java.util.UUID;
 
 public class ElytraBoostListener implements Listener {
 
-    private final ElytraEssentials elytraEssentials;
+    private final ElytraEssentials plugin;
+    private final HashMap<UUID, Long> cooldowns = new HashMap<>();
 
-    public ElytraBoostListener(ElytraEssentials elytraEssentials) {
-        this.elytraEssentials = elytraEssentials;
+    public ElytraBoostListener(ElytraEssentials plugin) {
+        this.plugin = plugin;
     }
 
-    private final HashMap<UUID, Long> cooldowns = new HashMap<>();
-    private final long cooldownTime = 0; // Cooldown in milliseconds (2 seconds)
-
     @EventHandler
-    public void onFeatherRightClick(PlayerInteractEvent e) {
-
+    public void onItemBoostRightClick(PlayerInteractEvent e) {
         Player player = e.getPlayer();
 
         // Check if the player right-clicked
@@ -39,51 +34,68 @@ public class ElytraBoostListener implements Listener {
 
         ItemStack item = player.getInventory().getItemInMainHand();
 
-        // Check if the item is a feather
-        if (item.getType() != Material.FEATHER) return;
+        // Get configured boost item and cooldown
+        String configuredBoostMaterial = plugin.getConfigHandlerInstance().getBoostItem();
+        Material configuredMaterial = Material.matchMaterial(configuredBoostMaterial);
+        if (configuredMaterial == null) {
+            plugin.getLogger().warning("Invalid item material " + configuredBoostMaterial + " in config.yml for the boost item");
+            return;
+        }
+        int cooldownTime = plugin.getConfigHandlerInstance().getBoostCooldown();
+
+        // Check if the item matches the configured material
+        if (item.getType() != configuredMaterial) return;
 
         // Check if the player is gliding (Elytra flying)
         if (!player.isGliding()) return;
 
         // Check cooldown
-        UUID playerId = player.getUniqueId();
-        long currentTime = System.currentTimeMillis();
-        long sinceLastBoost = 0;
+        boolean playerBypassBoostCooldown = PlayerBypassBoostCooldown(player);
+        if (!playerBypassBoostCooldown ) {
+            UUID playerId = player.getUniqueId();
+            long currentTime = System.currentTimeMillis();
+            long sinceLastBoost;
 
-        if (cooldowns.containsKey(playerId)){
-            sinceLastBoost = currentTime - cooldowns.get(playerId);
-            int remainingSeconds = (int) (cooldownTime - sinceLastBoost)/1000;
-            if (sinceLastBoost < cooldownTime) {
-                player.sendMessage("§cBoost is on cooldown! " + ChatColor.GOLD + remainingSeconds + " §csec remaining...");
-                return;
+            if (cooldowns.containsKey(playerId)) {
+                sinceLastBoost = currentTime - cooldowns.get(playerId);
+                int remainingSeconds = (int) (cooldownTime - sinceLastBoost) / 1000;
+                if (sinceLastBoost < cooldownTime) {
+
+                    //  format message
+                    String boostCooldownMessageTemplate = ChatColor.translateAlternateColorCodes('&',
+                            plugin.getMessagesHandlerInstance().getElytraBoostCooldown());
+                    String boostCooldownMessage = boostCooldownMessageTemplate.replace("{0}", String.valueOf(remainingSeconds));
+                    plugin.getMessagesHelper().sendPlayerMessage(player, boostCooldownMessage);
+
+                    return;
+                }
             }
+            cooldowns.put(playerId, currentTime);
         }
-        cooldowns.put(playerId, currentTime);
 
         // Apply the boost
         Vector direction = player.getLocation().getDirection().normalize();
+        Vector currentVelocity = player.getVelocity();
+        Vector boost = direction.multiply(1.5).add(currentVelocity);
+        player.setVelocity(boost);
 
-        double maxSpeed = elytraEssentials.getConfig().getDouble("max_speed_kmh");
+        //  Play sound
+        String configuredSoundName = plugin.getConfigHandlerInstance().getBoostSound().toUpperCase();
+        Sound sound = null;
+        try {
+            sound = Sound.valueOf(configuredSoundName);
+        } catch (IllegalArgumentException ex) {
+            plugin.getLogger().warning("Invalid sound name " + configuredSoundName + " in config.yml for the boost sound");
+        }
 
-        player.setVelocity(direction.multiply(2.0)); // Adjust multiplier for boost strength
-        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_LAUNCH, 1.0f, 1.0f);
+        if (sound != null) {
+            player.getWorld().playSound(player.getLocation(), sound, 1.0f, 1.0f);
+        }
+    }
 
-        // Spawn particle trail
-        new BukkitRunnable() {
-            int ticks = 0;
-
-            @Override
-            public void run() {
-                if (ticks > 20 || !player.isGliding()) { // Run for 1 second (20 ticks)
-                    this.cancel();
-                    return;
-                }
-
-                // Spawn particles at the player's location
-                player.getWorld().spawnParticle(Particle.CLOUD, player.getLocation(), 5, 0.2, 0.2, 0.2, 0.01);
-
-                ticks++;
-            }
-        }.runTaskTimer(elytraEssentials, 0L, 1L); // Schedule every tick (1L)
+    private boolean PlayerBypassBoostCooldown(Player player) {
+        return player.hasPermission("elytraessentials.bypass.boostcooldown") ||
+                player.hasPermission("elytraessentials.bypass.*") ||
+                player.hasPermission("elytraessentials.*");
     }
 }
