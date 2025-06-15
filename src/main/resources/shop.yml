@@ -1,0 +1,22 @@
+# You should just do changes on price, name and lore other than that
+# don't do any changes, otherwise it will break the shop system
+
+shop:
+  FIRE_TRAIL:
+    price: 1000.00
+    permission: "elytraessentials.effect.fire"
+    name: "&6Fire Trail"
+    lore:
+      - "&7Leave a fiery trail!"
+  WATER_TRAIL:
+    price: 2000.00
+    permission: "elytraessentials.effect.water"
+    name: "&bWater Trail"
+    lore:
+      - "&7Trails of water follow you!"
+  ICE_SHARDS:
+    price: 1500.00
+    permission: "elytraessentials.effect.ice"
+    name: "&aIce Shards"
+    lore:
+      - "&7Shards of ice behind you!"

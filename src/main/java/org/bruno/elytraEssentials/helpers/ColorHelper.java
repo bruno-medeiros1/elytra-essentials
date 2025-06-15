@@ -1,22 +1,8 @@
 package org.bruno.elytraEssentials.helpers;
 
-import org.bruno.elytraEssentials.ElytraEssentials;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
-import java.io.*;
 
 public class ColorHelper {
-    private final ElytraEssentials elytraEssentials;
-
-    private FileConfiguration fileConfiguration = null;
-    private File file = null;
-
-    public ColorHelper(ElytraEssentials elytraEssentials) {
-        this.elytraEssentials = elytraEssentials;
-        EnsureMessagesFileExists();
-    }
 
     //TODO: Rever esta função
     public static String ParseColoredString(String input) {
@@ -41,48 +27,5 @@ public class ColorHelper {
 
         // Return the fully processed string with color codes applied.
         return stringBuilder.toString();
-    }
-
-    public void InitializeMessagesFile() {
-        if (this.file == null) {
-            this.file = new File(this.elytraEssentials.getDataFolder(), "messages.yml");
-        }
-
-        //TODO: Add try catch block here maybe
-        // Load the configuration file
-        this.fileConfiguration = YamlConfiguration.loadConfiguration(this.file);
-
-        // Load default values from the plugin's resource if it exists
-        InputStream inputStream = this.elytraEssentials.getResource("messages.yml");
-        if (inputStream != null) {
-            try (Reader reader = new InputStreamReader(inputStream)) {
-                YamlConfiguration defaultConfig = YamlConfiguration.loadConfiguration(reader);
-                this.fileConfiguration.setDefaults(defaultConfig);
-            } catch (IOException e) {
-                Bukkit.getLogger().severe("Failed to read messages.yml");
-                Bukkit.getLogger().severe("Error: " + e.getMessage());
-                Bukkit.getLogger().severe("Stack Trace:");
-                for (StackTraceElement element : e.getStackTrace()) {
-                    Bukkit.getLogger().severe("  at " + element.toString());
-                }
-            }
-        }
-    }
-
-    public FileConfiguration GetFileConfiguration() {
-        if (this.fileConfiguration == null) {
-            this.InitializeMessagesFile();
-        }
-        return this.fileConfiguration;
-    }
-
-    private void EnsureMessagesFileExists() {
-        if (this.file == null) {
-            Bukkit.getLogger().info("File does not exist, creating new messages.yml");
-            this.file = new File(this.elytraEssentials.getDataFolder(), "messages.yml");
-        }
-        if (!this.file.exists()) {
-            this.elytraEssentials.saveResource("messages.yml", false);
-        }
     }
 }

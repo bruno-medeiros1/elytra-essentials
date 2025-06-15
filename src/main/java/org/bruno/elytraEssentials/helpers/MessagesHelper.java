@@ -60,13 +60,13 @@ public class MessagesHelper {
         consoleCommandSender.sendMessage(ColorHelper.ParseColoredString(pluginPrefix + " &r[" + object + "&r] - " + messageColor + string));
     }
 
-    public void SendDebugMessage(String string) {
+    public void sendDebugMessage(String string) {
         if (debugEnabled) {
             consoleCommandSender.sendMessage(ColorHelper.ParseColoredString("&CDebug&7: " + string));
         }
     }
 
-    public void SetDebugMode(boolean value) {
+    public void setDebugMode(boolean value) {
         debugEnabled = value;
     }
 }

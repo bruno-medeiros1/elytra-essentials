@@ -36,7 +36,7 @@ public class ConfigHandler {
     private String boostItem;
     private int boostCooldown;
     private String boostSound;
-
+    
     public ConfigHandler(FileConfiguration fileConfiguration) {
         this.fileConfiguration = fileConfiguration;
         SetConfigVariables();

@@ -2,8 +2,10 @@ package org.bruno.elytraEssentials.commands;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.handlers.ConfigHandler;
+import org.bruno.elytraEssentials.handlers.EffectsHandler;
 import org.bruno.elytraEssentials.handlers.MessagesHandler;
 import org.bruno.elytraEssentials.helpers.ColorHelper;
+import org.bruno.elytraEssentials.helpers.FileHelper;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bukkit.Bukkit;
@@ -56,16 +58,18 @@ public class ReloadCommand implements ISubCommand {
         this.plugin.getMessagesHelper().sendConsoleMessage("&aReloading config.yml...");
         this.plugin.reloadConfig();
 
-        //  We update colorHelper reference since messages.yml could have changed
-        ColorHelper colorHelper = new ColorHelper(this.plugin);
-        this.plugin.setColorHelper(colorHelper);
+        FileHelper fileHelper = new FileHelper(plugin);
+        plugin.setFileHelper(fileHelper);
 
         this.plugin.getMessagesHelper().sendConsoleMessage("&aReloading messages.yml...");
         ConfigHandler configHandler = new ConfigHandler(this.plugin.getConfig());
         this.plugin.setConfigHandler(configHandler);
 
-        MessagesHandler messagesHandler = new MessagesHandler(colorHelper.GetFileConfiguration());
+        MessagesHandler messagesHandler = new MessagesHandler(fileHelper.GetMessagesFileConfiguration());
         this.plugin.setMessagesHandler(messagesHandler);
+
+        EffectsHandler effectsHandler = new EffectsHandler(this.plugin, fileHelper.GetShopFileConfiguration());
+        this.plugin.setEffectsHandler(effectsHandler);
 
         MessagesHelper messagesHelper = new MessagesHelper(this.plugin);
         this.plugin.SetMessagesHelper(messagesHelper);
@@ -81,6 +85,6 @@ public class ReloadCommand implements ISubCommand {
             throw new RuntimeException(e);
         }
 
-        this.plugin.getMessagesHelper().SetDebugMode(this.plugin.getConfigHandlerInstance().getIsDebugModeEnabled());
+        this.plugin.getMessagesHelper().setDebugMode(this.plugin.getConfigHandlerInstance().getIsDebugModeEnabled());
     }
 }

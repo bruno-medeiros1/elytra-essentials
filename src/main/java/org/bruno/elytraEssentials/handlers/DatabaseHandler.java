@@ -1,14 +1,14 @@
 package org.bruno.elytraEssentials.handlers;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
-import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bukkit.Bukkit;
 
 import java.sql.*;
-import java.util.UUID;
+import java.util.*;
 
 public class DatabaseHandler {
     private final static String ELYTRA_FLIGHT_TIME_TABLE = "elytra_flight_time";
+    private final static String OWNED_EFFECTS_TABLE = "owned_effects";
 
     private String host;
     private int port;
@@ -47,7 +47,7 @@ public class DatabaseHandler {
         if (IsConnected()) {
             try {
                 connection.close();
-                this.elytraEssentials.getMessagesHelper().SendDebugMessage("Database was closed successfully!");
+                this.elytraEssentials.getMessagesHelper().sendDebugMessage("Database was closed successfully!");
             } catch (SQLException e){
                 Bukkit.getLogger().severe("Failed to close the connection to the database.");
                 Bukkit.getLogger().severe("Error: " + e.getMessage());
@@ -82,6 +82,71 @@ public class DatabaseHandler {
         }
     }
 
+    public void AddOwnedEffect(UUID playerUuid, String effectKey) throws SQLException {
+        String query = "INSERT INTO " + OWNED_EFFECTS_TABLE + " (player_uuid, effect_key) VALUES (?, ?)";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, playerUuid.toString());
+            stmt.setString(2, effectKey);
+            stmt.executeUpdate();
+        }
+    }
+
+    public void UpdateOwnedEffect(UUID playerId, String effectKey, boolean isActive) throws SQLException {
+        String query = "UPDATE " + OWNED_EFFECTS_TABLE + " SET is_active = ? WHERE player_uuid = ? AND effect_key = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setBoolean(1, isActive); // Use the passed boolean parameter
+            stmt.setString(2, playerId.toString());
+            stmt.setString(3, effectKey);
+            stmt.executeUpdate();
+        }
+    }
+
+    public boolean GetIsActiveOwnedEffect(UUID playerId, String effectKey) throws SQLException {
+        String query = "SELECT is_active FROM " + OWNED_EFFECTS_TABLE + " WHERE player_uuid = ? AND effect_key = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, playerId.toString());
+            stmt.setString(2, effectKey);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getBoolean("is_active"); // Fetch the is_active value
+                } else {
+                    throw new SQLException("No matching record found for player_uuid and effect_id.");
+                }
+            }
+        }
+    }
+
+    public List<String> GetOwnedEffectKeys(UUID playerId) throws SQLException {
+        List<String> ownedEffects = new ArrayList<>();
+        String query = "SELECT effect_key FROM " + OWNED_EFFECTS_TABLE + " WHERE player_uuid = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, playerId.toString());
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    ownedEffects.add(rs.getString("effect_key"));
+                }
+            }
+        }
+        return ownedEffects;
+    }
+
+    public String getPlayerActiveEffect(UUID playerId) throws SQLException {
+        String query = "SELECT effect_key FROM " + OWNED_EFFECTS_TABLE + " WHERE player_uuid = ? AND is_active = TRUE";
+
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, playerId.toString());
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("effect_key");
+                }
+            }
+        }
+
+        // Return null if no active effect is found
+        return null;
+    }
+
     public final void SetDatabaseVariables() {
         this.host = elytraEssentials.getConfigHandlerInstance().getHost();
         this.port = elytraEssentials.getConfigHandlerInstance().getPort();
@@ -99,10 +164,22 @@ public class DatabaseHandler {
                 );
                 """;
 
+        String createOwnedEffectsTableQuery = """
+                CREATE TABLE IF NOT EXISTS owned_effects (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    player_uuid VARCHAR(36) NOT NULL,
+                    effect_key VARCHAR(255) NOT NULL,
+                    is_active BOOLEAN NOT NULL DEFAULT FALSE,
+                    owned_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                """;
+
         try (Statement stmt = connection.createStatement()) {
             stmt.executeUpdate(createTableQuery);
+            stmt.executeUpdate(createOwnedEffectsTableQuery);
         }
     }
+
 //    private void StartPeriodicSaving(){
 //        new BukkitRunnable() {
 //            @Override

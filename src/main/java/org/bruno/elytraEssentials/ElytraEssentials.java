@@ -6,22 +6,19 @@ package org.bruno.elytraEssentials;
 */
 
 import com.github.jewishbanana.playerarmorchangeevent.PlayerArmorListener;
+import net.milkbowl.vault.economy.Economy;
 import org.bruno.elytraEssentials.commands.ElytraEssentialsCommand;
-import org.bruno.elytraEssentials.handlers.ConfigHandler;
-import org.bruno.elytraEssentials.handlers.DatabaseHandler;
-import org.bruno.elytraEssentials.handlers.MessagesHandler;
-import org.bruno.elytraEssentials.handlers.UpdaterHandler;
+import org.bruno.elytraEssentials.handlers.*;
 import org.bruno.elytraEssentials.helpers.ColorHelper;
+import org.bruno.elytraEssentials.helpers.FileHelper;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.VersionHelper;
-import org.bruno.elytraEssentials.listeners.ElytraBoostListener;
-import org.bruno.elytraEssentials.listeners.ElytraEquipListener;
-import org.bruno.elytraEssentials.listeners.ElytraFlightListener;
-import org.bruno.elytraEssentials.listeners.ElytraUpdaterListener;
+import org.bruno.elytraEssentials.listeners.*;
 import org.bruno.elytraEssentials.placeholders.FlightTimePlaceholder;
 import org.bukkit.Bukkit;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.PluginDescriptionFile;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bstats.bukkit.Metrics;
 
@@ -50,6 +47,8 @@ import java.util.UUID;
 //  TODO: [X] Placeholders API support
 //  TODO: [X] Add BStats support
 //  TODO: [] Add support for multiple versions (1.20 >)
+//  TODO: [] Update for 1.21.5
+
 
 public final class ElytraEssentials extends JavaPlugin {
     private final PluginDescriptionFile pluginDescriptionFile = this.getDescription();
@@ -59,17 +58,21 @@ public final class ElytraEssentials extends JavaPlugin {
     private ElytraBoostListener elytraBoostListener;
     private ElytraEquipListener elytraEquipListener;
     private ElytraUpdaterListener elytraUpdaterListener;
+    private ElytraEffectsListener elytraEffectsListener;
 
     private MessagesHandler messagesHandler;
     private ColorHelper colorHelper;
     private MessagesHelper messagesHelper;
-    private ConfigHandler configHandler;
+    private FileHelper fileHelper;
 
+    private ConfigHandler configHandler;
     private DatabaseHandler databaseHandler;
+    private EffectsHandler effectsHandler;
 
     private boolean databaseConnectionSuccessful = false;
-
     public boolean newerVersion = false;
+
+    private static Economy economy  = null;
 
     public final void onLoad() {
         this.getConfig().options().copyDefaults();
@@ -93,22 +96,31 @@ public final class ElytraEssentials extends JavaPlugin {
             databaseConnectionSuccessful = false;
         }
 
-        obj = new ColorHelper(this);
-        this.colorHelper= (ColorHelper) obj;
+        obj = new FileHelper(this);
+        this.fileHelper = (FileHelper) obj;
 
-        obj = new MessagesHandler(this.colorHelper.GetFileConfiguration());
+        obj = new MessagesHandler(this.fileHelper.GetMessagesFileConfiguration());
         this.messagesHandler = (MessagesHandler) obj;
+
+        obj = new EffectsHandler(this, this.fileHelper.GetShopFileConfiguration());
+        this.effectsHandler = (EffectsHandler) obj;
 
         obj = new MessagesHelper(this);
         this.messagesHelper = (MessagesHelper) obj;
 
-        this.messagesHelper.SetDebugMode(this.configHandler.getIsDebugModeEnabled());
+        this.messagesHelper.setDebugMode(this.configHandler.getIsDebugModeEnabled());
     }
 
     @Override
     public void onEnable() {
         if (!databaseConnectionSuccessful) {
-            getLogger().severe("Database connection was not established. Disabling plugin...");
+            getLogger().severe(String.format("[%s] - Database connection was not established. Disabling plugin...", getDescription().getName()));
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+
+        if (!setupEconomy() ) {
+            getLogger().severe(String.format("[%s] - Disabled due to no Vault dependency found!", getDescription().getName()));
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
@@ -125,10 +137,12 @@ public final class ElytraEssentials extends JavaPlugin {
         this.elytraBoostListener = new ElytraBoostListener(this);
         this.elytraEquipListener = new ElytraEquipListener(this);
         this.elytraUpdaterListener = new ElytraUpdaterListener(this);
+        this.elytraEffectsListener = new ElytraEffectsListener(this);
         Bukkit.getPluginManager().registerEvents(this.elytraFlightListener, this);
         Bukkit.getPluginManager().registerEvents(this.elytraBoostListener, this);
         Bukkit.getPluginManager().registerEvents(this.elytraEquipListener, this);
         Bukkit.getPluginManager().registerEvents(this.elytraUpdaterListener, this);
+        Bukkit.getPluginManager().registerEvents(this.elytraEffectsListener, this);
 
         new PlayerArmorListener(this);
 
@@ -160,11 +174,11 @@ public final class ElytraEssentials extends JavaPlugin {
         this.messagesHelper.sendConsoleMessage("&eVersion: &6&l" + this.pluginVersion);
         this.messagesHelper.sendConsoleMessage("&ahas been loaded successfully");
         this.messagesHelper.sendConsoleMessage("###########################################");
-        this.messagesHelper.SendDebugMessage("&eDeveloper debug mode enabled!");
-        this.messagesHelper.SendDebugMessage("&eThis WILL fill the console");
-        this.messagesHelper.SendDebugMessage("&ewith additional ElytraEssentials information!");
-        this.messagesHelper.SendDebugMessage("&eThis setting is not intended for ");
-        this.messagesHelper.SendDebugMessage("&econtinous use!");
+        this.messagesHelper.sendDebugMessage("&eDeveloper debug mode enabled!");
+        this.messagesHelper.sendDebugMessage("&eThis WILL fill the console");
+        this.messagesHelper.sendDebugMessage("&ewith additional ElytraEssentials information!");
+        this.messagesHelper.sendDebugMessage("&eThis setting is not intended for ");
+        this.messagesHelper.sendDebugMessage("&econtinous use!");
     }
 
     @Override
@@ -200,12 +214,18 @@ public final class ElytraEssentials extends JavaPlugin {
 
         if (databaseConnectionSuccessful){
             this.messagesHelper.sendConsoleMessage("&aClosing database connection...");
-            for (Map.Entry<UUID,Integer> entry : this.elytraFlightListener.GetAllActiveFlights().entrySet()) {
-                try {
-                    databaseHandler.SetPlayerFlightTime(entry.getKey(), entry.getValue());
-                } catch (SQLException e) {
-                    this.messagesHelper.SendDebugMessage("Something went wrong while trying to set flight time");
-                    throw new RuntimeException(e);
+
+            if (elytraFlightListener != null){
+                Map<UUID, Integer> flightTimes = elytraFlightListener.GetAllActiveFlights();
+                if (flightTimes != null ) {
+                    for (Map.Entry<UUID,Integer> entry : flightTimes.entrySet()) {
+                        try {
+                            databaseHandler.SetPlayerFlightTime(entry.getKey(), entry.getValue());
+                        } catch (SQLException e) {
+                            this.messagesHelper.sendDebugMessage("Something went wrong while trying to set flight time");
+                            throw new RuntimeException(e);
+                        }
+                    }
                 }
             }
 
@@ -214,13 +234,6 @@ public final class ElytraEssentials extends JavaPlugin {
 
         HandlerList.unregisterAll(this);
         this.messagesHelper.sendConsoleMessage("&aAll event listeners unregistered successfully!");
-
-        try {
-            this.messagesHelper.sendConsoleMessage("&aAll background tasks disabled successfully!");
-        }
-        catch (Exception exception) {
-            this.messagesHelper.sendConsoleMessage("&aAll background tasks disabled successfully!");
-        }
         this.messagesHelper.sendConsoleMessage("&aPlugin Version &d&l" + pluginVersion);
         this.messagesHelper.sendConsoleMessage("&aPlugin shutdown successfully!");
         this.messagesHelper.sendConsoleMessage("&aGoodbye");
@@ -229,10 +242,12 @@ public final class ElytraEssentials extends JavaPlugin {
         this.elytraBoostListener = null;
         this.elytraEquipListener = null;
         this.elytraUpdaterListener = null;
+        this.elytraEffectsListener = null;
         this.messagesHandler = null;
         this.colorHelper = null;
         this.messagesHelper = null;
         this.configHandler = null;
+        this.effectsHandler = null;
     }
 
     public final MessagesHelper getMessagesHelper() { return this.messagesHelper; }
@@ -249,8 +264,10 @@ public final class ElytraEssentials extends JavaPlugin {
         return this.databaseHandler;
     }
 
-    public final void setColorHelper(ColorHelper colorHelper) {
-        this.colorHelper = colorHelper;
+    public final EffectsHandler getEffectsHandler() { return this.effectsHandler; }
+
+    public Economy getEconomy() {
+        return this.economy;
     }
 
     public final void setConfigHandler(ConfigHandler configHandler) {
@@ -261,5 +278,21 @@ public final class ElytraEssentials extends JavaPlugin {
         this.messagesHandler = messagesHandler;
     }
 
+    public final void setEffectsHandler(EffectsHandler effectsHandler) { this.effectsHandler = effectsHandler; }
+
     public final void SetMessagesHelper(MessagesHelper messagesHelper) { this.messagesHelper = messagesHelper; }
+
+    public final void setFileHelper (FileHelper fileHelper) { this.fileHelper = fileHelper; }
+
+    private boolean setupEconomy() {
+        if (getServer().getPluginManager().getPlugin("Vault") == null) {
+            return false;
+        }
+        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+        if (rsp == null) {
+            return false;
+        }
+        economy = rsp.getProvider();
+        return true;
+    }
 }

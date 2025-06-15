@@ -13,6 +13,7 @@ public class HelpCommand implements ISubCommand {
         if (sender instanceof Player || sender instanceof ConsoleCommandSender) {
             sender.sendMessage(ChatColor.YELLOW + "ElytraEssentials Commands:");
             sender.sendMessage(ChatColor.GRAY + "/ee reload - Reload the plugin.");
+            sender.sendMessage(ChatColor.GRAY + "/ee shop - Opens the shop GUI.");
             sender.sendMessage(ChatColor.GRAY + "/ee flighttime add <player> <seconds> - Add flight time.");
             return true;
         }

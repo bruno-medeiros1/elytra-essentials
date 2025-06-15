@@ -2,8 +2,6 @@ package org.bruno.elytraEssentials.commands;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.handlers.DatabaseHandler;
-import org.bruno.elytraEssentials.handlers.MessagesHandler;
-import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -21,9 +19,6 @@ public class FlightTimeCommand implements ISubCommand {
 
     @Override
     public boolean Execute(CommandSender sender, String[] args) {
-        MessagesHandler messagesHandler = this.plugin.getMessagesHandlerInstance();
-        MessagesHelper messagesHelper = this.plugin.getMessagesHelper();
-
         if (args.length < 2) {
             sendUsageMessage(sender);
             return true;

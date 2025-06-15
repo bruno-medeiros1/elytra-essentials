@@ -1,9 +1,10 @@
 name: ElytraEssentials
-version: 1.3.0
+version: 1.4.0
 main: org.bruno.elytraEssentials.ElytraEssentials
 api-version: '1.21'
 authors: [ CodingMaestro ]
 description: A powerful plugin to manage Elytra flight and equipment features.
+depend: [Vault]
 commands:
   elytraessentials:
     description: Main command for ElytraEssentials.
@@ -19,7 +20,7 @@ permissions:
 
       elytraessentials.command.*:
         default: op
-        description: "Allows use of all ElytraEssentials commands."
+        description: "Allows the use of all ElytraEssentials commands."
         children:
           elytraessentials.command.use:
             default: true
@@ -30,6 +31,12 @@ permissions:
           elytraessentials.command.flighttime:
             default: op
             description: "Allows managing the flight time of a player with /ee flighttime add <player> <seconds>"
+          elytraessentials.command.shop:
+            default: true
+            description: "Allows the use of /ee shop command"
+          elytraessentials.command.effects:
+            default: true
+            description: "Allows the use of /ee effects command"
 
       elytraessentials.bypass.*:
         default: op
@@ -51,3 +58,7 @@ permissions:
       elytraessentials.update.notify:
         default: op
         description: Allows the player to receive update notifications.
+
+      elytraessentials.effect.*:
+        default: op
+        description: "Gives you access to all elytra effects"

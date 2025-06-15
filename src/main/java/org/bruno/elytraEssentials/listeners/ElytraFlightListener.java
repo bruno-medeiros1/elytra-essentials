@@ -4,6 +4,7 @@ import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.handlers.ConfigHandler;
+import org.bruno.elytraEssentials.utils.ElytraEffect;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.boss.BarColor;
@@ -23,12 +24,6 @@ import org.bukkit.util.Vector;
 import java.sql.SQLException;
 import java.util.*;
 
-/// Vanilla Speed Elytra:
-///
-/// Without rockets: 36 km/h
-/// With rockets (normal flight): 108 km/h
-/// With rockets (steep dive): 180 km/h
-///
 public class ElytraFlightListener implements Listener
 {
     private static final int TICKS_IN_ONE_SECOND = 20;
@@ -40,8 +35,7 @@ public class ElytraFlightListener implements Listener
     private final String timeExpiredMessage;
     private final String timeLimitMessageTemplate;
 
-
-    private final ElytraEssentials elytraEssentials;
+    private final ElytraEssentials plugin;
 
     //  config values
     private double maxSpeed;
@@ -61,8 +55,10 @@ public class ElytraFlightListener implements Listener
     private final HashMap<UUID, BossBar> flightBossBars;
     private final HashSet<Player> noFallDamagePlayers;
 
-    public ElytraFlightListener(ElytraEssentials elytraEssentials) {
-        this.elytraEssentials = elytraEssentials;
+    private ElytraEffect playerActiveEffect = null;
+
+    public ElytraFlightListener(ElytraEssentials plugin) {
+        this.plugin = plugin;
         this.perWorldSpeedLimits = new HashMap<>();
 
         this.initialFlightTimeLeft = new HashMap<>();
@@ -73,30 +69,30 @@ public class ElytraFlightListener implements Listener
         AssignConfigVariables();
 
         this.timeExpiredMessage = ChatColor.translateAlternateColorCodes('&',
-                this.elytraEssentials.getMessagesHandlerInstance().getElytraFlightTimeExpired());
+                this.plugin.getMessagesHandlerInstance().getElytraFlightTimeExpired());
         this.timeLimitMessageTemplate = ChatColor.translateAlternateColorCodes('&',
-                this.elytraEssentials.getMessagesHandlerInstance().getElytraTimeLimitMessage());
+                this.plugin.getMessagesHandlerInstance().getElytraTimeLimitMessage());
     }
 
     @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent e) {
+    public void onPlayerJoin(PlayerJoinEvent e) throws SQLException {
+        UUID uuid = e.getPlayer().getUniqueId();
+
+        String effectName = plugin.getDatabaseHandler().getPlayerActiveEffect(uuid);
+        if (effectName != null){
+            var effects = this.plugin.getEffectsHandler().getEffectsRegistry();
+            playerActiveEffect = effects.getOrDefault(effectName, null);
+
+            plugin.getLogger().info(e.getPlayer().getName() + "Active effect" + playerActiveEffect.getName());
+        }
+
         if (!isTimeLimitEnabled)
             return;
 
-        UUID uuid = e.getPlayer().getUniqueId();
+        int storedTime = plugin.getDatabaseHandler().GetPlayerFlightTime(uuid);
 
-        try {
-            int storedTime = this.elytraEssentials.getDatabaseHandler().GetPlayerFlightTime(uuid);
-            Bukkit.getLogger().info("Player " + e.getPlayer().getName() + " joined! Flight time: " + storedTime + "s");
-
-            initialFlightTimeLeft.put(uuid, storedTime);
-            flightTimeLeft.put(uuid, storedTime);
-
-            Bukkit.getLogger().info("flightTimeLeft: " + this.flightTimeLeft);
-        } catch (SQLException ex) {
-            this.elytraEssentials.getMessagesHelper().SendDebugMessage("Something went wrong while trying to get " + e.getPlayer().getName() + " flight time");
-            throw new RuntimeException(ex);
-        }
+        initialFlightTimeLeft.put(uuid, storedTime);
+        flightTimeLeft.put(uuid, storedTime);
     }
 
     @EventHandler
@@ -109,13 +105,13 @@ public class ElytraFlightListener implements Listener
         try {
             int newTime = flightTimeLeft.getOrDefault(uuid, 0);
             Bukkit.getLogger().info("Set Player " + e.getPlayer().getName() + " with UUID " + uuid + " flight time to: " + newTime);
-            this.elytraEssentials.getDatabaseHandler().SetPlayerFlightTime(uuid, newTime);
+            plugin.getDatabaseHandler().SetPlayerFlightTime(uuid, newTime);
 
             initialFlightTimeLeft.remove(uuid);
             flightTimeLeft.remove(uuid);
 
         } catch (SQLException ex) {
-            this.elytraEssentials.getMessagesHelper().SendDebugMessage("Something went wrong while trying to set " + e.getPlayer().getName() + " flight time");
+            plugin.getMessagesHelper().sendDebugMessage("Something went wrong while trying to set " + e.getPlayer().getName() + " flight time");
             throw new RuntimeException(ex);
         }
     }
@@ -126,13 +122,13 @@ public class ElytraFlightListener implements Listener
         String playerWorld = player.getWorld().getName();
 
         if (this.isGlobalFlightDisabled) {
-            this.elytraEssentials.getMessagesHelper().sendPlayerMessage(player, elytraEssentials.getMessagesHandlerInstance().getElytraUsageDisabledMessage());
+            plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getElytraUsageDisabledMessage());
             e.setCancelled(true);
             return;
         }
 
         if (this.disabledElytraWorlds != null && this.disabledElytraWorlds.contains(playerWorld)) {
-            this.elytraEssentials.getMessagesHelper().sendPlayerMessage(player, elytraEssentials.getMessagesHandlerInstance().getElytraUsageWorldDisabledMessage());
+            plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getElytraUsageWorldDisabledMessage());
             e.setCancelled(true);
             return;
         }
@@ -150,7 +146,7 @@ public class ElytraFlightListener implements Listener
             if (PlayerBypassTimeLimit(player)) {
                 //  TODO: Add customizable boss bar colors
                 if (!flightBossBars.containsKey(playerId)){
-                    String message = this.elytraEssentials.getMessagesHandlerInstance().getElytraBypassTimeLimitMessage();
+                    String message = plugin.getMessagesHandlerInstance().getElytraBypassTimeLimitMessage();
                     message = ChatColor.translateAlternateColorCodes('&', message);
                     BossBar bossBar = Bukkit.createBossBar(message, BarColor.YELLOW, BarStyle.SOLID);
                     bossBar.addPlayer(player);
@@ -190,6 +186,10 @@ public class ElytraFlightListener implements Listener
             bossBarUpdateTimes.remove(playerId);
             return;
         }
+
+        //  Spawn Elytra Effect
+        if (playerActiveEffect != null)
+            plugin.getEffectsHandler().spawnParticleTrail(player, playerActiveEffect);
 
         //  Flight Time Handling
         if (this.isTimeLimitEnabled && !PlayerBypassTimeLimit(player)) {
@@ -310,7 +310,7 @@ public class ElytraFlightListener implements Listener
     }
 
     public void AssignConfigVariables() {
-        ConfigHandler configHandler = elytraEssentials.getConfigHandlerInstance();
+        ConfigHandler configHandler = plugin.getConfigHandlerInstance();
 
         this.maxSpeed = configHandler.getDefaultSpeedLimit();
         this.maxSpeedBlocksPerTick = this.maxSpeed / METERS_PER_SECOND_TO_KMH / TICKS_IN_ONE_SECOND;
@@ -327,5 +327,9 @@ public class ElytraFlightListener implements Listener
     public void UpdatePlayerFlightTime(UUID player, int flightTime){
         initialFlightTimeLeft.put(player, flightTime);
         flightTimeLeft.put(player, flightTime);
+    }
+
+    public void UpdateEffect(ElytraEffect effect){
+        this.playerActiveEffect = effect;
     }
 }

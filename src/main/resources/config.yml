@@ -51,5 +51,5 @@ flight:
     # For more, check this: https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Sound.html
     sound: ENTITY_FIREWORK_ROCKET_LAUNCH
 
-    # Players or groups with the permission 'elytraessentials.bypass.boost.cooldown' can bypass this cooldown.
+    # Players or groups with the permission 'elytraessentials.bypass.boostcooldown' can bypass this cooldown.
     cooldown: 2000 # Cooldown time in milliseconds
