@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.bukkit.ChatColor;
 
+//  TODO: Add TabCompleter in the future for faster command prompting
 public class ElytraEssentialsCommand implements CommandExecutor {
     private final Map<String, ISubCommand> subCommands = new HashMap<>();
 

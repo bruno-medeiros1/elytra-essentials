@@ -1,10 +1,13 @@
-name: ElytraEssentials
-version: 1.5.0
 main: org.bruno.elytraEssentials.ElytraEssentials
+author: CodingMaestro
+name: ElytraEssentials
+version: 1.6.0
 api-version: '1.21'
-authors: [ CodingMaestro ]
+load: STARTUP
+folia-supported: false
 description: A powerful plugin to manage Elytra flight and equipment features.
-depend: [Vault]
+website: https://www.spigotmc.org/resources/elytraessentials.126002/
+depend: [Vault, PlaceholderAPI]
 commands:
   elytraessentials:
     description: Main command for ElytraEssentials.

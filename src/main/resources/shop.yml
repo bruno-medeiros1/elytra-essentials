@@ -1,4 +1,4 @@
-# You should just do changes on price, name and lore other than that
+# You should just do changes on price, permission, name and lore other than that
 # don't do any changes, otherwise it will break the shop system
 
 shop:

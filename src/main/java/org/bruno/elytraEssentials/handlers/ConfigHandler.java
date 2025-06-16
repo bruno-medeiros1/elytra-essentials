@@ -22,8 +22,7 @@ public class ConfigHandler {
     private double defaultSpeedLimit;
     private HashMap<String, Double> perWorldSpeedLimits;
     private boolean isTimeLimitEnabled;
-    private int defaultTimeLimit;
-    private HashMap<String, Integer> perWorldTimeLimits;
+    private int maxTimeLimit;
 
     //  Database section
     private String host;
@@ -72,25 +71,7 @@ public class ConfigHandler {
         }
 
         this.isTimeLimitEnabled = this.fileConfiguration.getBoolean("flight.time-limit.enabled", false);
-        this.defaultTimeLimit = this.fileConfiguration.getInt("flight.time-limit.default", 30);
-
-        ConfigurationSection perWorldTimeLimitSection = this.fileConfiguration.getConfigurationSection("flight.time-limit.per-world");
-        this.perWorldTimeLimits = new HashMap<>();
-
-        if (perWorldTimeLimitSection != null) {
-            for (String worldName : perWorldTimeLimitSection.getKeys(false)) {
-                try {
-                    int worldTimeLimit = perWorldTimeLimitSection.getInt(worldName, this.defaultTimeLimit);
-                    Bukkit.getLogger().info("World Time Limit for " + worldName + " : " + worldTimeLimit);
-                    this.perWorldTimeLimits.put(worldName, worldTimeLimit);
-                } catch (Exception e) {
-                    Bukkit.getLogger().info("Invalid time limit for world '" + worldName + "' in config.yml. Using default speed limit.");
-                    this.perWorldTimeLimits.put(worldName, this.defaultTimeLimit);
-                }
-            }
-        } else {
-            Bukkit.getLogger().info("No per-world time limits defined in config.yml. Using default values.");
-        }
+        this.maxTimeLimit = this.fileConfiguration.getInt("flight.time-limit.max-time", 600);
 
         this.host = this.fileConfiguration.getString("flight.time-limit.database.host", "localhost");
         this.port = this.fileConfiguration.getInt("flight.time-limit.database.port", 3306);
@@ -120,7 +101,9 @@ public class ConfigHandler {
         return this.defaultSpeedLimit;
     }
     public final HashMap<String, Double> getPerWorldSpeedLimits(){ return this.perWorldSpeedLimits; }
+
     public final boolean getIsTimeLimitEnabled() { return this.isTimeLimitEnabled; }
+    public final int getMaxTimeLimit() { return this.maxTimeLimit; }
 
     public String getHost() { return this.host; }
     public int getPort() { return this.port; }

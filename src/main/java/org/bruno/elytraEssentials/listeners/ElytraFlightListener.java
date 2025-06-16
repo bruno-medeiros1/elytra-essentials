@@ -38,6 +38,8 @@ public class ElytraFlightListener implements Listener
     private final ElytraEssentials plugin;
 
     //  config values
+    private int maxFlightTime;
+
     private double maxSpeed;
     private double maxSpeedBlocksPerTick;
 
@@ -82,14 +84,14 @@ public class ElytraFlightListener implements Listener
         if (effectName != null){
             var effects = this.plugin.getEffectsHandler().getEffectsRegistry();
             playerActiveEffect = effects.getOrDefault(effectName, null);
-
-            plugin.getLogger().info(e.getPlayer().getName() + "Active effect" + playerActiveEffect.getName());
         }
 
         if (!isTimeLimitEnabled)
             return;
 
         int storedTime = plugin.getDatabaseHandler().GetPlayerFlightTime(uuid);
+        if (maxFlightTime > 0 && storedTime > maxFlightTime)
+            storedTime = maxFlightTime;
 
         initialFlightTimeLeft.put(uuid, storedTime);
         flightTimeLeft.put(uuid, storedTime);
@@ -104,7 +106,9 @@ public class ElytraFlightListener implements Listener
 
         try {
             int newTime = flightTimeLeft.getOrDefault(uuid, 0);
-            Bukkit.getLogger().info("Set Player " + e.getPlayer().getName() + " with UUID " + uuid + " flight time to: " + newTime);
+            if (newTime > maxFlightTime)
+                newTime = maxFlightTime;
+
             plugin.getDatabaseHandler().SetPlayerFlightTime(uuid, newTime);
 
             initialFlightTimeLeft.remove(uuid);
@@ -320,6 +324,7 @@ public class ElytraFlightListener implements Listener
         this.disabledElytraWorlds = configHandler.getDisabledWorlds();
         this.perWorldSpeedLimits = configHandler.getPerWorldSpeedLimits();
         this.isTimeLimitEnabled = configHandler.getIsTimeLimitEnabled();
+        this.maxFlightTime = configHandler.getMaxTimeLimit();
     }
 
     public Map<UUID, Integer> GetAllActiveFlights() { return flightTimeLeft; }

@@ -36,6 +36,22 @@ flight:
     # Players or groups with the permission 'elytraessentials.bypass.timelimit' can bypass this limit.
     enabled: false # [Default: false]
 
+    # The maximum flight time (in seconds) that a player can have.
+    max-time: 600 # [Default: 600 seconds, 0 means unlimited]
+
+    # Automatically restore flight time over a period of time.
+    recovery:
+      enabled: true # [Default: true]
+
+      # The amount of flight time (in seconds) to add during recovery.
+      amount: 10 # [Default: 10 seconds]
+
+      # The interval (in seconds) at which to add the amount.
+      interval: 60 # [Default: 60 seconds]
+
+      # Notify players when flight time is recovered.
+      notify: true # [Default: true]
+
     database:
       host: localhost
       port: 3306
