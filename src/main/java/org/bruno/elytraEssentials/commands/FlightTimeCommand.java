@@ -126,6 +126,11 @@ public class FlightTimeCommand implements ISubCommand {
             //  check if the user defined a max flight time
             if (maxTimeLimit > 0 && newFlightTime > maxTimeLimit){
                 secondsToAdd = maxTimeLimit - currentFlightTime;
+                if (secondsToAdd == 0){
+                    sender.sendMessage("§cPlayer already has the flight time to the max");
+                    return;
+                }
+
                 newFlightTime = maxTimeLimit;
             }
 
