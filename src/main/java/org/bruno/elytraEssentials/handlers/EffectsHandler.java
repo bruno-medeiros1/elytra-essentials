@@ -2,6 +2,7 @@ package org.bruno.elytraEssentials.handlers;
 
 import net.milkbowl.vault.economy.Economy;
 import org.bruno.elytraEssentials.ElytraEssentials;
+import org.bruno.elytraEssentials.helpers.ColorHelper;
 import org.bruno.elytraEssentials.utils.ElytraEffect;
 import org.bukkit.*;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -122,11 +123,9 @@ public class EffectsHandler {
         List<String> lore = new ArrayList<>();
         lore.add(ChatColor.GOLD + "Price: "  + ChatColor.YELLOW  + "$" + effect.getPrice());
         lore.add("");
-
         for (String loreLine : effect.getLore()) {
-            lore.add(ChatColor.GRAY + loreLine);
+            lore.add(ColorHelper.ParseColoredString(loreLine));
         }
-
         lore.add("");
 
         if (player.hasPermission(effect.getPermission()) || ownedEffects.contains(effectKey)) {
@@ -136,7 +135,7 @@ public class EffectsHandler {
         }
 
         if (meta != null) {
-            meta.setDisplayName(effect.getName());
+            meta.setDisplayName(ColorHelper.ParseColoredString(effect.getName()));
             meta.setLore(lore);
 
             // Store the ID in the PersistentDataContainer
@@ -163,13 +162,10 @@ public class EffectsHandler {
         ItemMeta meta = item.getItemMeta();
 
         List<String> lore = new ArrayList<>();
-
         lore.add("");
-
         for (String loreLine : effect.getLore()) {
-            lore.add(ChatColor.GRAY + loreLine);
+            lore.add(ColorHelper.ParseColoredString(loreLine));
         }
-
         lore.add("");
         if (effect.getIsActive()){
             lore.add(ChatColor.RED + "§lAlready selected!");
@@ -185,7 +181,7 @@ public class EffectsHandler {
         }
 
         if (meta != null) {
-            meta.setDisplayName(effect.getName());
+            meta.setDisplayName(ColorHelper.ParseColoredString(effect.getName()));
             meta.setLore(lore);
 
             // Store the key in the PersistentDataContainer

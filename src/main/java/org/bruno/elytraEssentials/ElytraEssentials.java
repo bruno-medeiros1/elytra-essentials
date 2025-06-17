@@ -61,7 +61,6 @@ public final class ElytraEssentials extends JavaPlugin {
     private ElytraEffectsListener elytraEffectsListener;
 
     private MessagesHandler messagesHandler;
-    private ColorHelper colorHelper;
     private MessagesHelper messagesHelper;
     private FileHelper fileHelper;
 
@@ -244,7 +243,6 @@ public final class ElytraEssentials extends JavaPlugin {
         this.elytraUpdaterListener = null;
         this.elytraEffectsListener = null;
         this.messagesHandler = null;
-        this.colorHelper = null;
         this.messagesHelper = null;
         this.configHandler = null;
         this.effectsHandler = null;
