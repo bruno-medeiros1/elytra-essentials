@@ -39,7 +39,7 @@ public final class MessagesHandler {
         this.elytraEquipDisabled = this.fileConfiguration.getString("elytra-equip-disabled", "&cYou are not allowed to equip an elytra.");
         this.elytraEquipReturned = this.fileConfiguration.getString("elytra-equip-returned", "&&6Elytra equipping is disabled. The equipped elytra has been safely returned to your inventory.");
         this.elytraEquipDropped = this.fileConfiguration.getString("elytra-equip-dropped", "&6Elytra equipping is disabled. Your inventory is full, so the equipped elytra has been dropped on the ground.");
-        this.elytraTimeLimit = this.fileConfiguration.getString("elytra-time-limit", "&eRemaining Flight Time: &6{0}s");
+        this.elytraTimeLimit = this.fileConfiguration.getString("elytra-time-limit", "&eFlight Time Left: &6{0}");
         this.elytraBypassTimeLimit = this.fileConfiguration.getString("elytra-bypass-time-limit", "&eYou have infinite time!");
         this.elytraFlightTimeExpired = this.fileConfiguration.getString("elytra-flight-time-expired", "&cYour elytra flight time has expired...");
         this.elytraFlightTimeAdded = this.fileConfiguration.getString("elytra-flight-time-added", "&aYou have received {0} extra seconds of flight time.");

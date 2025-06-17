@@ -4,6 +4,7 @@ import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.handlers.ConfigHandler;
+import org.bruno.elytraEssentials.helpers.TimeHelper;
 import org.bruno.elytraEssentials.utils.ElytraEffect;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -163,7 +164,7 @@ public class ElytraFlightListener implements Listener
                 if (flightTime > 0 ){
                     if (!flightBossBars.containsKey(playerId)) {
 
-                        String timeLimitMessage = timeLimitMessageTemplate.replace("{0}", String.valueOf(flightTime));
+                        String timeLimitMessage = timeLimitMessageTemplate.replace("{0}", TimeHelper.formatFlightTime(flightTime));
                         BossBar bossBar = Bukkit.createBossBar(timeLimitMessage, BarColor.GREEN, BarStyle.SOLID);
                         bossBar.addPlayer(player);
 
@@ -245,7 +246,7 @@ public class ElytraFlightListener implements Listener
                         bossBar.setColor(BarColor.RED);
                     }
 
-                    String timeLimitMessage = timeLimitMessageTemplate.replace("{0}", String.valueOf(flightTime));
+                    String timeLimitMessage = timeLimitMessageTemplate.replace("{0}", TimeHelper.formatFlightTime(flightTime));
                     bossBar.setTitle(timeLimitMessage);
                 }
 

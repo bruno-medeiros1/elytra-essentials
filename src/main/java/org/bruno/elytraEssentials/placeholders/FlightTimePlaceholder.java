@@ -2,6 +2,7 @@ package org.bruno.elytraEssentials.placeholders;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bruno.elytraEssentials.ElytraEssentials;
+import org.bruno.elytraEssentials.helpers.TimeHelper;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -54,7 +55,7 @@ public class FlightTimePlaceholder extends PlaceholderExpansion {
 
             // If the formatted placeholder is requested, format the time dynamically
             if (identifier.equals("flight_time_formatted")) {
-                return formatFlightTimeDynamic(flightTime);
+                return TimeHelper.formatFlightTime(flightTime);
             }
 
             // For "flight_time", return the raw flight time in seconds as a string
@@ -62,29 +63,5 @@ public class FlightTimePlaceholder extends PlaceholderExpansion {
         }
 
         return null;
-    }
-
-    /**
-     * Dynamically formats the flight time based on its value.
-     * - Shows seconds if < 60.
-     * - Shows minutes and seconds if >= 60 and < 3600.
-     * - Shows hours, minutes, and seconds if >= 3600.
-     *
-     * @param totalSeconds The total flight time in seconds.
-     * @return A dynamically formatted string representing the flight time.
-     */
-    private String formatFlightTimeDynamic(int totalSeconds) {
-        if (totalSeconds < 60) {
-            return totalSeconds + "s";
-        } else if (totalSeconds < 3600) {
-            int minutes = totalSeconds / 60;
-            int seconds = totalSeconds % 60;
-            return String.format("%dm %ds", minutes, seconds);
-        } else {
-            int hours = totalSeconds / 3600;
-            int minutes = (totalSeconds % 3600) / 60;
-            int seconds = totalSeconds % 60;
-            return String.format("%dh %dm %ds", hours, minutes, seconds);
-        }
     }
 }
