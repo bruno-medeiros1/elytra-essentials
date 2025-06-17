@@ -64,8 +64,9 @@ flight:
     item: FEATHER
 
     # Sound played when using this boost item
+    # You can leave this empty if you wish to not play any sound
     # For more, check this: https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Sound.html
-    sound: ENTITY_FIREWORK_ROCKET_LAUNCH
+    sound: 'BLOCK_BEACON_ACTIVATE'
 
     # Players or groups with the permission 'elytraessentials.bypass.boostcooldown' can bypass this cooldown.
     cooldown: 2000 # Cooldown time in milliseconds

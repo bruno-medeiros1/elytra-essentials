@@ -81,7 +81,7 @@ public class ConfigHandler {
 
         this.boostItem = this.fileConfiguration.getString("flight.boost.item", "FEATHER");
         this.boostCooldown = this.fileConfiguration.getInt("flight.boost.cooldown", 2000);
-        this.boostSound = this.fileConfiguration.getString("flight.boost.sound", "ENTITY_FIREWORK_ROCKET_LAUNCH");
+        this.boostSound = this.fileConfiguration.getString("flight.boost.sound", "BLOCK_BEACON_ACTIVATE");
     }
 
     public final boolean getIsDebugModeEnabled() {

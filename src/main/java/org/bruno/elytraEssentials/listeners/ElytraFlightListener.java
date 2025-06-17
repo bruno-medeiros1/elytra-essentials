@@ -33,6 +33,9 @@ public class ElytraFlightListener implements Listener
     private static final double SPEED_NORMAL_THRESHOLD = 125.0;
     private static final double SPEED_FAST_THRESHOLD = 180;
 
+    private static final double MAX_FLIGHT_SPEED = 200;
+    private static final double MAX_SPEED_BLOCKS_PER_TICK = MAX_FLIGHT_SPEED / METERS_PER_SECOND_TO_KMH / TICKS_IN_ONE_SECOND;
+
     private final String timeExpiredMessage;
     private final String timeLimitMessageTemplate;
 
@@ -273,6 +276,15 @@ public class ElytraFlightListener implements Listener
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
                     TextComponent.fromLegacy("§eSpeed: " + color + String.format("%.2f", this.maxSpeed) + " §ekm/h"));
         } else {
+            //  Handling max speed on elytra
+            if (speed > MAX_FLIGHT_SPEED){
+                color = CalculateSpeedColor(MAX_FLIGHT_SPEED);
+
+                // Snap velocity to max speed
+                Vector snappedVelocity = velocity.normalize().multiply(MAX_SPEED_BLOCKS_PER_TICK);
+                player.setVelocity(snappedVelocity);
+            }
+
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
                     TextComponent.fromLegacy("§eSpeed: " + color + String.format("%.2f", speed) + " §ekm/h"));
         }

@@ -17,6 +17,11 @@ import java.util.UUID;
 
 public class ElytraBoostListener implements Listener {
 
+    private static final long MINIMUM_COOLDOWN = 100; // 100 milliseconds
+
+    //  TODO: Review if this make sense to add as properties in the config
+    private static final double BOOST_MULTIPLIER = 0.2;
+
     private final ElytraEssentials plugin;
     private final HashMap<UUID, Long> cooldowns = new HashMap<>();
 
@@ -27,6 +32,7 @@ public class ElytraBoostListener implements Listener {
     @EventHandler
     public void onItemBoostRightClick(PlayerInteractEvent e) {
         Player player = e.getPlayer();
+        if (!player.isGliding()) return;
 
         // Check if the player right-clicked
         if (e.getHand() == EquipmentSlot.OFF_HAND) return; // Ignore off-hand
@@ -34,53 +40,67 @@ public class ElytraBoostListener implements Listener {
 
         ItemStack item = player.getInventory().getItemInMainHand();
 
-        // Get configured boost item and cooldown
+        // Get configured boost item
         String configuredBoostMaterial = plugin.getConfigHandlerInstance().getBoostItem();
         Material configuredMaterial = Material.matchMaterial(configuredBoostMaterial);
         if (configuredMaterial == null) {
             plugin.getLogger().warning("Invalid item material " + configuredBoostMaterial + " in config.yml for the boost item");
             return;
         }
-        int cooldownTime = plugin.getConfigHandlerInstance().getBoostCooldown();
 
         // Check if the item matches the configured material
         if (item.getType() != configuredMaterial) return;
 
-        // Check if the player is gliding (Elytra flying)
-        if (!player.isGliding()) return;
 
-        // Check cooldown
-        boolean playerBypassBoostCooldown = PlayerBypassBoostCooldown(player);
-        if (!playerBypassBoostCooldown ) {
-            UUID playerId = player.getUniqueId();
-            long currentTime = System.currentTimeMillis();
-            long sinceLastBoost;
+        //  cooldown
+        UUID playerId = player.getUniqueId();
+        long currentTime = System.currentTimeMillis();
+        long sinceLastBoost;
 
+        int cooldownTime = plugin.getConfigHandlerInstance().getBoostCooldown();
+        if (cooldownTime > MINIMUM_COOLDOWN) {
+            boolean playerBypassBoostCooldown = PlayerBypassBoostCooldown(player);
+            if (!playerBypassBoostCooldown ) {
+                if (cooldowns.containsKey(playerId)) {
+                    sinceLastBoost = currentTime - cooldowns.get(playerId);
+                    int remainingSeconds = (int) (cooldownTime - sinceLastBoost) / 1000;
+                    if (sinceLastBoost < cooldownTime) {
+
+                        //  format message
+                        String boostCooldownMessageTemplate = ChatColor.translateAlternateColorCodes('&',
+                                plugin.getMessagesHandlerInstance().getElytraBoostCooldown());
+                        String boostCooldownMessage = boostCooldownMessageTemplate.replace("{0}", String.valueOf(remainingSeconds));
+                        plugin.getMessagesHelper().sendPlayerMessage(player, boostCooldownMessage);
+
+                        return;
+                    }
+                }
+                cooldowns.put(playerId, currentTime);
+            }
+        }
+        else{
             if (cooldowns.containsKey(playerId)) {
                 sinceLastBoost = currentTime - cooldowns.get(playerId);
-                int remainingSeconds = (int) (cooldownTime - sinceLastBoost) / 1000;
-                if (sinceLastBoost < cooldownTime) {
-
-                    //  format message
-                    String boostCooldownMessageTemplate = ChatColor.translateAlternateColorCodes('&',
-                            plugin.getMessagesHandlerInstance().getElytraBoostCooldown());
-                    String boostCooldownMessage = boostCooldownMessageTemplate.replace("{0}", String.valueOf(remainingSeconds));
-                    plugin.getMessagesHelper().sendPlayerMessage(player, boostCooldownMessage);
-
-                    return;
+                if (sinceLastBoost < MINIMUM_COOLDOWN) {
+                    return; // Prevent spamming even for bypass players
                 }
             }
             cooldowns.put(playerId, currentTime);
         }
 
-        // Apply the boost
+        //  velocity calculation
         Vector direction = player.getLocation().getDirection().normalize();
         Vector currentVelocity = player.getVelocity();
-        Vector boost = direction.multiply(1.5).add(currentVelocity);
+        Vector boost = direction.multiply(BOOST_MULTIPLIER).add(currentVelocity);
+
+        // Apply the boost
         player.setVelocity(boost);
 
         //  Play sound
         String configuredSoundName = plugin.getConfigHandlerInstance().getBoostSound().toUpperCase();
+        if (configuredSoundName.isBlank())
+            return;
+
         Sound sound = null;
         try {
             sound = Sound.valueOf(configuredSoundName);
@@ -95,6 +115,12 @@ public class ElytraBoostListener implements Listener {
 
     private boolean PlayerBypassBoostCooldown(Player player) {
         return player.hasPermission("elytraessentials.bypass.boostcooldown") ||
+                player.hasPermission("elytraessentials.bypass.*") ||
+                player.hasPermission("elytraessentials.*");
+    }
+
+    private boolean PlayerBypassSpeedLimit(Player player) {
+        return player.hasPermission("elytraessentials.bypass.speedlimit") ||
                 player.hasPermission("elytraessentials.bypass.*") ||
                 player.hasPermission("elytraessentials.*");
     }
