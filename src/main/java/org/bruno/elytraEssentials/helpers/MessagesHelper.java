@@ -7,22 +7,22 @@ import org.bukkit.entity.Player;
 
 public class MessagesHelper {
 
-    private final ElytraEssentials elytraEssentials;
+    private final ElytraEssentials plugin;
 
     private static final ConsoleCommandSender consoleCommandSender = Bukkit.getConsoleSender();
-    private String pluginPrefix = null;
+    private String pluginPrefix;
 
     private static String messageColor;
     private static boolean debugEnabled;
 
-    public MessagesHelper(ElytraEssentials elytraEssentials) {
-        this.elytraEssentials = elytraEssentials;
-//        this.pluginPrefix = elytraEssentials.getMessagesHandlerInstance().getPrefixMessage();
+    public MessagesHelper(ElytraEssentials plugin) {
+        this.plugin = plugin;
+        this.pluginPrefix = plugin.getMessagesHandlerInstance().getPrefixMessage();
     }
 
     public void sendConsoleMessage(String string) {
         if (pluginPrefix == null) {
-            pluginPrefix = elytraEssentials.getMessagesHandlerInstance().getPrefixMessage();
+            pluginPrefix = plugin.getMessagesHandlerInstance().getPrefixMessage();
         }
 
         consoleCommandSender.sendMessage(ColorHelper.ParseColoredString(pluginPrefix + " &r" + string));
@@ -30,7 +30,7 @@ public class MessagesHelper {
 
     public void sendPlayerMessage(Player player, String string) {
         if (pluginPrefix == null) {
-            pluginPrefix = elytraEssentials.getMessagesHandlerInstance().getPrefixMessage();
+            pluginPrefix = plugin.getMessagesHandlerInstance().getPrefixMessage();
         }
 
         player.sendMessage(ColorHelper.ParseColoredString(pluginPrefix + " &r" + string));
@@ -38,7 +38,7 @@ public class MessagesHelper {
 
     public void sendConsoleLog(String object, String string) {
         if (pluginPrefix == null) {
-            pluginPrefix = elytraEssentials.getMessagesHandlerInstance().getPrefixMessage();
+            pluginPrefix = plugin.getMessagesHandlerInstance().getPrefixMessage();
         }
 
         if (object.equalsIgnoreCase("info")) {

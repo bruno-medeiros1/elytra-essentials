@@ -99,14 +99,14 @@ public final class ElytraEssentials extends JavaPlugin {
         obj = new FileHelper(this);
         this.fileHelper = (FileHelper) obj;
 
-        obj = new MessagesHandler(this.fileHelper.GetMessagesFileConfiguration());
-        this.messagesHandler = (MessagesHandler) obj;
-
         obj = new EffectsHandler(this, this.fileHelper.GetShopFileConfiguration());
         this.effectsHandler = (EffectsHandler) obj;
 
         obj = new RecoveryHandler(this);
         this.recoveryHandler = (RecoveryHandler) obj;
+
+        obj = new MessagesHandler(this.fileHelper.GetMessagesFileConfiguration());
+        this.messagesHandler = (MessagesHandler) obj;
 
         obj = new MessagesHelper(this);
         this.messagesHelper = (MessagesHelper) obj;
@@ -259,9 +259,7 @@ public final class ElytraEssentials extends JavaPlugin {
 
     public ConfigHandler getConfigHandlerInstance() { return this.configHandler; }
 
-    public ElytraFlightListener getElytraFlightListener() {
-        return this.elytraFlightListener;
-    }
+    public ElytraFlightListener getElytraFlightListener() { return this.elytraFlightListener; }
 
     public DatabaseHandler getDatabaseHandler() {
         return this.databaseHandler;

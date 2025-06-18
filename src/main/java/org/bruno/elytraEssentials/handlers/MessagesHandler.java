@@ -29,7 +29,7 @@ public final class MessagesHandler {
         SetMessages();
     }
 
-    public final void SetMessages(){
+    public void SetMessages(){
         this.prefix = this.fileConfiguration.getString("prefix", "&6[&eElytraEssentials&6]");
         this.reloadStart = this.fileConfiguration.getString("reload-start", "&aReloading ElytraEssentials... Please wait.");
         this.reloadSuccess = this.fileConfiguration.getString("reload-success", "&aPlugin successfully reloaded! All configuration files are up to date.");
@@ -51,23 +51,23 @@ public final class MessagesHandler {
         this.elytraBoostCooldown = this.fileConfiguration.getString("elytra-boost-cooldown", "&cBoost is on cooldown! &6{0}s &cremaining...");
     }
 
-    public final String getPrefixMessage() { return this.prefix; }
-    public final String getReloadStartMessage() { return this.reloadStart; }
-    public final String getReloadSuccessMessage() { return this.reloadSuccess; }
-    public final String getNoPermissionMessage() { return this.noPermission; }
+    public String getPrefixMessage() { return this.prefix; }
+    public String getReloadStartMessage() { return this.reloadStart; }
+    public String getReloadSuccessMessage() { return this.reloadSuccess; }
+    public String getNoPermissionMessage() { return this.noPermission; }
 
-    public final String getElytraUsageDisabledMessage() { return this.elytraUsageDisabled; }
-    public final String getElytraUsageWorldDisabledMessage() { return this.elytraUsageWorldDisabled; }
-    public final String getElytraEquipDisabledMessage() { return this.elytraEquipDisabled; }
-    public final String getElytraEquipReturnedMessage() { return this.elytraEquipReturned; }
-    public final String getElytraEquipDroppedMessage() { return this.elytraEquipDropped; }
-    public final String getElytraTimeLimitMessage() { return this.elytraTimeLimit; }
-    public final String getElytraBypassTimeLimitMessage() { return this.elytraBypassTimeLimit; }
-    public final String getElytraFlightTimeExpired() { return this.elytraFlightTimeExpired; }
-    public final String getElytraFlightTimeAdded() { return this.elytraFlightTimeAdded; }
-    public final String getElytraFlightTimeRemoved() { return this.elytraFlightTimeRemoved; }
-    public final String getElytraFlightTimeCleared() { return this.elytraFlightTimeCleared; }
-    public final String getElytraFlightTimeSet() { return this.elytraFlightTimeSet; }
-    public final String getElytraFlightTimeRecovery() { return this.elytraFlightTimeRecovery; }
-    public final String getElytraBoostCooldown() { return this.elytraBoostCooldown; }
+    public String getElytraUsageDisabledMessage() { return this.elytraUsageDisabled; }
+    public String getElytraUsageWorldDisabledMessage() { return this.elytraUsageWorldDisabled; }
+    public String getElytraEquipDisabledMessage() { return this.elytraEquipDisabled; }
+    public String getElytraEquipReturnedMessage() { return this.elytraEquipReturned; }
+    public String getElytraEquipDroppedMessage() { return this.elytraEquipDropped; }
+    public String getElytraTimeLimitMessage() { return this.elytraTimeLimit; }
+    public String getElytraBypassTimeLimitMessage() { return this.elytraBypassTimeLimit; }
+    public String getElytraFlightTimeExpired() { return this.elytraFlightTimeExpired; }
+    public String getElytraFlightTimeAdded() { return this.elytraFlightTimeAdded; }
+    public String getElytraFlightTimeRemoved() { return this.elytraFlightTimeRemoved; }
+    public String getElytraFlightTimeCleared() { return this.elytraFlightTimeCleared; }
+    public String getElytraFlightTimeSet() { return this.elytraFlightTimeSet; }
+    public String getElytraFlightTimeRecovery() { return this.elytraFlightTimeRecovery; }
+    public String getElytraBoostCooldown() { return this.elytraBoostCooldown; }
 }
