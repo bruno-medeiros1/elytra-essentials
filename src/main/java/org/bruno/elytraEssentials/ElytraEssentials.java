@@ -63,6 +63,7 @@ public final class ElytraEssentials extends JavaPlugin {
     private MessagesHandler messagesHandler;
     private MessagesHelper messagesHelper;
     private FileHelper fileHelper;
+    private RecoveryHandler recoveryHandler;
 
     private ConfigHandler configHandler;
     private DatabaseHandler databaseHandler;
@@ -73,7 +74,7 @@ public final class ElytraEssentials extends JavaPlugin {
 
     private static Economy economy  = null;
 
-    public final void onLoad() {
+    public void onLoad() {
         this.getConfig().options().copyDefaults();
         this.saveDefaultConfig();
 
@@ -103,6 +104,9 @@ public final class ElytraEssentials extends JavaPlugin {
 
         obj = new EffectsHandler(this, this.fileHelper.GetShopFileConfiguration());
         this.effectsHandler = (EffectsHandler) obj;
+
+        obj = new RecoveryHandler(this);
+        this.recoveryHandler = (RecoveryHandler) obj;
 
         obj = new MessagesHelper(this);
         this.messagesHelper = (MessagesHelper) obj;
@@ -181,7 +185,7 @@ public final class ElytraEssentials extends JavaPlugin {
     }
 
     @Override
-    public final void onDisable() {
+    public void onDisable() {
         StackTraceElement[] stackTraceElementArray = Thread.currentThread().getStackTrace();
         boolean isReloading;
         block7: {
@@ -246,41 +250,44 @@ public final class ElytraEssentials extends JavaPlugin {
         this.messagesHelper = null;
         this.configHandler = null;
         this.effectsHandler = null;
+        this.recoveryHandler = null;
     }
 
-    public final MessagesHelper getMessagesHelper() { return this.messagesHelper; }
+    public MessagesHelper getMessagesHelper() { return this.messagesHelper; }
 
-    public final MessagesHandler getMessagesHandlerInstance() { return this.messagesHandler; }
+    public MessagesHandler getMessagesHandlerInstance() { return this.messagesHandler; }
 
-    public final ConfigHandler getConfigHandlerInstance() { return this.configHandler; }
+    public ConfigHandler getConfigHandlerInstance() { return this.configHandler; }
 
-    public final ElytraFlightListener getElytraFlightListener() {
+    public ElytraFlightListener getElytraFlightListener() {
         return this.elytraFlightListener;
     }
 
-    public final DatabaseHandler getDatabaseHandler() {
+    public DatabaseHandler getDatabaseHandler() {
         return this.databaseHandler;
     }
 
-    public final EffectsHandler getEffectsHandler() { return this.effectsHandler; }
+    public EffectsHandler getEffectsHandler() { return this.effectsHandler; }
 
     public Economy getEconomy() {
         return this.economy;
     }
 
-    public final void setConfigHandler(ConfigHandler configHandler) {
+    public void setConfigHandler(ConfigHandler configHandler) {
         this.configHandler = configHandler;
     }
 
-    public final void setMessagesHandler(MessagesHandler messagesHandler) {
+    public void setMessagesHandler(MessagesHandler messagesHandler) {
         this.messagesHandler = messagesHandler;
     }
 
-    public final void setEffectsHandler(EffectsHandler effectsHandler) { this.effectsHandler = effectsHandler; }
+    public void setEffectsHandler(EffectsHandler effectsHandler) { this.effectsHandler = effectsHandler; }
 
-    public final void SetMessagesHelper(MessagesHelper messagesHelper) { this.messagesHelper = messagesHelper; }
+    public void setRecoveryHandler(RecoveryHandler recoveryHandler) { this.recoveryHandler = recoveryHandler; }
 
-    public final void setFileHelper (FileHelper fileHelper) { this.fileHelper = fileHelper; }
+    public void SetMessagesHelper(MessagesHelper messagesHelper) { this.messagesHelper = messagesHelper; }
+
+    public void setFileHelper (FileHelper fileHelper) { this.fileHelper = fileHelper; }
 
     private boolean setupEconomy() {
         if (getServer().getPluginManager().getPlugin("Vault") == null) {

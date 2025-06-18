@@ -4,6 +4,7 @@ import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.handlers.ConfigHandler;
+import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.helpers.TimeHelper;
 import org.bruno.elytraEssentials.utils.ElytraEffect;
 import org.bukkit.Bukkit;
@@ -151,7 +152,7 @@ public class ElytraFlightListener implements Listener
         UUID playerId = player.getUniqueId();
         if (isTimeLimitEnabled){
 
-            if (PlayerBypassTimeLimit(player)) {
+            if (PermissionsHelper.PlayerBypassTimeLimit(player)) {
                 //  TODO: Add customizable boss bar colors
                 if (!flightBossBars.containsKey(playerId)){
                     String message = plugin.getMessagesHandlerInstance().getElytraBypassTimeLimitMessage();
@@ -200,7 +201,7 @@ public class ElytraFlightListener implements Listener
             plugin.getEffectsHandler().spawnParticleTrail(player, playerActiveEffect);
 
         //  Flight Time Handling
-        if (this.isTimeLimitEnabled && !PlayerBypassTimeLimit(player)) {
+        if (this.isTimeLimitEnabled && !PermissionsHelper.PlayerBypassTimeLimit(player)) {
             int flightTime = flightTimeLeft.getOrDefault(playerId, 0);
             if (flightTime <= 0) {
                 // Stop flight when time runs out
@@ -264,7 +265,7 @@ public class ElytraFlightListener implements Listener
 
         String color = CalculateSpeedColor(speed);
 
-        boolean playerBypassSpeedLimit = PlayerBypassSpeedLimit(player);
+        boolean playerBypassSpeedLimit = PermissionsHelper.PlayerBypassSpeedLimit(player);
         if (!playerBypassSpeedLimit && this.isSpeedLimitEnabled && speed > this.maxSpeed)
         {
             color = CalculateSpeedColor(this.maxSpeed);
@@ -299,18 +300,6 @@ public class ElytraFlightListener implements Listener
             e.setCancelled(true);
             noFallDamagePlayers.remove(player); // Remove after preventing damage to avoid permanent immunity
         }
-    }
-
-    private boolean PlayerBypassSpeedLimit(Player player) {
-        return player.hasPermission("elytraessentials.bypass.speedlimit") ||
-                player.hasPermission("elytraessentials.bypass.*") ||
-                player.hasPermission("elytraessentials.*");
-    }
-
-    private boolean PlayerBypassTimeLimit(Player player) {
-        return player.hasPermission("elytraessentials.bypass.timelimit") ||
-                player.hasPermission("elytraessentials.bypass.*") ||
-                player.hasPermission("elytraessentials.*");
     }
 
     private String CalculateSpeedColor(double speed) {

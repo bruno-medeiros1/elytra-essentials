@@ -1,6 +1,7 @@
 package org.bruno.elytraEssentials.listeners;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
+import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -59,7 +60,7 @@ public class ElytraBoostListener implements Listener {
 
         int cooldownTime = plugin.getConfigHandlerInstance().getBoostCooldown();
         if (cooldownTime > MINIMUM_COOLDOWN) {
-            boolean playerBypassBoostCooldown = PlayerBypassBoostCooldown(player);
+            boolean playerBypassBoostCooldown = PermissionsHelper.PlayerBypassBoostCooldown(player);
             if (!playerBypassBoostCooldown ) {
                 if (cooldowns.containsKey(playerId)) {
                     sinceLastBoost = currentTime - cooldowns.get(playerId);
@@ -111,17 +112,5 @@ public class ElytraBoostListener implements Listener {
         if (sound != null) {
             player.getWorld().playSound(player.getLocation(), sound, 1.0f, 1.0f);
         }
-    }
-
-    private boolean PlayerBypassBoostCooldown(Player player) {
-        return player.hasPermission("elytraessentials.bypass.boostcooldown") ||
-                player.hasPermission("elytraessentials.bypass.*") ||
-                player.hasPermission("elytraessentials.*");
-    }
-
-    private boolean PlayerBypassSpeedLimit(Player player) {
-        return player.hasPermission("elytraessentials.bypass.speedlimit") ||
-                player.hasPermission("elytraessentials.bypass.*") ||
-                player.hasPermission("elytraessentials.*");
     }
 }

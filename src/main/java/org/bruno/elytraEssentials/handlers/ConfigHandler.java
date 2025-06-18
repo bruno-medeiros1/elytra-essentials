@@ -24,6 +24,12 @@ public class ConfigHandler {
     private boolean isTimeLimitEnabled;
     private int maxTimeLimit;
 
+    //  recovery time
+    private boolean isRecoveryEnabled;
+    private int recoveryAmount;
+    private int recoveryInterval;
+    private boolean isNotifyOnRecoveryEnabled;
+
     //  Database section
     private String host;
     private int port;
@@ -35,7 +41,7 @@ public class ConfigHandler {
     private String boostItem;
     private int boostCooldown;
     private String boostSound;
-    
+
     public ConfigHandler(FileConfiguration fileConfiguration) {
         this.fileConfiguration = fileConfiguration;
         SetConfigVariables();
@@ -73,6 +79,11 @@ public class ConfigHandler {
         this.isTimeLimitEnabled = this.fileConfiguration.getBoolean("flight.time-limit.enabled", false);
         this.maxTimeLimit = this.fileConfiguration.getInt("flight.time-limit.max-time", 600);
 
+        this.isRecoveryEnabled = this.fileConfiguration.getBoolean("flight.time-limit.recovery.enabled", true);
+        this.recoveryAmount = this.fileConfiguration.getInt("flight.time-limit.recovery.amount", 10);
+        this.recoveryInterval = this.fileConfiguration.getInt("flight.time-limit.recovery.interval", 60);
+        this.isNotifyOnRecoveryEnabled = this.fileConfiguration.getBoolean("flight.time-limit.recovery.notify", true);
+
         this.host = this.fileConfiguration.getString("flight.time-limit.database.host", "localhost");
         this.port = this.fileConfiguration.getInt("flight.time-limit.database.port", 3306);
         this.database = this.fileConfiguration.getString("flight.time-limit.database.database", "elytraessentials");
@@ -105,6 +116,11 @@ public class ConfigHandler {
     public final boolean getIsTimeLimitEnabled() { return this.isTimeLimitEnabled; }
     public final int getMaxTimeLimit() { return this.maxTimeLimit; }
 
+    public final boolean getIsRecoveryEnabled() { return this.isRecoveryEnabled; }
+    public final int getRecoveryAmount() { return this.recoveryAmount; }
+    public final int getRecoveryInterval() { return this.recoveryInterval; }
+    public final boolean getIsNotifyOnRecoveryEnabled() { return this.isNotifyOnRecoveryEnabled; }
+
     public String getHost() { return this.host; }
     public int getPort() { return this.port; }
     public String getDatabase() { return this.database; }
@@ -114,5 +130,4 @@ public class ConfigHandler {
     public final String getBoostItem() { return this.boostItem; }
     public final Integer getBoostCooldown() { return this.boostCooldown; }
     public final String getBoostSound() { return this.boostSound; }
-
 }

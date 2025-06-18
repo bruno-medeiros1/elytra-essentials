@@ -3,6 +3,7 @@ package org.bruno.elytraEssentials.listeners;
 import com.github.jewishbanana.playerarmorchangeevent.PlayerArmorChangeEvent;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.handlers.ConfigHandler;
+import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -24,7 +25,7 @@ public class ElytraEquipListener implements Listener {
         Player player = e.getPlayer();
         ConfigHandler configHandler = elytraEssentials.getConfigHandlerInstance();
 
-        if (e.getNewItem().getType() == Material.ELYTRA && configHandler.getIsElytraEquipDisabled() && !PlayerBypassEquipElytra(player)) {
+        if (e.getNewItem().getType() == Material.ELYTRA && configHandler.getIsElytraEquipDisabled() && !PermissionsHelper.PlayerBypassElytraEquip(player)) {
             e.setCancelled(true);
             this.elytraEssentials.getMessagesHelper().sendPlayerMessage(player, this.elytraEssentials.getMessagesHandlerInstance().getElytraEquipDisabledMessage());
         }
@@ -36,7 +37,7 @@ public class ElytraEquipListener implements Listener {
         Player player = event.getPlayer();
         ConfigHandler configHandler = elytraEssentials.getConfigHandlerInstance();
 
-        if (configHandler.getIsElytraEquipDisabled() && !PlayerBypassEquipElytra(player)) {
+        if (configHandler.getIsElytraEquipDisabled() && !PermissionsHelper.PlayerBypassElytraEquip(player)) {
             ItemStack chestplate = player.getInventory().getChestplate();
 
             // Check if the chestplate is an Elytra
@@ -54,11 +55,5 @@ public class ElytraEquipListener implements Listener {
                 }
             }
         }
-    }
-
-    private boolean PlayerBypassEquipElytra(Player player) {
-        return player.hasPermission("elytraessentials.bypass.equipment") ||
-                player.hasPermission("elytraessentials.bypass.*") ||
-                player.hasPermission("elytraessentials.*");
     }
 }
