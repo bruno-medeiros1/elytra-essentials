@@ -65,7 +65,6 @@ public class ConfigHandler {
                 try {
                     // Try to parse the value as a double
                     double worldSpeedLimit = perWorldSpeedLimitSection.getDouble(worldName, this.defaultSpeedLimit);
-                    Bukkit.getLogger().info("World Speed Limit for " + worldName + " : " + worldSpeedLimit);
                     this.perWorldSpeedLimits.put(worldName, worldSpeedLimit);
                 } catch (Exception e) {
                     Bukkit.getLogger().info("Invalid speed limit for world '" + worldName + "' in config.yml. Using default speed limit.");

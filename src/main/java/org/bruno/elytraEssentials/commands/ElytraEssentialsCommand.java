@@ -6,6 +6,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,6 +40,10 @@ public class ElytraEssentialsCommand implements CommandExecutor {
             return true;
         }
 
-        return commandHandler.Execute(sender, Arrays.copyOfRange(args, 1, args.length));
+        try {
+            return commandHandler.Execute(sender, Arrays.copyOfRange(args, 1, args.length));
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

@@ -83,9 +83,9 @@ public class ElytraFlightListener implements Listener
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent e) throws SQLException {
-        UUID uuid = e.getPlayer().getUniqueId();
+        UUID playerId = e.getPlayer().getUniqueId();
 
-        String effectName = plugin.getDatabaseHandler().getPlayerActiveEffect(uuid);
+        String effectName = plugin.getDatabaseHandler().getPlayerActiveEffect(playerId);
         if (effectName != null){
             var effects = this.plugin.getEffectsHandler().getEffectsRegistry();
             playerActiveEffect = effects.getOrDefault(effectName, null);
@@ -94,35 +94,16 @@ public class ElytraFlightListener implements Listener
         if (!isTimeLimitEnabled)
             return;
 
-        int storedTime = plugin.getDatabaseHandler().GetPlayerFlightTime(uuid);
-        if (maxFlightTime > 0 && storedTime > maxFlightTime)
-            storedTime = maxFlightTime;
-
-        initialFlightTimeLeft.put(uuid, storedTime);
-        flightTimeLeft.put(uuid, storedTime);
+        HandleFlightTime(playerId, false);
     }
 
     @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent e) {
+    public void onPlayerQuit(PlayerQuitEvent e) throws SQLException {
         if (!isTimeLimitEnabled)
             return;
 
-        UUID uuid = e.getPlayer().getUniqueId();
-
-        try {
-            int newTime = flightTimeLeft.getOrDefault(uuid, 0);
-            if (newTime > maxFlightTime)
-                newTime = maxFlightTime;
-
-            plugin.getDatabaseHandler().SetPlayerFlightTime(uuid, newTime);
-
-            initialFlightTimeLeft.remove(uuid);
-            flightTimeLeft.remove(uuid);
-
-        } catch (SQLException ex) {
-            plugin.getMessagesHelper().sendDebugMessage("Something went wrong while trying to set " + e.getPlayer().getName() + " flight time");
-            throw new RuntimeException(ex);
-        }
+        UUID playerId = e.getPlayer().getUniqueId();
+        HandleFlightTime(playerId, true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -329,11 +310,42 @@ public class ElytraFlightListener implements Listener
         this.maxFlightTime = configHandler.getMaxTimeLimit();
     }
 
+    /// Method used on plugin reload to Handle time flight
+    public void validateFlightTimeOnReload() throws SQLException {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (PermissionsHelper.PlayerBypassTimeLimit(player))
+                return;
+
+            UUID playerId = player.getUniqueId();
+            HandleFlightTime(playerId, false);
+        }
+    }
+
     public Map<UUID, Integer> GetAllActiveFlights() { return flightTimeLeft; }
 
-    public void UpdatePlayerFlightTime(UUID player, int flightTime){
+    public void UpdatePlayerFlightTime(UUID player, int flightTime) {
         initialFlightTimeLeft.put(player, flightTime);
         flightTimeLeft.put(player, flightTime);
+    }
+
+    private void HandleFlightTime(UUID playerId, boolean onPlayerQuitEvent) throws SQLException {
+        if (onPlayerQuitEvent){
+            int newTime = flightTimeLeft.getOrDefault(playerId, 0);
+            if (newTime > maxFlightTime)
+                newTime = maxFlightTime;
+
+            plugin.getDatabaseHandler().SetPlayerFlightTime(playerId, newTime);
+
+            initialFlightTimeLeft.remove(playerId);
+            flightTimeLeft.remove(playerId);
+            return;
+        }
+
+        int storedTime = plugin.getDatabaseHandler().GetPlayerFlightTime(playerId);
+        if (maxFlightTime > 0 && storedTime > maxFlightTime)
+            storedTime = maxFlightTime;
+
+        UpdatePlayerFlightTime(playerId, storedTime);
     }
 
     public void UpdateEffect(ElytraEffect effect){

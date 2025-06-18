@@ -27,4 +27,10 @@ public class PermissionsHelper {
                 player.hasPermission("elytraessentials.bypass.*") ||
                 player.hasPermission("elytraessentials.bypass.equipment");
     }
+
+    public static boolean hasReloadPermission(Player player) {
+        return player.hasPermission("elytraessentials.*") ||
+                player.hasPermission("elytraEssentials.command.*") ||
+                player.hasPermission("elytraEssentials.command.reload");
+    }
 }
