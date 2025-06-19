@@ -40,6 +40,9 @@ public class FlightTimePlaceholder extends PlaceholderExpansion {
             return "";
         }
 
+        if (!plugin.getConfigHandlerInstance().getIsTimeLimitEnabled())
+            return "Not Enabled";
+
         // Check for the flight time placeholder
         if (identifier.equals("flight_time") || identifier.equals("flight_time_formatted")) {
             if (player.hasPermission("elytraessentials.bypass.timelimit") ||
