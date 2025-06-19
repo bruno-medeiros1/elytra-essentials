@@ -9,6 +9,7 @@ import org.bruno.elytraEssentials.helpers.TimeHelper;
 import org.bruno.elytraEssentials.utils.ElytraEffect;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -21,6 +22,8 @@ import org.bukkit.event.entity.EntityToggleGlideEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.util.Vector;
 
 import java.sql.SQLException;
@@ -51,6 +54,7 @@ public class ElytraFlightListener implements Listener
     private boolean isGlobalFlightDisabled;
     private boolean isSpeedLimitEnabled;
     private boolean isTimeLimitEnabled;
+    private boolean isElytraBreakProtectionEnabled;
 
     private List disabledElytraWorlds;
     private HashMap<String, Double> perWorldSpeedLimits;
@@ -163,6 +167,7 @@ public class ElytraFlightListener implements Listener
         }
     }
 
+    //  TODO: Add methods to handle each logic in a more sustainable way
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
@@ -176,10 +181,6 @@ public class ElytraFlightListener implements Listener
             bossBarUpdateTimes.remove(playerId);
             return;
         }
-
-        //  Spawn Elytra Effect
-        if (playerActiveEffect != null)
-            plugin.getEffectsHandler().spawnParticleTrail(player, playerActiveEffect);
 
         //  Flight Time Handling
         if (this.isTimeLimitEnabled && !PermissionsHelper.PlayerBypassTimeLimit(player)) {
@@ -240,6 +241,25 @@ public class ElytraFlightListener implements Listener
             }
         }
 
+        if (this.isElytraBreakProtectionEnabled) {
+            ItemStack elytra = player.getInventory().getChestplate();
+
+            // Check if they are wearing an elytra and it can be damaged
+            if (elytra != null && elytra.getType() == Material.ELYTRA && elytra.getItemMeta() instanceof Damageable damageable) {
+                int currentDamage = damageable.getDamage();
+                int maxDurability = elytra.getType().getMaxDurability();
+
+                // (maxDurability - 1 is the state just before it breaks)
+                if (currentDamage >= maxDurability - 1) {
+                    if (noFallDamagePlayers.add(player)) { // .add() returns true if the element was not already in the set
+                        player.playSound(player.getLocation(), org.bukkit.Sound.ITEM_TOTEM_USE, 0.8f, 0.8f);
+                        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacy("§fFall Protection: §a§lEnabled"));
+                        return;
+                    }
+                }
+            }
+        }
+
         // Calculate speed (convert velocity magnitude to km/h)
         Vector velocity = player.getVelocity();
         double speed = velocity.length() * TICKS_IN_ONE_SECOND  * METERS_PER_SECOND_TO_KMH;
@@ -270,6 +290,11 @@ public class ElytraFlightListener implements Listener
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
                     TextComponent.fromLegacy("§eSpeed: " + color + String.format("%.2f", speed) + " §ekm/h"));
         }
+
+        //  Spawn Elytra Effect
+        //  TODO: Added check for TPS if < 18 disable temporarily until it gets above
+        if (playerActiveEffect != null)
+            plugin.getEffectsHandler().spawnParticleTrail(player, playerActiveEffect);
     }
 
     @EventHandler
@@ -308,6 +333,7 @@ public class ElytraFlightListener implements Listener
         this.perWorldSpeedLimits = configHandler.getPerWorldSpeedLimits();
         this.isTimeLimitEnabled = configHandler.getIsTimeLimitEnabled();
         this.maxFlightTime = configHandler.getMaxTimeLimit();
+        this.isElytraBreakProtectionEnabled = configHandler.getIsElytraBreakProtectionEnabled();
     }
 
     /// Method used on plugin reload to Handle time flight

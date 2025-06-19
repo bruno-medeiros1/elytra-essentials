@@ -9,6 +9,9 @@ general:
   # Players or groups with the permission 'elytraessentials.bypass.equipment' can bypass this restriction.
   disable-elytra-equipment: false # [Default: false]
 
+  # Set to true to prevent players from taking fall damage when their elytra breaks mid-air.
+  elytra-break-protection: false # [Default: false]
+
 flight:
   # Completely disable Elytra flight across all worlds.
   disable-global: false # [Default: false]
@@ -22,10 +25,7 @@ flight:
     # Players or groups with the permission 'elytraessentials.bypass.speedlimit' can bypass this limit.
     enabled: true # [Default: true]
 
-    # Default maximum flight speed in km/h.
-    # Without rockets: ~36 km/h
-    # With rockets (normal flight): ~108 km/h
-    # With rockets (steep dive): ~180 km/h
+    # Default maximum flight speed in km/h being 1 meter = 1 block
     default: 75 # [Default: 75]
 
     # Per-world flight speed limits (overrides the default).

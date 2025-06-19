@@ -2,6 +2,7 @@ package org.bruno.elytraEssentials.placeholders;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bruno.elytraEssentials.ElytraEssentials;
+import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.helpers.TimeHelper;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -45,9 +46,7 @@ public class FlightTimePlaceholder extends PlaceholderExpansion {
 
         // Check for the flight time placeholder
         if (identifier.equals("flight_time") || identifier.equals("flight_time_formatted")) {
-            if (player.hasPermission("elytraessentials.bypass.timelimit") ||
-                    player.hasPermission("elytraessentials.bypass.*") ||
-                    player.hasPermission("elytraessentials.*")) {
+            if (PermissionsHelper.PlayerBypassTimeLimit(player)) {
                 return "Unlimited Time";
             }
 
