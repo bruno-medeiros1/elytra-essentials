@@ -28,29 +28,9 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.UUID;
 
-//  TODO: [X] Add UpdateHandler to check for newer versions of the plugin
-//  TODO: [X] Disabled elytra globally
-//  TODO: [X] Allow to disable elytra only in specific worlds
-//  TODO: [X] Add multiple speed limits per world.
-//  TODO: [X] Easily disable the ability for players to equip an Elytra (add new config + permission to bypass that).
-//  TODO: [X] Restrict or completely disable Elytra flight on your server.
 
-//  TODO: [X] Add/set/remove flight time limits for players to ensure balanced gameplay.
-//  TODO: [] Enable automatic recovery of flight time or customize how players regain flight.
-//  TODO: [] Choose between a unique flight time display or show the exact remaining time for precision.
-//  TODO: [X] Prevent fall damage when players run out of flight time, keeping them safe.
-
-//  TODO: [] Fully customize Elytra flight, firework boosting, and riptide boosting across different worlds.
-//  TODO: [] Disable firework boosting or set a customizable cooldown to balance Elytra flight.
-//  TODO: [] Disable riptide boosting to prevent abuse.
-//  TODO: [X] Review the plugin commands
 //  TODO: [] Reward players with awesome Elytra flight effects, perfect for in-game purchases or special achievements.
-
-//  TODO: [X] Placeholders API support
-//  TODO: [X] Add BStats support
-//  TODO: [] Add support for multiple versions (1.20 >)
-//  TODO: [] Update for 1.21.5
-
+//  TODO: [] Add support for multiple versions
 
 public final class ElytraEssentials extends JavaPlugin {
     private final PluginDescriptionFile pluginDescriptionFile = this.getDescription();

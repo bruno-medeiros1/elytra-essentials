@@ -43,10 +43,10 @@ public final class MessagesHandler {
         this.elytraTimeLimit = this.fileConfiguration.getString("elytra-time-limit", "&eFlight Time Left: &6{0}");
         this.elytraBypassTimeLimit = this.fileConfiguration.getString("elytra-bypass-time-limit", "&eYou have infinite time!");
         this.elytraFlightTimeExpired = this.fileConfiguration.getString("elytra-flight-time-expired", "&cYour elytra flight time has expired...");
-        this.elytraFlightTimeAdded = this.fileConfiguration.getString("elytra-flight-time-added", "&aYou have received {0} extra seconds of flight time.");
-        this.elytraFlightTimeRemoved = this.fileConfiguration.getString("elytra-flight-time-removed", "&cYou have lost {0} seconds of flight time.");
+        this.elytraFlightTimeAdded = this.fileConfiguration.getString("elytra-flight-time-added", "&aYou have received {0} extra of flight time.");
+        this.elytraFlightTimeRemoved = this.fileConfiguration.getString("elytra-flight-time-removed", "&cYou have lost {0} of flight time.");
         this.elytraFlightTimeCleared = this.fileConfiguration.getString("elytra-flight-time-cleared", "&cYour flight time has been cleared.");
-        this.elytraFlightTimeSet = this.fileConfiguration.getString("elytra-flight-time-set", "&aYour flight time has been set to {0} seconds.");
+        this.elytraFlightTimeSet = this.fileConfiguration.getString("elytra-flight-time-set", "&aYour flight time has been set to {0}.");
         this.elytraFlightTimeRecovery = this.fileConfiguration.getString("elytra-flight-time-recovery", "&7You have recovered &a{0} &7of flight time.");
         this.elytraBoostCooldown = this.fileConfiguration.getString("elytra-boost-cooldown", "&cBoost is on cooldown! &6{0}s &cremaining...");
     }

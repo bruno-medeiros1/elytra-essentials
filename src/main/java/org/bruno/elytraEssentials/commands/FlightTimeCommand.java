@@ -4,6 +4,7 @@ import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.handlers.DatabaseHandler;
 import org.bruno.elytraEssentials.handlers.MessagesHandler;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
+import org.bruno.elytraEssentials.helpers.TimeHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -137,9 +138,9 @@ public class FlightTimeCommand implements ISubCommand {
             databaseHandler.SetPlayerFlightTime(player.getUniqueId(), newFlightTime);
             plugin.getElytraFlightListener().UpdatePlayerFlightTime(player.getUniqueId(), newFlightTime);
 
-            sender.sendMessage("§aAdded " + secondsToAdd + " seconds of flight time to " + player.getName() + ".");
+            sender.sendMessage("§aAdded " + TimeHelper.formatFlightTime(secondsToAdd) + " of flight time to " + player.getName() + ".");
 
-            String message = this.plugin.getMessagesHandlerInstance().getElytraFlightTimeAdded().replace("{0}", String.valueOf(secondsToAdd));
+            String message = this.plugin.getMessagesHandlerInstance().getElytraFlightTimeAdded().replace("{0}", TimeHelper.formatFlightTime(secondsToAdd));
             plugin.getMessagesHelper().sendPlayerMessage(player, message);
         }
         catch (Exception e) {
@@ -161,8 +162,8 @@ public class FlightTimeCommand implements ISubCommand {
                 plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getElytraFlightTimeCleared());
             }
             else {
-                sender.sendMessage("§aRemoved " + secondsToRemove + " seconds of flight time from " + player.getName() + ".");
-                String message = this.plugin.getMessagesHandlerInstance().getElytraFlightTimeRemoved().replace("{0}", String.valueOf(secondsToRemove));
+                sender.sendMessage("§aRemoved " + TimeHelper.formatFlightTime(secondsToRemove) + " of flight time from " + player.getName() + ".");
+                String message = this.plugin.getMessagesHandlerInstance().getElytraFlightTimeRemoved().replace("{0}", TimeHelper.formatFlightTime(secondsToRemove));
                 plugin.getMessagesHelper().sendPlayerMessage(player, message);
             }
         } catch (Exception e) {
@@ -179,13 +180,13 @@ public class FlightTimeCommand implements ISubCommand {
                 sender.sendMessage("§aSet " + player.getName() + "'s flight time to max time of: " + maxTimeLimit + " seconds.");
             }
             else{
-                sender.sendMessage("§aSet " + player.getName() + "'s flight time to " + newFlightTime + " seconds.");
+                sender.sendMessage("§aSet " + player.getName() + "'s flight time to " + TimeHelper.formatFlightTime(newFlightTime));
             }
 
             databaseHandler.SetPlayerFlightTime(player.getUniqueId(), newFlightTime);
             plugin.getElytraFlightListener().UpdatePlayerFlightTime(player.getUniqueId(), newFlightTime);
 
-            String message = this.plugin.getMessagesHandlerInstance().getElytraFlightTimeSet().replace("{0}", String.valueOf(newFlightTime));
+            String message = this.plugin.getMessagesHandlerInstance().getElytraFlightTimeSet().replace("{0}", TimeHelper.formatFlightTime((newFlightTime)));
             plugin.getMessagesHelper().sendPlayerMessage(player, message);
         }
         catch (Exception e) {
