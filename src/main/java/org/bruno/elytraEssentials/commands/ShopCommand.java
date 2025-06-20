@@ -4,6 +4,7 @@ import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.gui.ShopHolder;
 import org.bruno.elytraEssentials.handlers.MessagesHandler;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
+import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bruno.elytraEssentials.utils.ElytraEffect;
 import org.bukkit.*;
@@ -32,7 +33,7 @@ public class ShopCommand implements ISubCommand {
             return true;
         }
 
-        boolean canOpen = PlayerCanOpenShop((Player) sender);
+        boolean canOpen = PermissionsHelper.hasShopPermission((Player) sender);
         if (!canOpen) {
             messagesHelper.sendPlayerMessage((Player) sender, messagesHandler.getNoPermissionMessage());
             return true;
@@ -67,11 +68,5 @@ public class ShopCommand implements ISubCommand {
 
         player.getWorld().playSound(player.getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
         player.openInventory(shop);
-    }
-
-    private boolean PlayerCanOpenShop(Player player) {
-        return player.hasPermission("elytraEssentials.*") ||
-                player.hasPermission("elytraEssentials.command.*") ||
-                player.hasPermission("elytraEssentials.command.shop");
     }
 }

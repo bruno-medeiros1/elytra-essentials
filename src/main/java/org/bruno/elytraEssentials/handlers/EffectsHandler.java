@@ -3,6 +3,7 @@ package org.bruno.elytraEssentials.handlers;
 import net.milkbowl.vault.economy.Economy;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.helpers.ColorHelper;
+import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.utils.ElytraEffect;
 import org.bukkit.*;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -39,7 +40,7 @@ public class EffectsHandler {
         try {
             List<String> ownedEffects = plugin.getDatabaseHandler().GetOwnedEffectKeys(player.getUniqueId());
 
-            if (player.hasPermission("elytraessentials.effect.*") || player.hasPermission(effectPermission) || ownedEffects.contains(effectKey)) {
+            if (PermissionsHelper.hasElytraEffectsPermission(player) || player.hasPermission(effectPermission) || ownedEffects.contains(effectKey)) {
                 player.getWorld().playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
                 player.sendMessage(ChatColor.YELLOW + "You already own this effect!");
                 return;

@@ -4,6 +4,7 @@ import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.gui.EffectsHolder;
 import org.bruno.elytraEssentials.handlers.MessagesHandler;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
+import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bruno.elytraEssentials.utils.ElytraEffect;
 import org.bukkit.Bukkit;
@@ -36,7 +37,7 @@ public class EffectsCommand implements ISubCommand {
             return true;
         }
 
-        boolean canOpen = PlayerCanOpenOwnedEffects((Player) sender);
+        boolean canOpen = PermissionsHelper.hasEffectsPermission((Player) sender);
         if (!canOpen) {
             messagesHelper.sendPlayerMessage((Player) sender, messagesHandler.getNoPermissionMessage());
             return true;
@@ -75,11 +76,5 @@ public class EffectsCommand implements ISubCommand {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private boolean PlayerCanOpenOwnedEffects(Player player) {
-        return player.hasPermission("elytraEssentials.*") ||
-                player.hasPermission("elytraEssentials.command.*") ||
-                player.hasPermission("elytraEssentials.command.effects");
     }
 }

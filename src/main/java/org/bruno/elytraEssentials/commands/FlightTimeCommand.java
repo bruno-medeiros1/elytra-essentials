@@ -4,6 +4,7 @@ import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.handlers.DatabaseHandler;
 import org.bruno.elytraEssentials.handlers.MessagesHandler;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
+import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.helpers.TimeHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bukkit.Bukkit;
@@ -40,9 +41,7 @@ public class FlightTimeCommand implements ISubCommand {
         MessagesHelper messagesHelper = this.plugin.getMessagesHelper();
 
         // Permission check for players
-        if (sender instanceof Player && !sender.hasPermission("elytraEssentials.*")
-                && !sender.hasPermission("elytraessentials.command.*")
-                && !sender.hasPermission("elytraEssentials.command.flighttime")) {
+        if (sender instanceof Player && !PermissionsHelper.hasFlightTimeCommandPermission((Player) sender)) {
             messagesHelper.sendPlayerMessage((Player) sender, messagesHandler.getNoPermissionMessage());
             return true;
         }
@@ -61,8 +60,7 @@ public class FlightTimeCommand implements ISubCommand {
         }
 
         //  Check if target player has time limit bypass permission
-        if (target.hasPermission("elytraessentials.*") || target.hasPermission("elytraessentials.bypass.*")
-            || target.hasPermission("elytraessentials.bypass.timelimit")){
+        if (PermissionsHelper.PlayerBypassTimeLimit(target)){
             sender.sendMessage("§cThe player " + args[1] + " has time limit bypass");
             return true;
         }
