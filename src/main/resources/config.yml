@@ -12,6 +12,10 @@ general:
   # Set to true to prevent players from taking fall damage when their elytra breaks mid-air.
   elytra-break-protection: false # [Default: false]
 
+  # Set to true to prevent players from dying when they fly into a surface at high speed.
+  # This will not prevent players from dying if they do a nosedive and hit the ground
+  kinetic-energy-protection: false # [Default: false]
+
 flight:
   # Completely disable Elytra flight across all worlds.
   disable-global: false # [Default: false]

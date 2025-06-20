@@ -55,6 +55,7 @@ public class ElytraFlightListener implements Listener
     private boolean isSpeedLimitEnabled;
     private boolean isTimeLimitEnabled;
     private boolean isElytraBreakProtectionEnabled;
+    private boolean isKineticEnergyProtectionEnabled;
 
     private List disabledElytraWorlds;
     private HashMap<String, Double> perWorldSpeedLimits;
@@ -301,6 +302,12 @@ public class ElytraFlightListener implements Listener
     public void onPlayerDamage(EntityDamageEvent e) {
         if (!(e.getEntity() instanceof Player player)) return;
 
+        // First, check for high-speed wall collisions.
+        if (this.isKineticEnergyProtectionEnabled && e.getCause() == EntityDamageEvent.DamageCause.FLY_INTO_WALL) {
+            e.setCancelled(true);
+            return;
+        }
+
         // Check if the damage is fall damage and the player is in the no-fall-damage list
         if (e.getCause() == EntityDamageEvent.DamageCause.FALL && noFallDamagePlayers.contains(player)) {
             e.setCancelled(true);
@@ -334,6 +341,7 @@ public class ElytraFlightListener implements Listener
         this.isTimeLimitEnabled = configHandler.getIsTimeLimitEnabled();
         this.maxFlightTime = configHandler.getMaxTimeLimit();
         this.isElytraBreakProtectionEnabled = configHandler.getIsElytraBreakProtectionEnabled();
+        this.isKineticEnergyProtectionEnabled = configHandler.getIsKineticEnergyProtectionEnabled();
     }
 
     /// Method used on plugin reload to Handle time flight
