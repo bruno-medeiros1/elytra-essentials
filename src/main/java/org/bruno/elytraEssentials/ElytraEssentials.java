@@ -21,6 +21,8 @@ import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bstats.bukkit.Metrics;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.sql.SQLException;
 import java.util.Map;
@@ -68,10 +70,10 @@ public final class ElytraEssentials extends JavaPlugin {
     private ConfigHandler configHandler;
     private DatabaseHandler databaseHandler;
     private EffectsHandler effectsHandler;
+    private TpsHandler tpsHandler;
 
     private boolean databaseConnectionSuccessful = false;
     public boolean newerVersion = false;
-
     private static Economy economy  = null;
 
     public void onLoad() {
@@ -104,6 +106,9 @@ public final class ElytraEssentials extends JavaPlugin {
 
         obj = new RecoveryHandler(this);
         this.recoveryHandler = (RecoveryHandler) obj;
+
+        obj = new TpsHandler(this);
+        this.tpsHandler = (TpsHandler) obj;
 
         obj = new MessagesHandler(this.fileHelper.GetMessagesFileConfiguration());
         this.messagesHandler = (MessagesHandler) obj;
@@ -182,10 +187,16 @@ public final class ElytraEssentials extends JavaPlugin {
         this.messagesHelper.sendDebugMessage("&ewith additional ElytraEssentials information!");
         this.messagesHelper.sendDebugMessage("&eThis setting is not intended for ");
         this.messagesHelper.sendDebugMessage("&econtinous use!");
+
+        this.getTpsHandler().start();
     }
 
     @Override
     public void onDisable() {
+
+        //  Disable tasks
+        this.getTpsHandler().cancel();
+
         StackTraceElement[] stackTraceElementArray = Thread.currentThread().getStackTrace();
         boolean isReloading;
         block7: {
@@ -251,6 +262,7 @@ public final class ElytraEssentials extends JavaPlugin {
         this.configHandler = null;
         this.effectsHandler = null;
         this.recoveryHandler = null;
+        this.tpsHandler = null;
     }
 
     public MessagesHelper getMessagesHelper() { return this.messagesHelper; }
@@ -266,6 +278,8 @@ public final class ElytraEssentials extends JavaPlugin {
     }
 
     public EffectsHandler getEffectsHandler() { return this.effectsHandler; }
+
+    public TpsHandler getTpsHandler() { return this.tpsHandler; }
 
     public Economy getEconomy() {
         return this.economy;

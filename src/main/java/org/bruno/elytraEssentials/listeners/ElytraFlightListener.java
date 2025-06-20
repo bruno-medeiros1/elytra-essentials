@@ -293,8 +293,7 @@ public class ElytraFlightListener implements Listener
         }
 
         //  Spawn Elytra Effect
-        //  TODO: Added check for TPS if < 18 disable temporarily until it gets above
-        if (playerActiveEffect != null)
+        if (playerActiveEffect != null && !plugin.getTpsHandler().isLagProtectionActive())
             plugin.getEffectsHandler().spawnParticleTrail(player, playerActiveEffect);
     }
 
