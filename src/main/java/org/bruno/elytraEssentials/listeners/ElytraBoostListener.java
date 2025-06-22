@@ -8,6 +8,7 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
@@ -17,11 +18,13 @@ import java.util.HashMap;
 import java.util.UUID;
 
 public class ElytraBoostListener implements Listener {
+    // Cooldown
+    private static final long MINIMUM_COOLDOWN_MS = 500; // A small internal cooldown to prevent spam
 
-    private static final long MINIMUM_COOLDOWN = 100; // 100 milliseconds
+    // Boost strengths
+    private static final double BOOST_MULTIPLIER = 0.5;
+    private static final double SUPER_BOOST_MULTIPLIER = 1.0;
 
-    //  TODO: Review if this make sense to add as properties in the config
-    private static final double BOOST_MULTIPLIER = 0.2;
 
     private final ElytraEssentials plugin;
     private final HashMap<UUID, Long> cooldowns = new HashMap<>();
@@ -32,85 +35,109 @@ public class ElytraBoostListener implements Listener {
 
     @EventHandler
     public void onItemBoostRightClick(PlayerInteractEvent e) {
+        if (!plugin.getConfigHandlerInstance().getIsBoostEnabled())
+            return;
+
+        if (e.getHand() == EquipmentSlot.OFF_HAND) return; // Ignore off-hand actions
+
         Player player = e.getPlayer();
         if (!player.isGliding()) return;
 
-        // Check if the player right-clicked
-        if (e.getHand() == EquipmentSlot.OFF_HAND) return; // Ignore off-hand
-        if (!e.getAction().toString().contains("RIGHT_CLICK")) return;
+        // Ensure it's a right-click action
+        Action action = e.getAction();
+        if (action != Action.RIGHT_CLICK_AIR && action != Action.RIGHT_CLICK_BLOCK) return;
 
-        ItemStack item = player.getInventory().getItemInMainHand();
+        // Check if the player has permission for at least one of the boosts
+        if (!PermissionsHelper.hasElytraBoostPermission(player) && !PermissionsHelper.hasElytraSuperBoostPermission(player)) return;
 
-        // Get configured boost item
+        // Check for the configured boost item
+        ItemStack itemInHand = player.getInventory().getItemInMainHand();
         String configuredBoostMaterial = plugin.getConfigHandlerInstance().getBoostItem();
         Material configuredMaterial = Material.matchMaterial(configuredBoostMaterial);
-        if (configuredMaterial == null) {
-            plugin.getLogger().warning("Invalid item material " + configuredBoostMaterial + " in config.yml for the boost item");
+        if (configuredMaterial == null || itemInHand.getType() != configuredMaterial)
+            return;
+
+        // --- Cooldown Check ---
+        if (isOnCooldown(player)) {
             return;
         }
 
-        // Check if the item matches the configured material
-        if (item.getType() != configuredMaterial) return;
+        // --- Determine Boost Type and Apply ---
+        double boostMultiplier;
+        boolean isSuperBoost = player.isSneaking();
 
+        if (isSuperBoost) {
+            if (!PermissionsHelper.hasElytraSuperBoostPermission(player))
+                return;
 
-        //  cooldown
-        UUID playerId = player.getUniqueId();
-        long currentTime = System.currentTimeMillis();
-        long sinceLastBoost;
+            boostMultiplier = SUPER_BOOST_MULTIPLIER;
+        } else {
+            // Player is trying a normal boost
+            if (!PermissionsHelper.hasElytraBoostPermission(player))
+                return;
 
-        int cooldownTime = plugin.getConfigHandlerInstance().getBoostCooldown();
-        if (cooldownTime > MINIMUM_COOLDOWN) {
-            boolean playerBypassBoostCooldown = PermissionsHelper.PlayerBypassBoostCooldown(player);
-            if (!playerBypassBoostCooldown ) {
-                if (cooldowns.containsKey(playerId)) {
-                    sinceLastBoost = currentTime - cooldowns.get(playerId);
-                    int remainingSeconds = (int) (cooldownTime - sinceLastBoost) / 1000;
-                    if (sinceLastBoost < cooldownTime) {
-
-                        //  format message
-                        String boostCooldownMessageTemplate = ChatColor.translateAlternateColorCodes('&',
-                                plugin.getMessagesHandlerInstance().getElytraBoostCooldown());
-                        String boostCooldownMessage = boostCooldownMessageTemplate.replace("{0}", String.valueOf(remainingSeconds));
-                        plugin.getMessagesHelper().sendPlayerMessage(player, boostCooldownMessage);
-
-                        return;
-                    }
-                }
-                cooldowns.put(playerId, currentTime);
-            }
-        }
-        else{
-            if (cooldowns.containsKey(playerId)) {
-                sinceLastBoost = currentTime - cooldowns.get(playerId);
-                if (sinceLastBoost < MINIMUM_COOLDOWN) {
-                    return; // Prevent spamming even for bypass players
-                }
-            }
-            cooldowns.put(playerId, currentTime);
+            boostMultiplier = BOOST_MULTIPLIER;
         }
 
-        //  velocity calculation
-        Vector direction = player.getLocation().getDirection().normalize();
-        Vector currentVelocity = player.getVelocity();
-        Vector boost = direction.multiply(BOOST_MULTIPLIER).add(currentVelocity);
+        // --- Apply Boost and Effects ---
+        // Set the cooldown *after* all checks have passed
+        cooldowns.put(player.getUniqueId(), System.currentTimeMillis());
 
-        // Apply the boost
-        player.setVelocity(boost);
+        // Calculate and apply velocity
+        Vector direction = player.getLocation().getDirection();
+        Vector boost = direction.multiply(boostMultiplier);
+        player.setVelocity(player.getVelocity().add(boost));
 
-        //  Play sound
-        String configuredSoundName = plugin.getConfigHandlerInstance().getBoostSound().toUpperCase();
-        if (configuredSoundName.isBlank())
-            return;
+        //  TODO: Add visual indicator '+' for the speedometer upon boost usage
 
-        Sound sound = null;
+        // Play sound effect
+        playSound(player);
+    }
+
+    /**
+     * Checks if a player is on cooldown. Sends them a message if they are.
+     * @param player The player to check.
+     * @return True if the player is on cooldown, false otherwise.
+     */
+    private boolean isOnCooldown(Player player) {
+        int configuredCooldownMs = plugin.getConfigHandlerInstance().getBoostCooldown();
+        if (configuredCooldownMs <= MINIMUM_COOLDOWN_MS) {
+            return false; // Cooldown is disabled or too short in config.
+        }
+
+        // Bypass permission check
+        if (PermissionsHelper.PlayerBypassBoostCooldown(player)) {
+            return false;
+        }
+
+        long lastBoostTime = cooldowns.getOrDefault(player.getUniqueId(), 0L);
+        long timeSinceLastBoost = System.currentTimeMillis() - lastBoostTime;
+
+        if (timeSinceLastBoost < configuredCooldownMs) {
+            // Player is on cooldown, send them the message
+            long remainingMs = configuredCooldownMs - timeSinceLastBoost;
+            int remainingSeconds = (int) Math.ceil(remainingMs / 1000.0);
+
+            String messageTemplate = ChatColor.translateAlternateColorCodes('&', plugin.getMessagesHandlerInstance().getElytraBoostCooldown());
+            String message = messageTemplate.replace("{0}", String.valueOf(remainingSeconds));
+            plugin.getMessagesHelper().sendPlayerMessage(player, message);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Plays the configured boost sound for a player.
+     * @param player The player to play the sound for.
+     */
+    private void playSound(Player player) {
+        String soundName = plugin.getConfigHandlerInstance().getBoostSound().toUpperCase();
         try {
-            sound = Sound.valueOf(configuredSoundName);
+            Sound sound = Sound.valueOf(soundName);
+            player.getWorld().playSound(player.getLocation(), sound, 1.0f, 1.2f); // Slightly higher pitch for a "boost" feel
         } catch (IllegalArgumentException ex) {
-            plugin.getLogger().warning("Invalid sound name " + configuredSoundName + " in config.yml for the boost sound");
-        }
-
-        if (sound != null) {
-            player.getWorld().playSound(player.getLocation(), sound, 1.0f, 1.0f);
+            plugin.getLogger().warning("Invalid sound name '" + soundName + "' in config.yml for the boost sound.");
         }
     }
 }

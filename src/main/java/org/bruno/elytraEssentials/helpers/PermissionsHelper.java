@@ -77,4 +77,18 @@ public class PermissionsHelper {
     }
 
     //</editor-fold>
+
+    //<editor-fold desc="BOOSTS">
+
+    public static boolean hasElytraBoostPermission(Player player) {
+        return player.hasPermission("elytraessentials.*") ||
+                player.hasPermission("elytraessentials.elytra.boost");
+    }
+
+    public static boolean hasElytraSuperBoostPermission(Player player) {
+        return player.hasPermission("elytraessentials.*") ||
+                player.hasPermission("elytraessentials.elytra.superboost");
+    }
+
+    //</editor-fold>
 }

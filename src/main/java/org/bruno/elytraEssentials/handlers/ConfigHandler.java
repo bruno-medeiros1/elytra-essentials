@@ -40,6 +40,7 @@ public class ConfigHandler {
     private String password;
 
     //  Boost section
+    private boolean isBoostEnabled;
     private String boostItem;
     private int boostCooldown;
     private String boostSound;
@@ -93,9 +94,10 @@ public class ConfigHandler {
         this.username = this.fileConfiguration.getString("flight.time-limit.database.user", "root");
         this.password = this.fileConfiguration.getString("flight.time-limit.database.password", "");
 
+        this.isBoostEnabled = this.fileConfiguration.getBoolean("flight.boost.enabled", true);
         this.boostItem = this.fileConfiguration.getString("flight.boost.item", "FEATHER");
         this.boostCooldown = this.fileConfiguration.getInt("flight.boost.cooldown", 2000);
-        this.boostSound = this.fileConfiguration.getString("flight.boost.sound", "BLOCK_BEACON_ACTIVATE");
+        this.boostSound = this.fileConfiguration.getString("flight.boost.sound", "ENTITY_FIREWORK_ROCKET_LAUNCH");
     }
 
     public final boolean getIsDebugModeEnabled() {
@@ -132,6 +134,7 @@ public class ConfigHandler {
     public String getUsername() { return this.username; }
     public String getPassword() { return this.password; }
 
+    public final Boolean getIsBoostEnabled() { return this.isBoostEnabled; }
     public final String getBoostItem() { return this.boostItem; }
     public final Integer getBoostCooldown() { return this.boostCooldown; }
     public final String getBoostSound() { return this.boostSound; }

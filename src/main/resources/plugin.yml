@@ -65,3 +65,10 @@ permissions:
       elytraessentials.effect.*:
         default: op
         description: "Gives you access to all elytra effects"
+
+      elytraessentials.elytra.boost:
+        default: op
+        description: "Allows the player to use the basic elytra boost with right click"
+      elytraessentials.elytra.superboost:
+        default: op
+        description: "Allows the player to use the elytra super boost with right click + shift click"
