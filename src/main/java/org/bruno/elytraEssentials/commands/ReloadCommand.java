@@ -1,11 +1,7 @@
 package org.bruno.elytraEssentials.commands;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
-import org.bruno.elytraEssentials.handlers.ConfigHandler;
-import org.bruno.elytraEssentials.handlers.EffectsHandler;
-import org.bruno.elytraEssentials.handlers.MessagesHandler;
-import org.bruno.elytraEssentials.handlers.RecoveryHandler;
-import org.bruno.elytraEssentials.helpers.ColorHelper;
+import org.bruno.elytraEssentials.handlers.*;
 import org.bruno.elytraEssentials.helpers.FileHelper;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
@@ -80,6 +76,9 @@ public class ReloadCommand implements ISubCommand {
 
         RecoveryHandler recoveryHandler = new RecoveryHandler(this.plugin);
         this.plugin.setRecoveryHandler(recoveryHandler);
+
+        StatsHandler statsHandler = new StatsHandler(this.plugin);
+        this.plugin.setStatsHandler(statsHandler);
 
         //  handle database on reload
         var database = this.plugin.getDatabaseHandler();

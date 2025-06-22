@@ -23,6 +23,7 @@ public class ElytraEssentialsCommand implements CommandExecutor {
         subCommands.put("ft", new FlightTimeCommand(plugin));
         subCommands.put("shop", new ShopCommand(plugin));
         subCommands.put("effects", new EffectsCommand(plugin));
+        subCommands.put("stats", new StatsCommand(plugin));
     }
 
     @Override

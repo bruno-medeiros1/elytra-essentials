@@ -1,6 +1,7 @@
 package org.bruno.elytraEssentials.handlers;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
+import org.bruno.elytraEssentials.utils.PlayerStats;
 import org.bukkit.Bukkit;
 
 import java.sql.*;
@@ -9,6 +10,7 @@ import java.util.*;
 public class DatabaseHandler {
     private final static String ELYTRA_FLIGHT_TIME_TABLE = "elytra_flight_time";
     private final static String OWNED_EFFECTS_TABLE = "owned_effects";
+    private final static String PLAYER_STATS_TABLE = "player_stats";
 
     private String host;
     private int port;
@@ -147,6 +149,91 @@ public class DatabaseHandler {
         return null;
     }
 
+    /**
+     * Retrieves all statistics for a given player.
+     * If the player has no stats entry, a new default stats object is returned.
+     *
+     * @param uuid The UUID of the player.
+     * @return A PlayerStats object containing all their stats.
+     * @throws SQLException If a database error occurs.
+     */
+    public PlayerStats getPlayerStats(UUID uuid) throws SQLException {
+        String query = "SELECT * FROM " + PLAYER_STATS_TABLE + " WHERE uuid = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, uuid.toString());
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    // Player found, create a stats object from the data
+                    PlayerStats stats = new PlayerStats(uuid);
+                    stats.setTotalDistance(rs.getDouble("total_distance"));
+                    stats.setTotalTimeSeconds(rs.getLong("total_time_seconds"));
+                    stats.setLongestFlight(rs.getDouble("longest_flight"));
+                    stats.setBoostsUsed(rs.getInt("boosts_used"));
+                    stats.setSuperBoostsUsed(rs.getInt("super_boosts_used"));
+                    stats.setPluginSaves(rs.getInt("plugin_saves"));
+                    return stats;
+                }
+            }
+        }
+        // No entry found for this player, return a new object with default (zero) values
+        return new PlayerStats(uuid);
+    }
+
+    /**
+     * Resets all statistics for a given player back to their default zero values.
+     * @param uuid The UUID of the player to reset.
+     * @throws SQLException If a database error occurs.
+     */
+    public void resetPlayerStats(UUID uuid) throws SQLException {
+        String query = "UPDATE " + PLAYER_STATS_TABLE + " SET " +
+                "total_distance = 0, " +
+                "total_time_seconds = 0, " +
+                "longest_flight = 0, " +
+                "boosts_used = 0, " +
+                "super_boosts_used = 0, " +
+                "plugin_saves = 0 " +
+                "WHERE uuid = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, uuid.toString());
+            stmt.executeUpdate();
+        }
+    }
+
+    /**
+     * Saves a player's complete statistics to the database.
+     * This will create a new row if one doesn't exist, or update the existing one.
+     *
+     * @param stats The PlayerStats object to save.
+     * @throws SQLException If a database error occurs.
+     */
+    public void savePlayerStats(PlayerStats stats) throws SQLException {
+        String query = "INSERT INTO " + PLAYER_STATS_TABLE + " (uuid, total_distance, total_time_seconds, longest_flight, boosts_used, super_boosts_used, plugin_saves) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE " +
+                "total_distance = ?, total_time_seconds = ?, longest_flight = ?, boosts_used = ?, super_boosts_used = ?, plugin_saves = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            // Values for INSERT
+            stmt.setString(1, stats.getUuid().toString());
+            stmt.setDouble(2, stats.getTotalDistance());
+            stmt.setLong(3, stats.getTotalTimeSeconds());
+            stmt.setDouble(4, stats.getLongestFlight());
+            stmt.setInt(5, stats.getBoostsUsed());
+            stmt.setInt(6, stats.getSuperBoostsUsed());
+            stmt.setInt(7, stats.getPluginSaves());
+
+            // Values for UPDATE
+            stmt.setDouble(8, stats.getTotalDistance());
+            stmt.setLong(9, stats.getTotalTimeSeconds());
+            stmt.setDouble(10, stats.getLongestFlight());
+            stmt.setInt(11, stats.getBoostsUsed());
+            stmt.setInt(12, stats.getSuperBoostsUsed());
+            stmt.setInt(13, stats.getPluginSaves());
+
+            stmt.executeUpdate();
+        }
+    }
+
     public final void SetDatabaseVariables() {
         this.host = elytraEssentials.getConfigHandlerInstance().getHost();
         this.port = elytraEssentials.getConfigHandlerInstance().getPort();
@@ -158,9 +245,8 @@ public class DatabaseHandler {
     private void InitializeTables() throws SQLException {
         String createTableQuery = """
                 CREATE TABLE IF NOT EXISTS elytra_flight_time (
-                    uuid VARCHAR(36) NOT NULL,
-                    flight_time INT DEFAULT 0,
-                    PRIMARY KEY (uuid)
+                    uuid VARCHAR(36) PRIMARY KEY,
+                    flight_time INT DEFAULT 0
                 );
                 """;
 
@@ -174,9 +260,22 @@ public class DatabaseHandler {
                 );
                 """;
 
+        String createPlayerStatsTableQuery = """
+                CREATE TABLE IF NOT EXISTS player_stats (
+                    uuid VARCHAR(36) PRIMARY KEY,
+                    total_distance DOUBLE DEFAULT 0,
+                    total_time_seconds BIGINT DEFAULT 0,
+                    longest_flight DOUBLE DEFAULT 0,
+                    boosts_used INT DEFAULT 0,
+                    super_boosts_used INT DEFAULT 0,
+                    plugin_saves INT DEFAULT 0
+                );
+                """;
+
         try (Statement stmt = connection.createStatement()) {
             stmt.executeUpdate(createTableQuery);
             stmt.executeUpdate(createOwnedEffectsTableQuery);
+            stmt.executeUpdate(createPlayerStatsTableQuery);
         }
     }
 

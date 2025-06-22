@@ -2,6 +2,7 @@ package org.bruno.elytraEssentials.listeners;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
+import org.bruno.elytraEssentials.utils.PlayerStats;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -24,7 +25,6 @@ public class ElytraBoostListener implements Listener {
     // Boost strengths
     private static final double BOOST_MULTIPLIER = 0.5;
     private static final double SUPER_BOOST_MULTIPLIER = 1.0;
-
 
     private final ElytraEssentials plugin;
     private final HashMap<UUID, Long> cooldowns = new HashMap<>();
@@ -58,9 +58,10 @@ public class ElytraBoostListener implements Listener {
             return;
 
         // --- Cooldown Check ---
-        if (isOnCooldown(player)) {
+        if (isOnCooldown(player))
             return;
-        }
+
+        PlayerStats stats = plugin.getStatsHandler().getStats(player);
 
         // --- Determine Boost Type and Apply ---
         double boostMultiplier;
@@ -70,12 +71,13 @@ public class ElytraBoostListener implements Listener {
             if (!PermissionsHelper.hasElytraSuperBoostPermission(player))
                 return;
 
+            stats.incrementSuperBoostsUsed();
             boostMultiplier = SUPER_BOOST_MULTIPLIER;
         } else {
-            // Player is trying a normal boost
             if (!PermissionsHelper.hasElytraBoostPermission(player))
                 return;
 
+            stats.incrementBoostsUsed();
             boostMultiplier = BOOST_MULTIPLIER;
         }
 

@@ -7,6 +7,7 @@ import org.bruno.elytraEssentials.handlers.ConfigHandler;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.helpers.TimeHelper;
 import org.bruno.elytraEssentials.utils.ElytraEffect;
+import org.bruno.elytraEssentials.utils.PlayerStats;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -63,6 +64,7 @@ public class ElytraFlightListener implements Listener
     private final HashMap<UUID, Integer> initialFlightTimeLeft;
     private final HashMap<UUID, Integer> flightTimeLeft;
     private final Map<UUID, Long> bossBarUpdateTimes = new HashMap<>();
+    private final HashMap<UUID, Double> currentFlightDistances = new HashMap<>();
 
     private final HashMap<UUID, BossBar> flightBossBars;
     private final HashSet<Player> noFallDamagePlayers;
@@ -88,6 +90,8 @@ public class ElytraFlightListener implements Listener
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent e) throws SQLException {
+        plugin.getStatsHandler().loadPlayerStats(e.getPlayer());
+
         UUID playerId = e.getPlayer().getUniqueId();
 
         String effectName = plugin.getDatabaseHandler().getPlayerActiveEffect(playerId);
@@ -104,16 +108,29 @@ public class ElytraFlightListener implements Listener
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent e) throws SQLException {
+        plugin.getStatsHandler().savePlayerStats(e.getPlayer());
+
+        UUID playerId = e.getPlayer().getUniqueId();
+
+        // Clean up maps to prevent memory leaks
+        flightBossBars.remove(playerId);
+        currentFlightDistances.remove(playerId);
+        noFallDamagePlayers.remove(e.getPlayer());
+        bossBarUpdateTimes.remove(playerId);
+        initialFlightTimeLeft.remove(playerId);
+
         if (!isTimeLimitEnabled)
             return;
 
-        UUID playerId = e.getPlayer().getUniqueId();
         HandleFlightTime(playerId, true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerGlide(EntityToggleGlideEvent e) {
-        Player player = (Player) e.getEntity();
+        if (!(e.getEntity() instanceof Player player)) return;
+
+        plugin.getStatsHandler().setGliding(player, e.isGliding()); // Update gliding state for time tracking
+
         String playerWorld = player.getWorld().getName();
 
         if (this.isGlobalFlightDisabled) {
@@ -165,6 +182,19 @@ public class ElytraFlightListener implements Listener
                     }
                 }
             }
+        }
+
+        //  Stats Tracker
+        if (e.isGliding()) {
+            currentFlightDistances.put(player.getUniqueId(), 0.0);
+        } else {
+            PlayerStats stats = plugin.getStatsHandler().getStats(player);
+            double flightDistance = currentFlightDistances.getOrDefault(player.getUniqueId(), 0.0);
+
+            if (flightDistance > stats.getLongestFlight()) {
+                stats.setLongestFlight(flightDistance);
+            }
+            currentFlightDistances.remove(player.getUniqueId());
         }
     }
 
@@ -295,22 +325,37 @@ public class ElytraFlightListener implements Listener
         //  Spawn Elytra Effect
         if (playerActiveEffect != null && !plugin.getTpsHandler().isLagProtectionActive())
             plugin.getEffectsHandler().spawnParticleTrail(player, playerActiveEffect);
+
+        // --- NEW: Track Stats ---
+        PlayerStats stats = plugin.getStatsHandler().getStats(player);
+        double distanceMoved = event.getFrom().distance(event.getTo());
+
+        // Add to total distance
+        stats.addDistance(distanceMoved);
+
+        // Add to current flight distance (for longest flight calculation)
+        currentFlightDistances.compute(player.getUniqueId(), (uuid, dist) -> (dist == null ? 0 : dist) + distanceMoved);
+
     }
 
     @EventHandler
     public void onPlayerDamage(EntityDamageEvent e) {
         if (!(e.getEntity() instanceof Player player)) return;
 
+        PlayerStats stats = plugin.getStatsHandler().getStats(player);
+
         // First, check for high-speed wall collisions.
         if (this.isKineticEnergyProtectionEnabled && e.getCause() == EntityDamageEvent.DamageCause.FLY_INTO_WALL) {
             e.setCancelled(true);
+            stats.incrementPluginSaves();
             return;
         }
 
         // Check if the damage is fall damage and the player is in the no-fall-damage list
         if (e.getCause() == EntityDamageEvent.DamageCause.FALL && noFallDamagePlayers.contains(player)) {
             e.setCancelled(true);
-            noFallDamagePlayers.remove(player); // Remove after preventing damage to avoid permanent immunity
+            stats.incrementPluginSaves();
+            noFallDamagePlayers.remove(player);
         }
     }
 

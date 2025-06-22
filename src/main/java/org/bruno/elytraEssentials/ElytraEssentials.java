@@ -46,6 +46,7 @@ public final class ElytraEssentials extends JavaPlugin {
     private MessagesHelper messagesHelper;
     private FileHelper fileHelper;
     private RecoveryHandler recoveryHandler;
+    private StatsHandler statsHandler;
 
     private ConfigHandler configHandler;
     private DatabaseHandler databaseHandler;
@@ -93,6 +94,9 @@ public final class ElytraEssentials extends JavaPlugin {
         obj = new MessagesHandler(this.fileHelper.GetMessagesFileConfiguration());
         this.messagesHandler = (MessagesHandler) obj;
 
+        obj = new StatsHandler(this);
+        this.statsHandler = (StatsHandler) obj;
+
         obj = new MessagesHelper(this);
         this.messagesHelper = (MessagesHelper) obj;
 
@@ -113,7 +117,7 @@ public final class ElytraEssentials extends JavaPlugin {
             return;
         }
 
-        this.messagesHelper.sendConsoleMessage("&a-------------------------------------------");
+        this.messagesHelper.sendConsoleMessage("###########################################");
         this.messagesHelper.sendConsoleMessage("&aDetected Version &d" + Bukkit.getVersion());
         this.messagesHelper.sendConsoleMessage("&aLoading settings for Version &d" + Bukkit.getVersion());
 
@@ -159,7 +163,6 @@ public final class ElytraEssentials extends JavaPlugin {
         //  bStats
         new Metrics(this, 26164);
 
-        this.messagesHelper.sendConsoleMessage("###########################################");
         this.messagesHelper.sendConsoleMessage("&ePlugin by: &6&lCodingMaestro");
         this.messagesHelper.sendConsoleMessage("&eVersion: &6&l" + this.pluginVersion);
         this.messagesHelper.sendConsoleMessage("&ahas been loaded successfully");
@@ -171,6 +174,7 @@ public final class ElytraEssentials extends JavaPlugin {
         this.messagesHelper.sendDebugMessage("&econtinous use!");
 
         this.getTpsHandler().start();
+        this.getStatsHandler().start();
     }
 
     @Override
@@ -178,6 +182,7 @@ public final class ElytraEssentials extends JavaPlugin {
 
         //  Disable tasks
         this.getTpsHandler().cancel();
+        this.getStatsHandler().cancel();
 
         StackTraceElement[] stackTraceElementArray = Thread.currentThread().getStackTrace();
         boolean isReloading;
@@ -246,6 +251,7 @@ public final class ElytraEssentials extends JavaPlugin {
         this.effectsHandler = null;
         this.recoveryHandler = null;
         this.tpsHandler = null;
+        this.statsHandler = null;
     }
 
     public MessagesHelper getMessagesHelper() { return this.messagesHelper; }
@@ -263,6 +269,8 @@ public final class ElytraEssentials extends JavaPlugin {
     public EffectsHandler getEffectsHandler() { return this.effectsHandler; }
 
     public TpsHandler getTpsHandler() { return this.tpsHandler; }
+
+    public StatsHandler getStatsHandler() { return this.statsHandler; }
 
     public Economy getEconomy() {
         return this.economy;
@@ -283,6 +291,8 @@ public final class ElytraEssentials extends JavaPlugin {
     public void SetMessagesHelper(MessagesHelper messagesHelper) { this.messagesHelper = messagesHelper; }
 
     public void setFileHelper (FileHelper fileHelper) { this.fileHelper = fileHelper; }
+
+    public void setStatsHandler (StatsHandler statsHandler) { this.statsHandler = statsHandler; }
 
     private boolean setupEconomy() {
         if (getServer().getPluginManager().getPlugin("Vault") == null) {
