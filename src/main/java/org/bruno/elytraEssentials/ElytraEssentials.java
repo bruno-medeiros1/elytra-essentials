@@ -7,9 +7,10 @@ package org.bruno.elytraEssentials;
 
 import com.github.jewishbanana.playerarmorchangeevent.PlayerArmorListener;
 import net.milkbowl.vault.economy.Economy;
+import org.bruno.elytraEssentials.commands.EffectsCommand;
 import org.bruno.elytraEssentials.commands.ElytraEssentialsCommand;
+import org.bruno.elytraEssentials.commands.ShopCommand;
 import org.bruno.elytraEssentials.handlers.*;
-import org.bruno.elytraEssentials.helpers.ColorHelper;
 import org.bruno.elytraEssentials.helpers.FileHelper;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.VersionHelper;
@@ -21,8 +22,6 @@ import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bstats.bukkit.Metrics;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.sql.SQLException;
 import java.util.Map;
@@ -40,7 +39,8 @@ public final class ElytraEssentials extends JavaPlugin {
     private ElytraBoostListener elytraBoostListener;
     private ElytraEquipListener elytraEquipListener;
     private ElytraUpdaterListener elytraUpdaterListener;
-    private ElytraEffectsListener elytraEffectsListener;
+    private EffectsGuiListener effectsGuiListener;
+    private ShopGuiListener shopGuiListener;
 
     private MessagesHandler messagesHandler;
     private MessagesHelper messagesHelper;
@@ -125,12 +125,14 @@ public final class ElytraEssentials extends JavaPlugin {
         this.elytraBoostListener = new ElytraBoostListener(this);
         this.elytraEquipListener = new ElytraEquipListener(this);
         this.elytraUpdaterListener = new ElytraUpdaterListener(this);
-        this.elytraEffectsListener = new ElytraEffectsListener(this);
+        this.effectsGuiListener = new EffectsGuiListener(this, new EffectsCommand(this), new ShopCommand(this));
+        this.shopGuiListener = new ShopGuiListener(this, new EffectsCommand(this), new ShopCommand(this));
         Bukkit.getPluginManager().registerEvents(this.elytraFlightListener, this);
         Bukkit.getPluginManager().registerEvents(this.elytraBoostListener, this);
         Bukkit.getPluginManager().registerEvents(this.elytraEquipListener, this);
         Bukkit.getPluginManager().registerEvents(this.elytraUpdaterListener, this);
-        Bukkit.getPluginManager().registerEvents(this.elytraEffectsListener, this);
+        Bukkit.getPluginManager().registerEvents(this.effectsGuiListener, this);
+        Bukkit.getPluginManager().registerEvents(this.shopGuiListener, this);
 
         new PlayerArmorListener(this);
 
@@ -236,7 +238,8 @@ public final class ElytraEssentials extends JavaPlugin {
         this.elytraBoostListener = null;
         this.elytraEquipListener = null;
         this.elytraUpdaterListener = null;
-        this.elytraEffectsListener = null;
+        this.effectsGuiListener = null;
+        this.shopGuiListener = null;
         this.messagesHandler = null;
         this.messagesHelper = null;
         this.configHandler = null;

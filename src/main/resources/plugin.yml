@@ -33,7 +33,7 @@ permissions:
             description: "Allows reloading the plugin configuration with /ee reload."
           elytraessentials.command.flighttime:
             default: op
-            description: "Allows managing the flight time of a player with /ee flighttime add <player> <seconds>"
+            description: "Allows managing flight time in a player with /ee ft commands"
           elytraessentials.command.shop:
             default: true
             description: "Allows the use of /ee shop command"
@@ -60,7 +60,7 @@ permissions:
 
       elytraessentials.update.notify:
         default: op
-        description: Allows the player to receive update notifications.
+        description: "Allows the player to receive update notifications."
 
       elytraessentials.effect.*:
         default: op

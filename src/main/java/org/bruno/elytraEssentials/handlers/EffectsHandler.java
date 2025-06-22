@@ -36,21 +36,21 @@ public class EffectsHandler {
         loadEffectsConfig(fileConfiguration);
     }
 
-    public void handlePurchase(Player player, String effectKey, String effectPermission) {
+    public boolean handlePurchase(Player player, String effectKey, String effectPermission) {
         try {
             List<String> ownedEffects = plugin.getDatabaseHandler().GetOwnedEffectKeys(player.getUniqueId());
 
             if (PermissionsHelper.hasElytraEffectsPermission(player) || player.hasPermission(effectPermission) || ownedEffects.contains(effectKey)) {
                 player.getWorld().playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
                 player.sendMessage(ChatColor.YELLOW + "You already own this effect!");
-                return;
+                return false;
             }
 
             ElytraEffect effect = effectsRegistry.getOrDefault(effectKey, null);
             if (effect == null)
             {
                 plugin.getLogger().severe("An error occurred while trying to get the wanted effect to buy!" );
-                return;
+                return false;
             }
 
             double price = effect.getPrice();
@@ -59,23 +59,25 @@ public class EffectsHandler {
             if (!economy.has(player, price)) {
                 player.getWorld().playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
                 player.sendMessage(ChatColor.RED + "You do not have enough money to purchase this effect.");
-                return;
+                return false;
             }
 
             economy.withdrawPlayer(player, price);
             plugin.getDatabaseHandler().AddOwnedEffect(player.getUniqueId(), effectKey);
 
             player.getWorld().playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
-            player.sendMessage(ChatColor.GREEN + "You have purchased the " + effect.getName() + " effect!");
+            player.sendMessage(ChatColor.GRAY + "You have purchased the " + ColorHelper.ParseColoredString(effect.getName()) + ChatColor.GRAY + " effect!");
+            return true;
         }
         catch (SQLException e) {
             e.printStackTrace();
             player.getWorld().playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
             player.sendMessage(ChatColor.RED + "An error occurred while processing your purchase.");
         }
+        return false;
     }
 
-    public void handleSelection(Player player, String effectKey) {
+    public boolean handleSelection(Player player, String effectKey) {
         try {
             //  Make sure the other effect that may be selected gets deactivated so we don't get multiple active
             String oldEffectName = plugin.getDatabaseHandler().getPlayerActiveEffect(player.getUniqueId());
@@ -87,7 +89,7 @@ public class EffectsHandler {
             ElytraEffect selectedEffect = effectsRegistry.getOrDefault(effectKey, null);
             if (selectedEffect == null){
                 plugin.getLogger().severe("An error occurred while trying to get the selected effect!" );
-                return;
+                return false;
             }
 
             if (selectedEffect.getIsActive())
@@ -97,16 +99,17 @@ public class EffectsHandler {
 
 
             player.getWorld().playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
-            player.sendMessage(ChatColor.GREEN + "You have successfully selected " + selectedEffect.getName() + " effect!");
+            player.sendMessage(ChatColor.GRAY + "You have selected " + ColorHelper.ParseColoredString(selectedEffect.getName()) + ChatColor.GRAY + " effect!");
 
-            //  TODO: update the effect and make sure the flight listener gets the updated info
             plugin.getElytraFlightListener().UpdateEffect(selectedEffect);
-
-        } catch (SQLException e) {
+            return true;
+        }
+        catch (SQLException e) {
             e.printStackTrace();
             player.getWorld().playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
             player.sendMessage(ChatColor.RED + "An error occurred while trying to activate the effect!" );
         }
+        return false;
     }
 
     public ItemStack createShopItem(String effectKey, ElytraEffect effect, Player player) {
