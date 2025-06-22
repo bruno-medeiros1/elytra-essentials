@@ -49,12 +49,12 @@ public class ShopGuiListener implements Listener {
         switch (clickedSlot) {
             case CLOSE_SLOT:
                 player.closeInventory();
-                player.playSound(player.getLocation(), Sound.BLOCK_CHEST_CLOSE, 1.0f, 1.0f);
+                player.playSound(player.getLocation(), Sound.BLOCK_CHEST_CLOSE, 0.8f, 0.8f);
                 return;
 
             case PLAYER_HEAD_SLOT:
                 player.closeInventory();
-                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+                player.playSound(player.getLocation(), Sound.UI_LOOM_SELECT_PATTERN, 0.8f, 0.8f);
                 effectsCommand.OpenOwnedEffects(player);
                 return;
         }

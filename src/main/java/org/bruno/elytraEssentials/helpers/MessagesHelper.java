@@ -62,7 +62,7 @@ public class MessagesHelper {
 
     public void sendDebugMessage(String string) {
         if (debugEnabled) {
-            consoleCommandSender.sendMessage(ColorHelper.ParseColoredString("&CDebug&7: " + string));
+            consoleCommandSender.sendMessage(ColorHelper.ParseColoredString("&6Debug&7: " + string));
         }
     }
 

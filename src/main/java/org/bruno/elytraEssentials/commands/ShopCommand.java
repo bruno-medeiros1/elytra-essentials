@@ -19,7 +19,7 @@ import java.util.Map;
 public class ShopCommand implements ISubCommand {
 
     private static final int INVENTORY_SIZE = 36;
-    private static final String INVENTORY_NAME = "§6Shop";
+    private static final String INVENTORY_NAME = "§fShop";
 
     // Define the slot numbers for your control items
     private static final int PLAYER_HEAD_SLOT = 27; // Slot 27 is the first slot on the bottom row
@@ -44,7 +44,6 @@ public class ShopCommand implements ISubCommand {
         MessagesHandler messagesHandler = this.plugin.getMessagesHandlerInstance();
         MessagesHelper messagesHelper = this.plugin.getMessagesHelper();
 
-
         boolean canOpen = PermissionsHelper.hasShopPermission(player);
         if (!canOpen) {
             messagesHelper.sendPlayerMessage(player, messagesHandler.getNoPermissionMessage());
@@ -62,7 +61,7 @@ public class ShopCommand implements ISubCommand {
         populateShopItems(shop, player);
         addControlButtons(shop, player);
 
-        player.playSound(player.getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
+        player.playSound(player.getLocation(), Sound.BLOCK_CHEST_OPEN, 0.8f, 0.8f);
         player.openInventory(shop);
     }
 
@@ -96,7 +95,7 @@ public class ShopCommand implements ISubCommand {
      * Creates and places the static control buttons at the bottom of the GUI.
      */
     private void addControlButtons(Inventory shop, Player player) {
-        shop.setItem(PLAYER_HEAD_SLOT, GuiHelper.createPlayerHead(player, "§aYour Effects", "§7Click to view the effects you own."));
+        shop.setItem(PLAYER_HEAD_SLOT, GuiHelper.createPlayerHead(player, "§bYour Effects", "§7Click to view the effects you own."));
         shop.setItem(PREVIOUS_PAGE_SLOT, GuiHelper.createGuiItem(Material.RED_STAINED_GLASS_PANE, "§cPrevious Page", "§7You are on the first page."));
         shop.setItem(PAGE_INFO_SLOT, GuiHelper.createGuiItem(Material.COMPASS, "§ePage 1/1", "§7More effects coming soon!"));
         shop.setItem(NEXT_PAGE_SLOT, GuiHelper.createGuiItem(Material.GREEN_STAINED_GLASS_PANE, "§aNext Page", "§7You are on the last page."));

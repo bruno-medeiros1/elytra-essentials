@@ -6,6 +6,7 @@ import org.bruno.elytraEssentials.commands.ShopCommand;
 import org.bruno.elytraEssentials.gui.EffectsHolder;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -54,6 +55,7 @@ public class EffectsGuiListener implements Listener {
                 return;
 
             case CLOSE_SLOT:
+                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.8f, 0.8f);
                 player.closeInventory();
                 return;
         }

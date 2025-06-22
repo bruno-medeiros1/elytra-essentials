@@ -24,7 +24,7 @@ public class EffectsCommand implements ISubCommand {
 
     // --- Constants for the GUI Layout ---
     private static final int INVENTORY_SIZE = 27;
-    private static final String INVENTORY_NAME = "§bYour Effects";
+    private static final String INVENTORY_NAME = "§fYour Effects";
     private static final int ITEM_DISPLAY_LIMIT = 18; // Max items that can be shown (slots 0-17)
 
     // Define the slot numbers for the bottom control row (18-26)
@@ -55,7 +55,7 @@ public class EffectsCommand implements ISubCommand {
             return true;
         }
 
-        player.playSound(player.getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
+        player.playSound(player.getLocation(), Sound.UI_LOOM_SELECT_PATTERN, 0.8f, 0.8f);
         OpenOwnedEffects(player);
         return true;
     }
@@ -97,10 +97,8 @@ public class EffectsCommand implements ISubCommand {
 
         for (int i = 0; i < playerOwnedKeys.size(); i++) {
             // Stop if we reach the display limit to avoid overwriting control buttons
-            if (i >= ITEM_DISPLAY_LIMIT) {
-                plugin.getLogger().warning("Player " + player.getName() + " has more than " + ITEM_DISPLAY_LIMIT + " effects, not all will be shown.");
+            if (i >= ITEM_DISPLAY_LIMIT)
                 break;
-            }
 
             String effectKey = playerOwnedKeys.get(i);
             ElytraEffect elytraEffect = allEffects.get(effectKey);
@@ -118,10 +116,10 @@ public class EffectsCommand implements ISubCommand {
      * Creates and places the static control buttons at the bottom of the GUI.
      */
     private void addControlButtons(Inventory inv) {
-        inv.setItem(SHOP_SLOT, GuiHelper.createGuiItem(Material.EMERALD, "§aEffects Shop", "§7Click here to buy more effects."));
+        inv.setItem(SHOP_SLOT, GuiHelper.createGuiItem(Material.CHEST, "§aShop", "§7Click here to buy more effects."));
         inv.setItem(PREVIOUS_PAGE_SLOT, GuiHelper.createGuiItem(Material.RED_STAINED_GLASS_PANE, "§cPrevious Page", "§7You are on the first page."));
         inv.setItem(PAGE_INFO_SLOT, GuiHelper.createGuiItem(Material.COMPASS, "§ePage 1/1"));
-        inv.setItem(NEXT_PAGE_SLOT, GuiHelper.createGuiItem(Material.GREEN_STAINED_GLASS_PANE, "§cNext Page", "§7You are on the last page."));
+        inv.setItem(NEXT_PAGE_SLOT, GuiHelper.createGuiItem(Material.GREEN_STAINED_GLASS_PANE, "§aNext Page", "§7You are on the last page."));
         inv.setItem(CLOSE_SLOT, GuiHelper.createGuiItem(Material.BARRIER, "§cClose Menu", "§7Click to exit."));
     }
 }

@@ -41,7 +41,7 @@ public class EffectsHandler {
             List<String> ownedEffects = plugin.getDatabaseHandler().GetOwnedEffectKeys(player.getUniqueId());
 
             if (PermissionsHelper.hasElytraEffectsPermission(player) || player.hasPermission(effectPermission) || ownedEffects.contains(effectKey)) {
-                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 0.8f);
                 player.sendMessage(ChatColor.YELLOW + "You already own this effect!");
                 return false;
             }
@@ -57,7 +57,7 @@ public class EffectsHandler {
             Economy economy = plugin.getEconomy();
 
             if (!economy.has(player, price)) {
-                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 0.8f);
                 player.sendMessage(ChatColor.RED + "You do not have enough money to purchase this effect.");
                 return false;
             }
@@ -65,13 +65,13 @@ public class EffectsHandler {
             economy.withdrawPlayer(player, price);
             plugin.getDatabaseHandler().AddOwnedEffect(player.getUniqueId(), effectKey);
 
-            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
+            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 0.8f);
             player.sendMessage(ChatColor.GRAY + "You have purchased the " + ColorHelper.ParseColoredString(effect.getName()) + ChatColor.GRAY + " effect!");
             return true;
         }
         catch (SQLException e) {
             e.printStackTrace();
-            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 0.8f);
             player.sendMessage(ChatColor.RED + "An error occurred while processing your purchase.");
         }
         return false;
@@ -98,7 +98,7 @@ public class EffectsHandler {
                 plugin.getDatabaseHandler().UpdateOwnedEffect(player.getUniqueId(), effectKey, true);
 
 
-            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
+            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 0.8f);
             player.sendMessage(ChatColor.GRAY + "You have selected " + ColorHelper.ParseColoredString(selectedEffect.getName()) + ChatColor.GRAY + " effect!");
 
             plugin.getElytraFlightListener().UpdateEffect(selectedEffect);
@@ -106,7 +106,7 @@ public class EffectsHandler {
         }
         catch (SQLException e) {
             e.printStackTrace();
-            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 0.8f);
             player.sendMessage(ChatColor.RED + "An error occurred while trying to activate the effect!" );
         }
         return false;
@@ -245,7 +245,9 @@ public class EffectsHandler {
                 effect.setPrice(fileConfiguration.getDouble("shop." + key + ".price"));
                 effect.setPermission(fileConfiguration.getString("shop." + key + ".permission"));
 
-                effect.setName(fileConfiguration.getString("shop." + key + ".name"));
+                String effectName = fileConfiguration.getString("shop." + key + ".name");
+                if (effectName != null)
+                    effect.setName(ColorHelper.ParseColoredString(effectName));
 
                 // Handle lore as a list
                 List<String> loreLines = fileConfiguration.getStringList("shop." + key + ".lore");
@@ -284,6 +286,42 @@ public class EffectsHandler {
                 List.of("&7Shards of ice behind you!"),
                 1500,
                 "elytraessentials.effect.ice"
+        ));
+
+        effectsRegistry.put("ARCANE_TRAIL", new ElytraEffect(
+                "Arcane Trail",
+                Material.ENCHANTING_TABLE,
+                Particle.ENCHANT,
+                List.of("§7Leave a trail of mystical runes."),
+                2500,
+                "elytraessentials.effect.arcane"
+        ));
+
+        effectsRegistry.put("INKY_VOID", new ElytraEffect(
+                "Inky Void",
+                Material.INK_SAC,
+                Particle.SQUID_INK,
+                List.of("§7Soar with a trail of darkness."),
+                1750,
+                "elytraessentials.effect.void"
+        ));
+
+        effectsRegistry.put("HEART_TRAIL", new ElytraEffect(
+                "Heart Trail",
+                Material.POPPY,
+                Particle.HEART,
+                List.of("§7Spread love wherever you fly!"),
+                1250,
+                "elytraessentials.effect.heart"
+        ));
+
+        effectsRegistry.put("EMERALD_SPARK", new ElytraEffect(
+                "Emerald Spark",
+                Material.EMERALD,
+                Particle.HAPPY_VILLAGER,
+                List.of("§7Show off with a glittering green trail."),
+                3000,
+                "elytraessentials.effect.emerald"
         ));
     }
 

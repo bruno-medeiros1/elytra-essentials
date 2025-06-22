@@ -20,3 +20,27 @@ shop:
     name: "&aIce Shards"
     lore:
       - "&7Shards of ice behind you!"
+  ARCANE_TRAIL:
+    price: 2500.00
+    permission: "elytraessentials.effect.arcane"
+    name: "&dArcane Trail"
+    lore:
+      - "&7Leave a trail of mystical runes."
+  INKY_VOID:
+    price: 1750.00
+    permission: "elytraessentials.effect.void"
+    name: "&8Inky Void"
+    lore:
+      - "&7Soar with a trail of darkness."
+  HEART_TRAIL:
+    price: 1250.00
+    permission: "elytraessentials.effect.heart"
+    name: "&cHeart Trail"
+    lore:
+      - "&7Spread love wherever you fly!"
+  EMERALD_SPARK:
+    price: 3000.00
+    permission: "elytraessentials.effect.emerald"
+    name: "&aEmerald Spark"
+    lore:
+      - "&7Show off with a glittering green trail."
