@@ -28,9 +28,6 @@ import java.util.Map;
 import java.util.UUID;
 
 
-//  TODO: [] Reward players with awesome Elytra flight effects, perfect for in-game purchases or special achievements.
-//  TODO: [] Add support for multiple versions
-
 public final class ElytraEssentials extends JavaPlugin {
     private final PluginDescriptionFile pluginDescriptionFile = this.getDescription();
     private final String pluginVersion = this.pluginDescriptionFile.getVersion();
@@ -56,6 +53,7 @@ public final class ElytraEssentials extends JavaPlugin {
     private boolean databaseConnectionSuccessful = false;
     public boolean newerVersion = false;
     private static Economy economy  = null;
+    private ElytraEssentialsPlaceholders elytraStatsExpansion;
 
     public void onLoad() {
         this.getConfig().options().copyDefaults();
@@ -141,8 +139,7 @@ public final class ElytraEssentials extends JavaPlugin {
         new PlayerArmorListener(this);
 
         //  Placeholder API Expansion classes
-        new ElytraEssentialsPlaceholders(this).register();
-        this.messagesHelper.sendConsoleMessage("&aPlaceholderAPI support enabled!");
+        registerPlaceholders();
 
         boolean checkForUpdatesEnabled = this.configHandler.getIsCheckForUpdatesEnabled();
         if (checkForUpdatesEnabled) {
@@ -233,6 +230,9 @@ public final class ElytraEssentials extends JavaPlugin {
         }
 
         HandlerList.unregisterAll(this);
+
+        unregisterPlaceholders();
+
         this.messagesHelper.sendConsoleMessage("&aAll event listeners unregistered successfully!");
         this.messagesHelper.sendConsoleMessage("&aPlugin Version &d&l" + pluginVersion);
         this.messagesHelper.sendConsoleMessage("&aPlugin shutdown successfully!");
@@ -305,5 +305,22 @@ public final class ElytraEssentials extends JavaPlugin {
         }
         economy = rsp.getProvider();
         return true;
+    }
+
+    public void registerPlaceholders() {
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            this.elytraStatsExpansion = new ElytraEssentialsPlaceholders(this);
+            this.elytraStatsExpansion.register();
+            getLogger().info("Successfully hooked into PlaceholderAPI!");
+        } else {
+            getLogger().warning("PlaceholderAPI not found! Placeholders will not work.");
+        }
+    }
+
+    public void unregisterPlaceholders() {
+        if (this.elytraStatsExpansion != null) {
+            this.elytraStatsExpansion.unregister();
+            getLogger().info("Successfully unhooked from PlaceholderAPI.");
+        }
     }
 }

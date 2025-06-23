@@ -51,7 +51,6 @@ public class StatsHandler {
                 public void run() {
                     try {
                         plugin.getDatabaseHandler().savePlayerStats(stats);
-                        plugin.getLogger().info("Stats Saved");
 
                     } catch (SQLException e) {
                         plugin.getLogger().severe("Could not save stats for player " + player.getName());

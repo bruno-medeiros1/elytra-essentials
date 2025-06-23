@@ -44,23 +44,27 @@ public class ReloadCommand implements ISubCommand {
 
     private void ReloadPlugin() throws SQLException {
         try {
+            this.plugin.getMessagesHelper().sendDebugMessage("&eShutting down background tasks...");
             Bukkit.getScheduler().cancelTasks(this.plugin);
+
+            this.plugin.getMessagesHelper().sendDebugMessage("&eSaving to database...");
+            this.plugin.getDatabaseHandler().save();
+
+            this.plugin.getMessagesHelper().sendDebugMessage("&Disconnecting the database...");
             this.plugin.getDatabaseHandler().Disconnect();
 
-            this.plugin.getMessagesHelper().sendConsoleMessage("&aAll background tasks disabled successfully!");
         } catch (Exception exception) {
             this.plugin.getMessagesHelper().sendConsoleMessage("&aAll background tasks disabled successfully!");
         }
 
-        boolean isOldTimeLimitEnabled = plugin.getConfigHandlerInstance().getIsTimeLimitEnabled();
-
-        this.plugin.getMessagesHelper().sendConsoleMessage("&aReloading config.yml...");
+        this.plugin.getMessagesHelper().sendDebugMessage("&aReloading config.yml...");
+        this.plugin.saveDefaultConfig();
         this.plugin.reloadConfig();
 
         FileHelper fileHelper = new FileHelper(plugin);
         plugin.setFileHelper(fileHelper);
 
-        this.plugin.getMessagesHelper().sendConsoleMessage("&aReloading messages.yml...");
+        this.plugin.getMessagesHelper().sendDebugMessage("&aReloading messages.yml...");
         ConfigHandler configHandler = new ConfigHandler(this.plugin.getConfig());
         this.plugin.setConfigHandler(configHandler);
 
@@ -70,7 +74,7 @@ public class ReloadCommand implements ISubCommand {
         MessagesHelper messagesHelper = new MessagesHelper(this.plugin);
         this.plugin.SetMessagesHelper(messagesHelper);
 
-        this.plugin.getMessagesHelper().sendConsoleMessage("&aReloading shop.yml...");
+        this.plugin.getMessagesHelper().sendDebugMessage("&aReloading shop.yml...");
         EffectsHandler effectsHandler = new EffectsHandler(this.plugin, fileHelper.GetShopFileConfiguration());
         this.plugin.setEffectsHandler(effectsHandler);
 
@@ -80,20 +84,25 @@ public class ReloadCommand implements ISubCommand {
         StatsHandler statsHandler = new StatsHandler(this.plugin);
         this.plugin.setStatsHandler(statsHandler);
 
-        //  handle database on reload
+        //  ElytraFlightListener
+        this.plugin.getElytraFlightListener().AssignConfigVariables();
+
+        this.plugin.getMessagesHelper().setDebugMode(this.plugin.getConfigHandlerInstance().getIsDebugModeEnabled());
+
+        this.plugin.getMessagesHelper().sendDebugMessage("&eRe-connecting to database and starting tasks...");
         var database = this.plugin.getDatabaseHandler();
         database.SetDatabaseVariables();
         database.Initialize();
 
-        //  ElytraFlightListener
-        this.plugin.getElytraFlightListener().AssignConfigVariables();
+        this.plugin.registerPlaceholders();
 
-        //  Handling flight time data structures to be updated in the listener
-        boolean isNewTimeLimitEnabled = plugin.getConfigHandlerInstance().getIsTimeLimitEnabled();
-        if (!isOldTimeLimitEnabled && isNewTimeLimitEnabled)
-            this.plugin.getElytraFlightListener().validateFlightTimeOnReload();
+        this.plugin.getMessagesHelper().sendDebugMessage("&eReloading stats for all online players...");
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            this.plugin.getStatsHandler().loadPlayerStats(player);
+        }
 
-
-        this.plugin.getMessagesHelper().setDebugMode(this.plugin.getConfigHandlerInstance().getIsDebugModeEnabled());
+        this.plugin.getTpsHandler().start();
+        this.plugin.getStatsHandler().start();
+        this.plugin.getRecoveryHandler().start();
     }
 }

@@ -3,6 +3,7 @@ package org.bruno.elytraEssentials.handlers;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.utils.PlayerStats;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 
 import java.sql.*;
 import java.util.*;
@@ -18,16 +19,16 @@ public class DatabaseHandler {
     private String username;
     private String password;
 
-    private final ElytraEssentials elytraEssentials;
+    private final ElytraEssentials plugin;
 
     private Connection connection;
 
-    public DatabaseHandler(ElytraEssentials elytraEssentials){
-        this.elytraEssentials = elytraEssentials;
+    public DatabaseHandler(ElytraEssentials plugin){
+        this.plugin = plugin;
 
         SetDatabaseVariables();
 
-        //StartPeriodicSaving();
+        //  TODO: Add StartPeriodicSaving() to save data hourly
     }
 
     public void Initialize() throws SQLException {
@@ -49,7 +50,7 @@ public class DatabaseHandler {
         if (IsConnected()) {
             try {
                 connection.close();
-                this.elytraEssentials.getMessagesHelper().sendDebugMessage("Database was closed successfully!");
+                this.plugin.getMessagesHelper().sendDebugMessage("Database was closed successfully!");
             } catch (SQLException e){
                 Bukkit.getLogger().severe("Failed to close the connection to the database.");
                 Bukkit.getLogger().severe("Error: " + e.getMessage());
@@ -234,11 +235,25 @@ public class DatabaseHandler {
     }
 
     public final void SetDatabaseVariables() {
-        this.host = elytraEssentials.getConfigHandlerInstance().getHost();
-        this.port = elytraEssentials.getConfigHandlerInstance().getPort();
-        this.database = elytraEssentials.getConfigHandlerInstance().getDatabase();
-        this.username = elytraEssentials.getConfigHandlerInstance().getUsername();
-        this.password = elytraEssentials.getConfigHandlerInstance().getPassword();
+        this.host = plugin.getConfigHandlerInstance().getHost();
+        this.port = plugin.getConfigHandlerInstance().getPort();
+        this.database = plugin.getConfigHandlerInstance().getDatabase();
+        this.username = plugin.getConfigHandlerInstance().getUsername();
+        this.password = plugin.getConfigHandlerInstance().getPassword();
+    }
+
+    public final void save() throws SQLException {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            PlayerStats stats = this.plugin.getStatsHandler().getStats(player);
+            if (stats != null)
+                this.plugin.getDatabaseHandler().savePlayerStats(stats);
+
+            //  Time Flight if feature is enabled
+            if (!this.plugin.getConfigHandlerInstance().getIsTimeLimitEnabled())
+                return;
+        }
+
+        this.plugin.getElytraFlightListener().validateFlightTimeOnReload();
     }
 
     private void InitializeTables() throws SQLException {
@@ -277,19 +292,4 @@ public class DatabaseHandler {
             stmt.executeUpdate(createPlayerStatsTableQuery);
         }
     }
-
-//    private void StartPeriodicSaving(){
-//        new BukkitRunnable() {
-//            @Override
-//            public void run() {
-//                for (Map.Entry<UUID, Integer> entry : elytraEssentials.getElytraFlightListener().GetAllActiveFlights().entrySet()) {
-//                    try {
-//                        SetPlayerFlightTime(entry.getKey(), entry.getValue());
-//                    } catch (SQLException e) {
-//                        throw new RuntimeException(e);
-//                    }
-//                }
-//            }
-//        }.runTaskTimerAsynchronously(elytraEssentials, 20 * 60 * 5, 20 * 60 * 5); // Every 5 minutes
-//    }
 }
