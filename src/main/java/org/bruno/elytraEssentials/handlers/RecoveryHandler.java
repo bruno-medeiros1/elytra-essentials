@@ -5,6 +5,7 @@ import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.helpers.TimeHelper;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.UUID;
 
@@ -16,14 +17,27 @@ public class RecoveryHandler
     private int recoveryInterval;
     private boolean isNotifyOnRecoveryEnabled;
 
+    private BukkitTask task;
 
     public RecoveryHandler(ElytraEssentials plugin) {
         this.plugin = plugin;
-
-        startRecoveryTask();
     }
 
-    public void startRecoveryTask() {
+    public void start() {
+        if (this.task != null)
+            return;
+
+        this.task = Bukkit.getScheduler().runTaskTimer(plugin, this::recoveryTask, 0L, 1L);
+    }
+
+    public void cancel() {
+        if (this.task != null) {
+            this.task.cancel();
+            this.task = null;
+        }
+    }
+
+    public void recoveryTask() {
         var config = plugin.getConfigHandlerInstance();
         if (!config.getIsTimeLimitEnabled() || !config.getIsRecoveryEnabled()) return;
 

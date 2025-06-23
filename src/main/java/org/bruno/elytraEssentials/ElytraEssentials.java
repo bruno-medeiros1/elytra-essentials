@@ -15,7 +15,7 @@ import org.bruno.elytraEssentials.helpers.FileHelper;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.VersionHelper;
 import org.bruno.elytraEssentials.listeners.*;
-import org.bruno.elytraEssentials.placeholders.FlightTimePlaceholder;
+import org.bruno.elytraEssentials.placeholders.ElytraEssentialsPlaceholders;
 import org.bukkit.Bukkit;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -140,12 +140,9 @@ public final class ElytraEssentials extends JavaPlugin {
 
         new PlayerArmorListener(this);
 
-        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
-            new FlightTimePlaceholder(this).register();
-            this.messagesHelper.sendConsoleMessage("PlaceholderAPI support enabled!");
-        } else {
-            getLogger().warning("PlaceholderAPI not found. Placeholder support is disabled.");
-        }
+        //  Placeholder API Expansion classes
+        new ElytraEssentialsPlaceholders(this).register();
+        this.messagesHelper.sendConsoleMessage("&aPlaceholderAPI support enabled!");
 
         boolean checkForUpdatesEnabled = this.configHandler.getIsCheckForUpdatesEnabled();
         if (checkForUpdatesEnabled) {
@@ -173,6 +170,7 @@ public final class ElytraEssentials extends JavaPlugin {
         this.messagesHelper.sendDebugMessage("&eThis setting is not intended for ");
         this.messagesHelper.sendDebugMessage("&econtinous use!");
 
+        this.getRecoveryHandler().start();
         this.getTpsHandler().start();
         this.getStatsHandler().start();
     }
@@ -181,6 +179,7 @@ public final class ElytraEssentials extends JavaPlugin {
     public void onDisable() {
 
         //  Disable tasks
+        this.getRecoveryHandler().cancel();
         this.getTpsHandler().cancel();
         this.getStatsHandler().cancel();
 
@@ -267,6 +266,8 @@ public final class ElytraEssentials extends JavaPlugin {
     }
 
     public EffectsHandler getEffectsHandler() { return this.effectsHandler; }
+
+    public RecoveryHandler getRecoveryHandler() { return this.recoveryHandler; }
 
     public TpsHandler getTpsHandler() { return this.tpsHandler; }
 

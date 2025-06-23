@@ -5,7 +5,6 @@ import org.bruno.elytraEssentials.handlers.StatsHandler;
 import org.bruno.elytraEssentials.helpers.TimeHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bruno.elytraEssentials.utils.PlayerStats;
-import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -23,16 +22,13 @@ public class StatsCommand implements ISubCommand {
     }
 
     @Override
-    public boolean Execute(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage(ChatColor.RED + "This command can only be run by a player.");
+    public boolean Execute(CommandSender sender, String[] args) throws SQLException {
+        if (!(sender instanceof Player player))
             return true;
-        }
 
         // Get the cached stats object for the player
         PlayerStats stats = statsHandler.getStats(player);
 
-        // --- Calculate Derived Stats ---
         // Average Speed
         double totalDistance = stats.getTotalDistance();
         long totalTime = stats.getTotalTimeSeconds();
@@ -42,26 +38,11 @@ public class StatsCommand implements ISubCommand {
             avgSpeedKmh = avgSpeedBps * 3.6;
         }
 
-        // Effects Unlocked
-        int effectsOwned = 0;
-        try {
-            effectsOwned = plugin.getDatabaseHandler().GetOwnedEffectKeys(player.getUniqueId()).size();
-        } catch (SQLException e) {
-            player.sendMessage(ChatColor.RED + "Could not load effect count.");
-            e.printStackTrace();
-        }
+        int effectsOwned = plugin.getDatabaseHandler().GetOwnedEffectKeys(player.getUniqueId()).size();
         int totalEffects = plugin.getEffectsHandler().getEffectsRegistry().size();
-
-        // Active Effect
-        String activeEffect;
-        try {
-            activeEffect = plugin.getDatabaseHandler().getPlayerActiveEffect(player.getUniqueId());
-        } catch (SQLException e) {
-            activeEffect = "Error";
-        }
-        if (activeEffect == null) {
+        String activeEffect = plugin.getDatabaseHandler().getPlayerActiveEffect(player.getUniqueId());
+        if (activeEffect == null)
             activeEffect = "None";
-        }
 
         player.sendMessage("§6--- Your Elytra Statistics ---");
         player.sendMessage(String.format("§eTotal Distance Flown: §f%.1f km", totalDistance / METERS_IN_ONE_KILOMETER));
