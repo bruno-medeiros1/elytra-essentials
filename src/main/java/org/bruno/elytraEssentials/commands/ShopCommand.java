@@ -1,6 +1,7 @@
 package org.bruno.elytraEssentials.commands;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
+import org.bruno.elytraEssentials.constants.GuiConstants;
 import org.bruno.elytraEssentials.gui.ShopHolder;
 import org.bruno.elytraEssentials.handlers.MessagesHandler;
 import org.bruno.elytraEssentials.helpers.GuiHelper;
@@ -17,17 +18,6 @@ import org.bukkit.inventory.ItemStack;
 import java.util.Map;
 
 public class ShopCommand implements ISubCommand {
-
-    private static final int INVENTORY_SIZE = 36;
-    private static final String INVENTORY_NAME = "§fShop";
-
-    // Define the slot numbers for your control items
-    private static final int PLAYER_HEAD_SLOT = 27; // Slot 27 is the first slot on the bottom row
-    private static final int PREVIOUS_PAGE_SLOT = 30;
-    private static final int PAGE_INFO_SLOT = 31;
-    private static final int NEXT_PAGE_SLOT = 32;
-    private static final int CLOSE_SLOT = 35; // The last slot in the bottom row
-
     private final ElytraEssentials plugin;
 
     public ShopCommand(ElytraEssentials plugin) {
@@ -36,10 +26,8 @@ public class ShopCommand implements ISubCommand {
 
     @Override
     public boolean Execute(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage(ChatColor.RED + "Only players can use this command.");
+        if (!(sender instanceof Player player))
             return true;
-        }
 
         MessagesHandler messagesHandler = this.plugin.getMessagesHandlerInstance();
         MessagesHelper messagesHelper = this.plugin.getMessagesHelper();
@@ -55,7 +43,7 @@ public class ShopCommand implements ISubCommand {
     }
 
     public void OpenShop(Player player) {
-        Inventory shop = Bukkit.createInventory(new ShopHolder(), INVENTORY_SIZE, INVENTORY_NAME);
+        Inventory shop = Bukkit.createInventory(new ShopHolder(), GuiConstants.SHOP_INVENTORY_SIZE, GuiConstants.SHOP_INVENTORY_NAME);
 
         // Populate the shop with items, borders, and controls
         populateShopItems(shop, player);
@@ -65,10 +53,7 @@ public class ShopCommand implements ISubCommand {
         player.openInventory(shop);
     }
 
-    /**
-     * Fills the shop with the available elytra effects.
-     * NOTE: This current implementation does not support pagination.
-     */
+    //  TODO: This current implementation does not support pagination.
     private void populateShopItems(Inventory shop, Player player) {
         Map<String, ElytraEffect> effects = plugin.getEffectsHandler().getEffectsRegistry();
         if (effects.isEmpty()) {
@@ -91,14 +76,11 @@ public class ShopCommand implements ISubCommand {
         }
     }
 
-    /**
-     * Creates and places the static control buttons at the bottom of the GUI.
-     */
     private void addControlButtons(Inventory shop, Player player) {
-        shop.setItem(PLAYER_HEAD_SLOT, GuiHelper.createPlayerHead(player, "§bYour Effects", "§7Click to view the effects you own."));
-        shop.setItem(PREVIOUS_PAGE_SLOT, GuiHelper.createGuiItem(Material.RED_STAINED_GLASS_PANE, "§cPrevious Page", "§7You are on the first page."));
-        shop.setItem(PAGE_INFO_SLOT, GuiHelper.createGuiItem(Material.COMPASS, "§ePage 1/1", "§7More effects coming soon!"));
-        shop.setItem(NEXT_PAGE_SLOT, GuiHelper.createGuiItem(Material.GREEN_STAINED_GLASS_PANE, "§aNext Page", "§7You are on the last page."));
-        shop.setItem(CLOSE_SLOT, GuiHelper.createGuiItem(Material.BARRIER, "§cClose Menu", "§7Click to exit the shop."));
+        shop.setItem(GuiConstants.SHOP_PLAYER_HEAD_SLOT, GuiHelper.createPlayerHead(player, "§bYour Effects", "§7Click to view the effects you own."));
+        shop.setItem(GuiConstants.SHOP_PREVIOUS_PAGE_SLOT, GuiHelper.createGuiItem(Material.RED_STAINED_GLASS_PANE, "§cPrevious Page", "§7You are on the first page."));
+        shop.setItem(GuiConstants.SHOP_PAGE_INFO_SLOT, GuiHelper.createGuiItem(Material.COMPASS, "§ePage 1/1", "§7More effects coming soon!"));
+        shop.setItem(GuiConstants.SHOP_NEXT_PAGE_SLOT, GuiHelper.createGuiItem(Material.GREEN_STAINED_GLASS_PANE, "§aNext Page", "§7You are on the last page."));
+        shop.setItem(GuiConstants.SHOP_CLOSE_SLOT, GuiHelper.createGuiItem(Material.BARRIER, "§cClose Menu", "§7Click to exit the shop."));
     }
 }

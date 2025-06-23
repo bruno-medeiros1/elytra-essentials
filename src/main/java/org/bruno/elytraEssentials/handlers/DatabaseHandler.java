@@ -203,7 +203,6 @@ public class DatabaseHandler {
     /**
      * Saves a player's complete statistics to the database.
      * This will create a new row if one doesn't exist, or update the existing one.
-     *
      * @param stats The PlayerStats object to save.
      * @throws SQLException If a database error occurs.
      */

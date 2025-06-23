@@ -3,6 +3,7 @@ package org.bruno.elytraEssentials.listeners;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.commands.EffectsCommand;
 import org.bruno.elytraEssentials.commands.ShopCommand;
+import org.bruno.elytraEssentials.constants.GuiConstants;
 import org.bruno.elytraEssentials.gui.EffectsHolder;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -21,10 +22,6 @@ public class EffectsGuiListener implements Listener {
     private final EffectsCommand effectsCommand;
     private final ShopCommand shopCommand;
 
-    // These should match the values in your EffectsCommand class
-    private static final int SHOP_SLOT = 18;
-    private static final int CLOSE_SLOT = 26;
-
     public EffectsGuiListener(ElytraEssentials plugin, EffectsCommand effectsCommand, ShopCommand shopCommand) {
         this.plugin = plugin;
         this.effectsCommand = effectsCommand;
@@ -33,47 +30,49 @@ public class EffectsGuiListener implements Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        // We only care about clicks inside the EffectsHolder GUI
-        if (event.getInventory().getHolder() == null || !(event.getInventory().getHolder() instanceof EffectsHolder)) {
+        if (event.getInventory().getHolder() == null || !(event.getInventory().getHolder() instanceof EffectsHolder))
             return;
-        }
 
-        // Always cancel the event to prevent players from taking items
         event.setCancelled(true);
-
         if (!(event.getWhoClicked() instanceof Player player)) return;
-
         ItemStack clickedItem = event.getCurrentItem();
         if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
 
         int clickedSlot = event.getSlot();
 
         switch (clickedSlot) {
-            case SHOP_SLOT:
+            case GuiConstants.EFFECTS_SHOP_SLOT:
                 player.closeInventory();
                 shopCommand.OpenShop(player);
                 return;
 
-            case CLOSE_SLOT:
+            case GuiConstants.EFFECTS_CLOSE_SLOT:
                 player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.8f, 0.8f);
                 player.closeInventory();
                 return;
         }
 
         ItemMeta meta = clickedItem.getItemMeta();
-        if (meta != null) {
-            String effectKey = meta.getPersistentDataContainer().get(
-                    new NamespacedKey(plugin, "effect_key"),
-                    PersistentDataType.STRING
-            );
-            // If the item has no effect key, it's a filler pane, so do nothing.
-            if (effectKey == null) return;
+        if (meta == null) return;
 
-            // Attempt to select the effect
+        String effectKey = meta.getPersistentDataContainer().get(
+                new NamespacedKey(plugin, "effect_key"),
+                PersistentDataType.STRING
+        );
+        if (effectKey == null) return; // It's a filler pane or control button without a key.
+
+        if (event.isLeftClick()) {
+            // Player wants to SELECT a new effect.
             boolean selectionSuccess = plugin.getEffectsHandler().handleSelection(player, effectKey);
-            if (selectionSuccess) {
-                effectsCommand.OpenOwnedEffects(player);
-            }
+            if (selectionSuccess)
+                effectsCommand.OpenOwnedEffects(player); // Refresh GUI to show new active effect
+
+        } else if (event.isRightClick()) {
+            // Player wants to DESELECT their active effect.
+            boolean deselectionSuccess = plugin.getEffectsHandler().handleDeselection(player, effectKey);
+            if (deselectionSuccess)
+                effectsCommand.OpenOwnedEffects(player); // Refresh GUI to show it's no longer active
+
         }
     }
 }

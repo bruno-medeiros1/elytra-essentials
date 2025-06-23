@@ -29,10 +29,8 @@ public class EffectsHandler {
     public EffectsHandler(ElytraEssentials plugin, FileConfiguration fileConfiguration) {
         this.plugin = plugin;
 
-        //  register effects
         registerEffects();
 
-        //  update effects from shop.yml
         loadEffectsConfig(fileConfiguration);
     }
 
@@ -82,9 +80,8 @@ public class EffectsHandler {
             //  Make sure the other effect that may be selected gets deactivated so we don't get multiple active
             String oldEffectName = plugin.getDatabaseHandler().getPlayerActiveEffect(player.getUniqueId());
             ElytraEffect oldEffect = effectsRegistry.getOrDefault(oldEffectName, null);
-            if (oldEffect != null){
+            if (oldEffect != null)
                 plugin.getDatabaseHandler().UpdateOwnedEffect(player.getUniqueId(), oldEffectName, false);
-            }
 
             ElytraEffect selectedEffect = effectsRegistry.getOrDefault(effectKey, null);
             if (selectedEffect == null){
@@ -93,14 +90,12 @@ public class EffectsHandler {
             }
 
             if (selectedEffect.getIsActive())
-                plugin.getDatabaseHandler().UpdateOwnedEffect(player.getUniqueId(), effectKey, false);
-            else
-                plugin.getDatabaseHandler().UpdateOwnedEffect(player.getUniqueId(), effectKey, true);
+                return false;
 
+            plugin.getDatabaseHandler().UpdateOwnedEffect(player.getUniqueId(), effectKey, true);
 
             player.getWorld().playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 0.8f);
             player.sendMessage(ChatColor.GRAY + "You have selected " + ColorHelper.ParseColoredString(selectedEffect.getName()) + ChatColor.GRAY + " effect!");
-
             plugin.getElytraFlightListener().UpdateEffect(selectedEffect);
             return true;
         }
@@ -110,6 +105,40 @@ public class EffectsHandler {
             player.sendMessage(ChatColor.RED + "An error occurred while trying to activate the effect!" );
         }
         return false;
+    }
+
+    /**
+     * Handles the deactivation of a player's currently active effect.
+     * @param player The player deactivating the effect.
+     * @param effectKey The key of the effect to deactivate.
+     * @return true if the effect was successfully deactivated, false otherwise.
+     */
+    public boolean handleDeselection(Player player, String effectKey) {
+        try {
+            String activeEffect = plugin.getDatabaseHandler().getPlayerActiveEffect(player.getUniqueId());
+            if (activeEffect == null)
+                return false;
+
+            if (!effectKey.equals(activeEffect))
+                return false;
+
+            // Check if the effect they are right-clicking is actually the one that's active.
+            plugin.getDatabaseHandler().UpdateOwnedEffect(player.getUniqueId(), effectKey, false);
+
+            ElytraEffect elytraEffect = getEffectsRegistry().get(effectKey);
+            if (elytraEffect != null)
+                elytraEffect.setIsActive(false);
+
+            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 0.8f);
+            player.sendMessage(ChatColor.GRAY + "You have cleared " + ColorHelper.ParseColoredString(elytraEffect.getName()) + ChatColor.GRAY + " effect.");
+            plugin.getElytraFlightListener().UpdateEffect(null);
+            return true;
+        }
+        catch (SQLException e) {
+            player.sendMessage(ChatColor.RED + "An error occurred while updating your effect.");
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public ItemStack createShopItem(String effectKey, ElytraEffect effect, Player player) {
@@ -133,9 +162,9 @@ public class EffectsHandler {
         lore.add("");
 
         if (player.hasPermission(effect.getPermission()) || ownedEffects.contains(effectKey)) {
-            lore.add(ChatColor.RED + "§lYou already own this effect!");
+            lore.add(ChatColor.RED + "You already own this effect!");
         } else {
-            lore.add(ChatColor.GREEN + "§lClick to purchase!");
+            lore.add(ChatColor.GREEN + "Click to purchase!");
         }
 
         if (meta != null) {
@@ -172,16 +201,15 @@ public class EffectsHandler {
         }
         lore.add("");
         if (effect.getIsActive()){
-            lore.add(ChatColor.RED + "§lAlready selected!");
+            lore.add("§cRight Click: Clear Effect");
 
-            // Add a visual enchantment effect
             if (meta != null) {
                 meta.addEnchant(Enchantment.LUCK_OF_THE_SEA, 1, true);
                 meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
             }
         }
         else{
-            lore.add(ChatColor.GREEN + "§lSelect this effect!");
+            lore.add("§aLeft Click: Select Effect");
         }
 
         if (meta != null) {
@@ -264,7 +292,7 @@ public class EffectsHandler {
 
     private void registerEffects() {
         effectsRegistry.put("FIRE_TRAIL", new ElytraEffect(
-                "Fire Trail",
+                "§6Fire Trail",
                 Material.CAMPFIRE,
                 Particle.FLAME,
                 List.of("&7Leave a fiery trail!"),
@@ -272,51 +300,48 @@ public class EffectsHandler {
                 "elytraessentials.effect.fire"
         ));
         effectsRegistry.put("WATER_TRAIL", new ElytraEffect(
-                "Water Trail",
+                "§bWater Trail",
                 Material.WATER_BUCKET,
                 Particle.DRIPPING_WATER,
                 List.of("&7Trails of water follow you!"),
                 2000,
                 "elytraessentials.effect.water"
         ));
-        effectsRegistry.put("ICE_SHARDS", new ElytraEffect(
-                "Ice Shards",
-                Material.ICE,
-                Particle.SNOWFLAKE,
-                List.of("&7Shards of ice behind you!"),
-                1500,
-                "elytraessentials.effect.ice"
-        ));
 
         effectsRegistry.put("ARCANE_TRAIL", new ElytraEffect(
-                "Arcane Trail",
+                "§dArcane Trail",
                 Material.ENCHANTING_TABLE,
                 Particle.ENCHANT,
                 List.of("§7Leave a trail of mystical runes."),
                 2500,
                 "elytraessentials.effect.arcane"
         ));
-
         effectsRegistry.put("INKY_VOID", new ElytraEffect(
-                "Inky Void",
+                "§8Inky Void",
                 Material.INK_SAC,
                 Particle.SQUID_INK,
                 List.of("§7Soar with a trail of darkness."),
                 1750,
                 "elytraessentials.effect.void"
         ));
-
         effectsRegistry.put("HEART_TRAIL", new ElytraEffect(
-                "Heart Trail",
+                "§cHeart Trail",
                 Material.POPPY,
                 Particle.HEART,
                 List.of("§7Spread love wherever you fly!"),
                 1250,
                 "elytraessentials.effect.heart"
         ));
-
+        effectsRegistry.put("ICE_SHARDS", new ElytraEffect(
+                "§bIce Shards",
+                Material.ICE,
+                Particle.SNOWFLAKE,
+                List.of("&7Shards of ice behind you!"),
+                1500,
+                "elytraessentials.effect.ice"
+        ));
         effectsRegistry.put("EMERALD_SPARK", new ElytraEffect(
-                "Emerald Spark",
+                "§aEmerald Spark",
                 Material.EMERALD,
                 Particle.HAPPY_VILLAGER,
                 List.of("§7Show off with a glittering green trail."),

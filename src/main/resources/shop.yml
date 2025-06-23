@@ -14,12 +14,6 @@ shop:
     name: "&bWater Trail"
     lore:
       - "&7Trails of water follow you!"
-  ICE_SHARDS:
-    price: 1500.00
-    permission: "elytraessentials.effect.ice"
-    name: "&aIce Shards"
-    lore:
-      - "&7Shards of ice behind you!"
   ARCANE_TRAIL:
     price: 2500.00
     permission: "elytraessentials.effect.arcane"
@@ -38,6 +32,12 @@ shop:
     name: "&cHeart Trail"
     lore:
       - "&7Spread love wherever you fly!"
+  ICE_SHARDS:
+    price: 1500.00
+    permission: "elytraessentials.effect.ice"
+    name: "&bIce Shards"
+    lore:
+      - "&7Shards of ice behind you!"
   EMERALD_SPARK:
     price: 3000.00
     permission: "elytraessentials.effect.emerald"
