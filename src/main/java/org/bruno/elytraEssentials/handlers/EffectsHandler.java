@@ -5,6 +5,7 @@ import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.helpers.ColorHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.utils.ElytraEffect;
+import org.bruno.elytraEssentials.utils.ServerVersion;
 import org.bukkit.*;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -204,7 +205,7 @@ public class EffectsHandler {
             lore.add("§cRight Click: Clear Effect");
 
             if (meta != null) {
-                meta.addEnchant(Enchantment.LUCK_OF_THE_SEA, 1, true);
+                meta.addEnchant(Enchantment.LURE, 1, true);
                 meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
             }
         }
@@ -291,63 +292,78 @@ public class EffectsHandler {
     }
 
     private void registerEffects() {
+        // Your existing effects that work on all versions
         effectsRegistry.put("FIRE_TRAIL", new ElytraEffect(
-                "§6Fire Trail",
-                Material.CAMPFIRE,
-                Particle.FLAME,
-                List.of("&7Leave a fiery trail!"),
-                1000,
-                "elytraessentials.effect.fire"
-        ));
-        effectsRegistry.put("WATER_TRAIL", new ElytraEffect(
-                "§bWater Trail",
-                Material.WATER_BUCKET,
-                Particle.DRIPPING_WATER,
-                List.of("&7Trails of water follow you!"),
-                2000,
-                "elytraessentials.effect.water"
-        ));
-
-        effectsRegistry.put("ARCANE_TRAIL", new ElytraEffect(
-                "§dArcane Trail",
-                Material.ENCHANTING_TABLE,
-                Particle.ENCHANT,
-                List.of("§7Leave a trail of mystical runes."),
-                2500,
-                "elytraessentials.effect.arcane"
-        ));
-        effectsRegistry.put("INKY_VOID", new ElytraEffect(
-                "§8Inky Void",
-                Material.INK_SAC,
-                Particle.SQUID_INK,
-                List.of("§7Soar with a trail of darkness."),
-                1750,
-                "elytraessentials.effect.void"
-        ));
-        effectsRegistry.put("HEART_TRAIL", new ElytraEffect(
-                "§cHeart Trail",
-                Material.POPPY,
-                Particle.HEART,
-                List.of("§7Spread love wherever you fly!"),
-                1250,
-                "elytraessentials.effect.heart"
+                "Fire Trail", Material.CAMPFIRE, Particle.FLAME,
+                List.of("§7Leave a fiery trail!"), 1000, "elytraessentials.effect.fire"
         ));
         effectsRegistry.put("ICE_SHARDS", new ElytraEffect(
-                "§bIce Shards",
-                Material.ICE,
-                Particle.SNOWFLAKE,
-                List.of("&7Shards of ice behind you!"),
-                1500,
-                "elytraessentials.effect.ice"
+                "Ice Shards", Material.ICE, Particle.SNOWFLAKE,
+                List.of("§7Shards of ice behind you!"), 1500, "elytraessentials.effect.ice"
         ));
-        effectsRegistry.put("EMERALD_SPARK", new ElytraEffect(
-                "§aEmerald Spark",
-                Material.EMERALD,
-                Particle.HAPPY_VILLAGER,
-                List.of("§7Show off with a glittering green trail."),
-                3000,
-                "elytraessentials.effect.emerald"
+        effectsRegistry.put("INKY_VOID", new ElytraEffect(
+                "Inky Void", Material.INK_SAC, Particle.SQUID_INK,
+                List.of("§7Soar with a trail of darkness."), 1750, "elytraessentials.effect.void"
         ));
+        effectsRegistry.put("HEART_TRAIL", new ElytraEffect(
+                "Heart Trail", Material.POPPY, Particle.HEART,
+                List.of("§7Spread love wherever you fly!"), 1250, "elytraessentials.effect.heart"
+        ));
+
+        //  Register version-dependent effects
+        registerVersionDependentEffect("WATER_TRAIL", "Water Trail", Material.WATER_BUCKET,
+                Map.of(
+                        ServerVersion.V_1_18, "DRIP_WATER",
+                        ServerVersion.V_1_19, "DRIP_WATER",
+                        ServerVersion.V_1_20, "DRIP_WATER",
+                        ServerVersion.V_1_21, "DRIPPING_WATER"
+                ),
+                List.of("§7Trails of water follow you!"), 2000, "elytraessentials.effect.water");
+
+        // For Arcane Trail
+        registerVersionDependentEffect("ARCANE_TRAIL", "Arcane Trail", Material.ENCHANTING_TABLE,
+                Map.of(
+                        ServerVersion.V_1_18, "ENCHANTMENT_TABLE",
+                        ServerVersion.V_1_19, "ENCHANTMENT_TABLE",
+                        ServerVersion.V_1_20, "ENCHANTMENT_TABLE",
+                        ServerVersion.V_1_21, "ENCHANTMENT_TABLE"
+                ),
+                List.of("§7Leave a trail of mystical runes."), 2500, "elytraessentials.effect.arcane");
+
+        // For Emerald Spark
+        registerVersionDependentEffect("EMERALD_SPARK", "Emerald Spark", Material.EMERALD,
+                Map.of(
+                        ServerVersion.V_1_18, "VILLAGER_HAPPY",
+                        ServerVersion.V_1_19, "VILLAGER_HAPPY",
+                        ServerVersion.V_1_20, "VILLAGER_HAPPY",
+                        ServerVersion.V_1_21, "HAPPY_VILLAGER" // Renamed in 1.21
+                ),
+                List.of("§7Show off with a glittering green trail."), 3000, "elytraessentials.effect.emerald");
+    }
+
+    private void registerVersionDependentEffect(String key, String name, Material material,
+                                                Map<ServerVersion, String> particleNames,
+                                                List<String> lore, int price, String permission) {
+
+        ServerVersion currentVersion = plugin.getServerVersion();
+        if (currentVersion == null || currentVersion == ServerVersion.UNKNOWN) {
+            plugin.getLogger().warning("Could not register effect '" + name + "' due to an unknown server version.");
+            return;
+        }
+
+        String particleNameToUse = particleNames.getOrDefault(currentVersion, particleNames.get(ServerVersion.V_1_21));
+
+        if (particleNameToUse == null) {
+            plugin.getLogger().warning("Could not register effect '" + name + "'. No valid particle name was defined for this version.");
+            return;
+        }
+
+        try {
+            Particle particle = Particle.valueOf(particleNameToUse.toUpperCase());
+            effectsRegistry.put(key, new ElytraEffect(name, material, particle, lore, price, permission));
+        } catch (IllegalArgumentException e) {
+            plugin.getLogger().warning("Could not register effect '" + name + "'. Particle '" + particleNameToUse + "' is not valid on this server version.");
+        }
     }
 
     public Map<String, ElytraEffect> getEffectsRegistry(){

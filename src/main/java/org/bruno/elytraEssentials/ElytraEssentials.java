@@ -16,6 +16,7 @@ import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.VersionHelper;
 import org.bruno.elytraEssentials.listeners.*;
 import org.bruno.elytraEssentials.placeholders.ElytraEssentialsPlaceholders;
+import org.bruno.elytraEssentials.utils.ServerVersion;
 import org.bukkit.Bukkit;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -55,7 +56,11 @@ public final class ElytraEssentials extends JavaPlugin {
     private static Economy economy  = null;
     private ElytraEssentialsPlaceholders elytraStatsExpansion;
 
+    private ServerVersion serverVersion;
+
     public void onLoad() {
+        this.serverVersion = ServerVersion.getCurrent();
+
         this.getConfig().options().copyDefaults();
         this.saveDefaultConfig();
 
@@ -253,6 +258,7 @@ public final class ElytraEssentials extends JavaPlugin {
         this.statsHandler = null;
     }
 
+
     public MessagesHelper getMessagesHelper() { return this.messagesHelper; }
 
     public MessagesHandler getMessagesHandlerInstance() { return this.messagesHandler; }
@@ -277,6 +283,10 @@ public final class ElytraEssentials extends JavaPlugin {
         return this.economy;
     }
 
+    public ServerVersion getServerVersion() { return this.serverVersion; }
+
+
+
     public void setConfigHandler(ConfigHandler configHandler) {
         this.configHandler = configHandler;
     }
@@ -294,6 +304,8 @@ public final class ElytraEssentials extends JavaPlugin {
     public void setFileHelper (FileHelper fileHelper) { this.fileHelper = fileHelper; }
 
     public void setStatsHandler (StatsHandler statsHandler) { this.statsHandler = statsHandler; }
+
+
 
     private boolean setupEconomy() {
         if (getServer().getPluginManager().getPlugin("Vault") == null) {

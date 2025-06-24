@@ -1,7 +1,5 @@
 package org.bruno.elytraEssentials.listeners;
 
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.TextComponent;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.handlers.ConfigHandler;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
@@ -231,7 +229,7 @@ public class ElytraFlightListener implements Listener
 
                 bossBarUpdateTimes.remove(playerId);
 
-                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacy(timeExpiredMessage));
+                plugin.getMessagesHelper().sendActionBarMessage(player, timeExpiredMessage);
                 return;
             }
 
@@ -280,11 +278,11 @@ public class ElytraFlightListener implements Listener
                 int currentDamage = damageable.getDamage();
                 int maxDurability = elytra.getType().getMaxDurability();
 
-                // (maxDurability - 1 is the state just before it breaks)
+                //  just before it breaks
                 if (currentDamage >= maxDurability - 1) {
-                    if (noFallDamagePlayers.add(player)) { // .add() returns true if the element was not already in the set
+                    if (noFallDamagePlayers.add(player)) {
                         player.playSound(player.getLocation(), org.bukkit.Sound.ITEM_TOTEM_USE, 0.8f, 0.8f);
-                        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacy("§fFall Protection: §a§lEnabled"));
+                        plugin.getMessagesHelper().sendActionBarMessage(player, "§fFall Protection: §a§lEnabled");
                         return;
                     }
                 }
@@ -306,8 +304,9 @@ public class ElytraFlightListener implements Listener
             Vector snappedVelocity = velocity.normalize().multiply(this.maxSpeedBlocksPerTick);
             player.setVelocity(snappedVelocity);
 
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
-                    TextComponent.fromLegacy("§eSpeed: " + color + String.format("%.2f", this.maxSpeed) + " §ekm/h"));
+            String message = "§eSpeed: " + color + String.format("%.2f", this.maxSpeed) + " §ekm/h";
+            plugin.getMessagesHelper().sendActionBarMessage(player, message);
+
         } else {
             //  Handling max speed on elytra
             if (speed > MAX_FLIGHT_SPEED){
@@ -318,8 +317,8 @@ public class ElytraFlightListener implements Listener
                 player.setVelocity(snappedVelocity);
             }
 
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
-                    TextComponent.fromLegacy("§eSpeed: " + color + String.format("%.2f", speed) + " §ekm/h"));
+            String message = "§eSpeed: " + color + String.format("%.2f", speed) + " §ekm/h";
+            plugin.getMessagesHelper().sendActionBarMessage(player, message);
         }
 
         //  Spawn Elytra Effect
@@ -392,7 +391,7 @@ public class ElytraFlightListener implements Listener
     public void validateFlightTimeOnReload() throws SQLException {
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (PermissionsHelper.PlayerBypassTimeLimit(player))
-                return;
+                continue;
 
             UUID playerId = player.getUniqueId();
             HandleFlightTime(playerId, false);

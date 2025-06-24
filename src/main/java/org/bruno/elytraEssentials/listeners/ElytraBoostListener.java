@@ -91,9 +91,10 @@ public class ElytraBoostListener implements Listener {
         player.setVelocity(player.getVelocity().add(boost));
 
         //  TODO: Add visual indicator '+' for the speedometer upon boost usage
+        //  TODO: fix playsound on older versions 1.18 and 1.19
 
         // Play sound effect
-        playSound(player);
+        //playSound(player);
     }
 
     /**

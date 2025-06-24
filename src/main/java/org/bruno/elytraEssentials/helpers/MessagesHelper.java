@@ -1,6 +1,9 @@
 package org.bruno.elytraEssentials.helpers;
 
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bruno.elytraEssentials.ElytraEssentials;
+import org.bruno.elytraEssentials.utils.ServerVersion;
 import org.bukkit.Bukkit;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
@@ -18,6 +21,17 @@ public class MessagesHelper {
     public MessagesHelper(ElytraEssentials plugin) {
         this.plugin = plugin;
         this.pluginPrefix = plugin.getMessagesHandlerInstance().getPrefixMessage();
+    }
+
+    public void sendActionBarMessage(Player player, String message) {
+        String coloredMessage = ColorHelper.ParseColoredString(message);
+        ServerVersion version = plugin.getServerVersion();
+
+        if (version == ServerVersion.V_1_21) {
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacy(message));
+        } else {
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(coloredMessage));
+        }
     }
 
     public void sendConsoleMessage(String string) {

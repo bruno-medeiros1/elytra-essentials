@@ -247,11 +247,10 @@ public class DatabaseHandler {
             PlayerStats stats = this.plugin.getStatsHandler().getStats(player);
             if (stats != null)
                 this.plugin.getDatabaseHandler().savePlayerStats(stats);
-
-            //  Time Flight if feature is enabled
-            if (!this.plugin.getConfigHandlerInstance().getIsTimeLimitEnabled())
-                return;
         }
+
+        if (!this.plugin.getConfigHandlerInstance().getIsTimeLimitEnabled())
+            return;
 
         this.plugin.getElytraFlightListener().validateFlightTimeOnReload();
     }
