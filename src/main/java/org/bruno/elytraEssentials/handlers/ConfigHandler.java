@@ -43,7 +43,6 @@ public class ConfigHandler {
     private boolean isBoostEnabled;
     private String boostItem;
     private int boostCooldown;
-    private String boostSound;
 
     public ConfigHandler(FileConfiguration fileConfiguration) {
         this.fileConfiguration = fileConfiguration;
@@ -97,7 +96,6 @@ public class ConfigHandler {
         this.isBoostEnabled = this.fileConfiguration.getBoolean("flight.boost.enabled", true);
         this.boostItem = this.fileConfiguration.getString("flight.boost.item", "FEATHER");
         this.boostCooldown = this.fileConfiguration.getInt("flight.boost.cooldown", 2000);
-        this.boostSound = this.fileConfiguration.getString("flight.boost.sound", "ENTITY_FIREWORK_ROCKET_LAUNCH");
     }
 
     public final boolean getIsDebugModeEnabled() {
@@ -137,5 +135,4 @@ public class ConfigHandler {
     public final Boolean getIsBoostEnabled() { return this.isBoostEnabled; }
     public final String getBoostItem() { return this.boostItem; }
     public final Integer getBoostCooldown() { return this.boostCooldown; }
-    public final String getBoostSound() { return this.boostSound; }
 }

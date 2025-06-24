@@ -267,6 +267,8 @@ public final class ElytraEssentials extends JavaPlugin {
 
     public ElytraFlightListener getElytraFlightListener() { return this.elytraFlightListener; }
 
+    public ElytraBoostListener getElytraBoostListener() { return this.elytraBoostListener; }
+
     public DatabaseHandler getDatabaseHandler() {
         return this.databaseHandler;
     }

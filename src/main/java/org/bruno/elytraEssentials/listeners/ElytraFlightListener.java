@@ -289,52 +289,71 @@ public class ElytraFlightListener implements Listener
             }
         }
 
-        // Calculate speed (convert velocity magnitude to km/h)
+        //  Calculate the player's current, real speed
         Vector velocity = player.getVelocity();
-        double speed = velocity.length() * TICKS_IN_ONE_SECOND  * METERS_PER_SECOND_TO_KMH;
+        double realSpeed = velocity.length() * TICKS_IN_ONE_SECOND * METERS_PER_SECOND_TO_KMH;
 
-        String color = CalculateSpeedColor(speed);
-
+        //  Determine the final speed to apply and display, enforcing limits
+        double finalSpeed = realSpeed;
         boolean playerBypassSpeedLimit = PermissionsHelper.PlayerBypassSpeedLimit(player);
-        if (!playerBypassSpeedLimit && this.isSpeedLimitEnabled && speed > this.maxSpeed)
-        {
-            color = CalculateSpeedColor(this.maxSpeed);
 
-            // Snap velocity to max speed
-            Vector snappedVelocity = velocity.normalize().multiply(this.maxSpeedBlocksPerTick);
-            player.setVelocity(snappedVelocity);
-
-            String message = "§eSpeed: " + color + String.format("%.2f", this.maxSpeed) + " §ekm/h";
-            plugin.getMessagesHelper().sendActionBarMessage(player, message);
-
-        } else {
-            //  Handling max speed on elytra
-            if (speed > MAX_FLIGHT_SPEED){
-                color = CalculateSpeedColor(MAX_FLIGHT_SPEED);
-
-                // Snap velocity to max speed
-                Vector snappedVelocity = velocity.normalize().multiply(MAX_SPEED_BLOCKS_PER_TICK);
-                player.setVelocity(snappedVelocity);
-            }
-
-            String message = "§eSpeed: " + color + String.format("%.2f", speed) + " §ekm/h";
-            plugin.getMessagesHelper().sendActionBarMessage(player, message);
+        if (!playerBypassSpeedLimit && this.isSpeedLimitEnabled && realSpeed > this.maxSpeed) {
+            // Player is over the world/permission-based speed limit
+            finalSpeed = this.maxSpeed;
+            player.setVelocity(velocity.normalize().multiply(this.maxSpeedBlocksPerTick));
+        } else if (realSpeed > MAX_FLIGHT_SPEED) {
+            // Player is over the hard-coded max speed
+            finalSpeed = MAX_FLIGHT_SPEED;
+            player.setVelocity(velocity.normalize().multiply(MAX_SPEED_BLOCKS_PER_TICK));
         }
 
-        //  Spawn Elytra Effect
-        if (playerActiveEffect != null && !plugin.getTpsHandler().isLagProtectionActive())
-            plugin.getEffectsHandler().spawnParticleTrail(player, playerActiveEffect);
+        Long boostExpiryTime = plugin.getElytraBoostListener().getBoostMessageExpirations().get(player.getUniqueId());
+        Long superBoostExpiryTime = plugin.getElytraBoostListener().getSuperBoostMessageExpirations().get(player.getUniqueId());
 
-        // --- NEW: Track Stats ---
+        boolean showBoostMessage = boostExpiryTime != null && System.currentTimeMillis() < boostExpiryTime;
+        boolean showSuperBoostMessage = superBoostExpiryTime != null && System.currentTimeMillis() < superBoostExpiryTime;
+
+        //  Choose the message to display, prioritizing the super boost
+        String message;
+        String color = CalculateSpeedColor(finalSpeed);
+
+        if (showSuperBoostMessage) {
+            message = String.format("§a§l++ §eSpeed: %s%.1f §ekm/h §a§l++", color, finalSpeed);
+        } else if (showBoostMessage) {
+            message = String.format("§a§l+ §eSpeed: %s%.1f §ekm/h §a§l+", color, finalSpeed);
+        } else {
+            message = String.format("§eSpeed: %s%.1f §ekm/h", color, finalSpeed);
+
+            // Clean up any expired timers from the maps
+            if (boostExpiryTime != null) {
+                plugin.getElytraBoostListener().getBoostMessageExpirations().remove(player.getUniqueId());
+            }
+            if (superBoostExpiryTime != null) {
+                plugin.getElytraBoostListener().getSuperBoostMessageExpirations().remove(player.getUniqueId());
+            }
+        }
+
+        //  Build and send the final action bar message ONCE
+        plugin.getMessagesHelper().sendActionBarMessage(player, message);
+
+        //  Spawn Player's Elytra Effect
+        if (playerActiveEffect != null && !plugin.getTpsHandler().isLagProtectionActive()) {
+            plugin.getEffectsHandler().spawnParticleTrail(player, playerActiveEffect);
+        }
+
+        //  Track Stats
         PlayerStats stats = plugin.getStatsHandler().getStats(player);
-        double distanceMoved = event.getFrom().distance(event.getTo());
+        double distanceMoved;
+        if (event.getTo() != null)
+            distanceMoved = event.getFrom().distance(event.getTo());
+        else
+            distanceMoved = 0;
 
         // Add to total distance
         stats.addDistance(distanceMoved);
 
         // Add to current flight distance (for longest flight calculation)
         currentFlightDistances.compute(player.getUniqueId(), (uuid, dist) -> (dist == null ? 0 : dist) + distanceMoved);
-
     }
 
     @EventHandler

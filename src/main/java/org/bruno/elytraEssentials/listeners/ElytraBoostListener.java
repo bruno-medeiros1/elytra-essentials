@@ -5,6 +5,7 @@ import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.utils.PlayerStats;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -28,6 +29,9 @@ public class ElytraBoostListener implements Listener {
 
     private final ElytraEssentials plugin;
     private final HashMap<UUID, Long> cooldowns = new HashMap<>();
+
+    private final HashMap<UUID, Long> boostMessageExpirations = new HashMap<>();
+    private final HashMap<UUID, Long> superBoostMessageExpirations = new HashMap<>();
 
     public ElytraBoostListener(ElytraEssentials plugin) {
         this.plugin = plugin;
@@ -57,13 +61,13 @@ public class ElytraBoostListener implements Listener {
         if (configuredMaterial == null || itemInHand.getType() != configuredMaterial)
             return;
 
-        // --- Cooldown Check ---
+        //  Cooldown Check
         if (isOnCooldown(player))
             return;
 
         PlayerStats stats = plugin.getStatsHandler().getStats(player);
 
-        // --- Determine Boost Type and Apply ---
+        //  Determine Boost Type and Apply
         double boostMultiplier;
         boolean isSuperBoost = player.isSneaking();
 
@@ -81,7 +85,6 @@ public class ElytraBoostListener implements Listener {
             boostMultiplier = BOOST_MULTIPLIER;
         }
 
-        // --- Apply Boost and Effects ---
         // Set the cooldown *after* all checks have passed
         cooldowns.put(player.getUniqueId(), System.currentTimeMillis());
 
@@ -90,11 +93,20 @@ public class ElytraBoostListener implements Listener {
         Vector boost = direction.multiply(boostMultiplier);
         player.setVelocity(player.getVelocity().add(boost));
 
-        //  TODO: Add visual indicator '+' for the speedometer upon boost usage
-        //  TODO: fix playsound on older versions 1.18 and 1.19
-
         // Play sound effect
-        //playSound(player);
+        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_LAUNCH, 1.0f, 1.0f); // Slightly higher pitch for a "boost" feel
+
+        //  Display boost action bar message temporarily for 1s and spawn impulse effect
+        if (isSuperBoost){
+            superBoostMessageExpirations.put(player.getUniqueId(), System.currentTimeMillis() + 1000);
+            player.getWorld().spawnParticle(Particle.CLOUD, player.getLocation(),
+                    40, 0.5, 0.5, 0.5, 0.1);
+        }
+        else {
+            boostMessageExpirations.put(player.getUniqueId(), System.currentTimeMillis() + 1000);
+            player.getWorld().spawnParticle(Particle.CLOUD, player.getLocation(),
+                    20, 0.5, 0.5, 0.5, 0.1);
+        }
     }
 
     /**
@@ -130,17 +142,11 @@ public class ElytraBoostListener implements Listener {
         return false;
     }
 
-    /**
-     * Plays the configured boost sound for a player.
-     * @param player The player to play the sound for.
-     */
-    private void playSound(Player player) {
-        String soundName = plugin.getConfigHandlerInstance().getBoostSound().toUpperCase();
-        try {
-            Sound sound = Sound.valueOf(soundName);
-            player.getWorld().playSound(player.getLocation(), sound, 1.0f, 1.2f); // Slightly higher pitch for a "boost" feel
-        } catch (IllegalArgumentException ex) {
-            plugin.getLogger().warning("Invalid sound name '" + soundName + "' in config.yml for the boost sound.");
-        }
+    public HashMap<UUID, Long> getBoostMessageExpirations(){
+        return this.boostMessageExpirations;
+    }
+
+    public HashMap<UUID, Long> getSuperBoostMessageExpirations(){
+        return this.superBoostMessageExpirations;
     }
 }
