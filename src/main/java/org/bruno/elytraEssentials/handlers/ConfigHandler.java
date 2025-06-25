@@ -33,6 +33,7 @@ public class ConfigHandler {
     private boolean isNotifyOnRecoveryEnabled;
 
     //  Database section
+    private String storageType;
     private String host;
     private int port;
     private String database;
@@ -87,11 +88,12 @@ public class ConfigHandler {
         this.recoveryInterval = this.fileConfiguration.getInt("flight.time-limit.recovery.interval", 60);
         this.isNotifyOnRecoveryEnabled = this.fileConfiguration.getBoolean("flight.time-limit.recovery.notify", true);
 
-        this.host = this.fileConfiguration.getString("flight.time-limit.database.host", "localhost");
-        this.port = this.fileConfiguration.getInt("flight.time-limit.database.port", 3306);
-        this.database = this.fileConfiguration.getString("flight.time-limit.database.database", "elytraessentials");
-        this.username = this.fileConfiguration.getString("flight.time-limit.database.user", "root");
-        this.password = this.fileConfiguration.getString("flight.time-limit.database.password", "");
+        this.storageType = this.fileConfiguration.getString("storage.type", "SQLITE");
+        this.host = this.fileConfiguration.getString("storage.mysql.host", "localhost");
+        this.port = this.fileConfiguration.getInt("storage.mysql.port", 3306);
+        this.database = this.fileConfiguration.getString("storage.mysql.database", "elytraessentials");
+        this.username = this.fileConfiguration.getString("storage.mysql.user", "root");
+        this.password = this.fileConfiguration.getString("storage.mysql.password", "");
 
         this.isBoostEnabled = this.fileConfiguration.getBoolean("flight.boost.enabled", true);
         this.boostItem = this.fileConfiguration.getString("flight.boost.item", "FEATHER");
@@ -126,6 +128,7 @@ public class ConfigHandler {
     public final int getRecoveryInterval() { return this.recoveryInterval; }
     public final boolean getIsNotifyOnRecoveryEnabled() { return this.isNotifyOnRecoveryEnabled; }
 
+    public String getStorageType() { return this.storageType; }
     public String getHost() { return this.host; }
     public int getPort() { return this.port; }
     public String getDatabase() { return this.database; }

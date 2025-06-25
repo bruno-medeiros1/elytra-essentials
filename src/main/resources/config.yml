@@ -16,6 +16,20 @@ general:
   # This will not prevent players from dying if they do a nosedive and hit the ground
   kinetic-energy-protection: false # [Default: false]
 
+storage:
+  # The type of storage to use.
+  # Options: SQLITE (default), MYSQL
+  type: SQLITE
+
+  # --- MySQL Settings ---
+  # These are ONLY used if 'type' is set to MYSQL.
+  mysql:
+    host: localhost
+    port: 3306
+    database: elytraessentials
+    username: root
+    password:
+
 flight:
   # Completely disable Elytra flight across all worlds.
   disable-global: false # [Default: false]
@@ -55,13 +69,6 @@ flight:
 
       # Notify players when flight time is recovered.
       notify: true # [Default: true]
-
-    database:
-      host: localhost
-      port: 3306
-      database: elytraessentials
-      username: root
-      password:
 
   boost:
     enabled: true # [Default: true]

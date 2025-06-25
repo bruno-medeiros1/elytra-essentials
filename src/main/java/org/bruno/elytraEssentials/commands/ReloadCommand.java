@@ -91,7 +91,7 @@ public class ReloadCommand implements ISubCommand {
 
         this.plugin.getMessagesHelper().sendDebugMessage("&eRe-connecting to database and starting tasks...");
         var database = this.plugin.getDatabaseHandler();
-        database.SetDatabaseVariables();
+        database.setDatabaseVariables();
         database.Initialize();
 
         this.plugin.registerPlaceholders();
