@@ -45,8 +45,6 @@ public class DatabaseHandler {
             this.storageType = StorageType.SQLITE;
         }
 
-        plugin.getMessagesHelper().sendDebugMessage("Using " + storageType.name() + " for data storage.");
-
         if (storageType == StorageType.MYSQL) {
             connection = DriverManager.getConnection(
                     "jdbc:mysql://" + this.host + ":" + this.port + "/" + this.database + "?useSSL=false",

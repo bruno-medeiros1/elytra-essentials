@@ -18,6 +18,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -45,25 +46,29 @@ public class EffectsCommand implements ISubCommand {
         return true;
     }
 
-    /**
-     * Creates and opens the GUI showing a player's owned effects.
-     * This version does not support pagination.
-     * @param player The player to open the GUI for.
-     */
+
     public void OpenOwnedEffects(Player player) {
         Inventory ownedEffects = Bukkit.createInventory(new EffectsHolder(), GuiConstants.EFFECTS_INVENTORY_SIZE, GuiConstants.EFFECTS_INVENTORY_NAME);
 
         try {
-            List<String> playerOwnedKeys = plugin.getDatabaseHandler().GetOwnedEffectKeys(player.getUniqueId());
+            List<String> keysToDisplay;
+
+            if (PermissionsHelper.hasElytraEffectsPermission(player)) {
+                keysToDisplay = new ArrayList<>(plugin.getEffectsHandler().getEffectsRegistry().keySet());
+            } else {
+                keysToDisplay = plugin.getDatabaseHandler().GetOwnedEffectKeys(player.getUniqueId());
+            }
 
             // Add the static control buttons to the bottom row
             addControlButtons(ownedEffects);
 
-            if (playerOwnedKeys.isEmpty()) {
+            // Now, check if the final list of keys to display is empty.
+            if (keysToDisplay.isEmpty()) {
                 ItemStack item = plugin.getEffectsHandler().createEmptyItemStack();
                 ownedEffects.setItem(13, item); // Center slot
             } else {
-                populateOwnedItems(ownedEffects, player, playerOwnedKeys);
+                // If there are keys to display, populate the GUI with them.
+                populateOwnedItems(ownedEffects, player, keysToDisplay);
             }
 
             player.openInventory(ownedEffects);
@@ -86,8 +91,11 @@ public class EffectsCommand implements ISubCommand {
             ElytraEffect elytraEffect = allEffects.get(effectKey);
 
             if (elytraEffect != null) {
-                boolean isActive = plugin.getDatabaseHandler().GetIsActiveOwnedEffect(player.getUniqueId(), effectKey);
-                elytraEffect.setIsActive(isActive);
+                if (!PermissionsHelper.hasElytraEffectsPermission(player)) {
+                    boolean isActive = plugin.getDatabaseHandler().GetIsActiveOwnedEffect(player.getUniqueId(), effectKey);
+                    elytraEffect.setIsActive(isActive);
+                }
+
                 ItemStack item = plugin.getEffectsHandler().createOwnedItem(effectKey, elytraEffect);
                 inv.setItem(i, item);
             }

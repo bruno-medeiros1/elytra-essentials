@@ -1,7 +1,7 @@
 main: org.bruno.elytraEssentials.ElytraEssentials
 author: CodingMaestro
 name: ElytraEssentials
-version: 1.0.0
+version: 1.1.0
 api-version: '1.18'
 load: STARTUP
 folia-supported: false
