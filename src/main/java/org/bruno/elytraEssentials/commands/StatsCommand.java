@@ -2,6 +2,7 @@ package org.bruno.elytraEssentials.commands;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.handlers.StatsHandler;
+import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.helpers.TimeHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bruno.elytraEssentials.utils.PlayerStats;
@@ -25,6 +26,11 @@ public class StatsCommand implements ISubCommand {
     public boolean Execute(CommandSender sender, String[] args) throws SQLException {
         if (!(sender instanceof Player player))
             return true;
+
+        if (!PermissionsHelper.hasStatsPermission(player)){
+            plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getNoPermissionMessage());
+            return true;
+        }
 
         // Get the cached stats object for the player
         PlayerStats stats = statsHandler.getStats(player);

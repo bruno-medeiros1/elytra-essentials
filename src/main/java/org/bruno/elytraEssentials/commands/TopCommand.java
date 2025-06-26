@@ -1,12 +1,14 @@
 package org.bruno.elytraEssentials.commands;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
+import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.helpers.TimeHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.sql.SQLException;
@@ -14,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class TopCommand implements ISubCommand {
     private final ElytraEssentials plugin;
@@ -25,6 +28,15 @@ public class TopCommand implements ISubCommand {
 
     @Override
     public boolean Execute(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player player))
+            //  TODO: Add message "only players are allowed to execute this"
+            return true;
+
+        if (!PermissionsHelper.hasTopPermission(player)){
+            plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getNoPermissionMessage());
+            return true;
+        }
+
         if (args.length < 1) {
             sender.sendMessage(ChatColor.RED + "Usage: /ee top <distance,time,longest>");
             return true;
@@ -109,5 +121,31 @@ public class TopCommand implements ISubCommand {
         }.runTaskAsynchronously(plugin);
 
         return true;
+    }
+
+    @Override
+    public List<String> getSubcommandCompletions(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player))
+            return List.of();
+
+        if (args.length == 2) {
+            if (!PermissionsHelper.hasTopPermission((Player) sender))
+                return List.of();
+
+            // A list of all possible leaderboard categories
+            List<String> allCategories = List.of("distance", "time", "longest");
+            List<String> allowedCategories = new ArrayList<>();
+
+            // Check permission for each category before adding it as a suggestion
+            allowedCategories.addAll(allCategories);
+
+            // Now, filter the list of *allowed* categories based on what the player is typing
+            String currentArg = args[1].toLowerCase();
+            return allowedCategories.stream()
+                    .filter(s -> s.toLowerCase().startsWith(currentArg))
+                    .collect(Collectors.toList());
+        }
+
+        return List.of();
     }
 }

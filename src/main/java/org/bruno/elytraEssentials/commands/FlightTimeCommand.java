@@ -12,6 +12,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class FlightTimeCommand implements ISubCommand {
 
     private final ElytraEssentials plugin;
@@ -80,9 +83,49 @@ public class FlightTimeCommand implements ISubCommand {
         return true;
     }
 
-    /**
-     * Processes the command action and returns whether it was successfully handled.
-     */
+
+    @Override
+    public List<String> getSubcommandCompletions(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player player))
+            return List.of();
+
+        if (!PermissionsHelper.hasFlightTimeCommandPermission(player)){
+            plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getNoPermissionMessage());
+            return List.of();
+        }
+
+        //  Action type
+        if (args.length == 2) {
+            List<String> actions = List.of("add", "remove", "set", "clear");
+
+            return actions.stream()
+                    .filter(s -> s.toLowerCase().startsWith(args[1].toLowerCase()))
+                    .collect(Collectors.toList());
+        }
+
+        //  Player name
+        if (args.length == 3) {
+            // Suggest online player names
+            return Bukkit.getOnlinePlayers().stream()
+                    .map(Player::getName)
+                    .filter(name -> name.toLowerCase().startsWith(args[2].toLowerCase()))
+                    .collect(Collectors.toList());
+        }
+
+        //  Time amount
+        if (args.length == 4) {
+            String action = args[1].toLowerCase();
+
+            if (action.equals("add") || action.equals("remove") || action.equals("set")) {
+                return List.of("60", "600", "3600");
+            }
+        }
+
+        return List.of();
+    }
+
+
+    //  Processes the command action and returns whether it was successfully handled.
     private boolean processCommandAction(CommandSender sender, String action, String[] args, Player target) {
         int amount;
         switch (action) {

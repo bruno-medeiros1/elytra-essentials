@@ -29,12 +29,8 @@ public class ShopCommand implements ISubCommand {
         if (!(sender instanceof Player player))
             return true;
 
-        MessagesHandler messagesHandler = this.plugin.getMessagesHandlerInstance();
-        MessagesHelper messagesHelper = this.plugin.getMessagesHelper();
-
-        boolean canOpen = PermissionsHelper.hasShopPermission(player);
-        if (!canOpen) {
-            messagesHelper.sendPlayerMessage(player, messagesHandler.getNoPermissionMessage());
+        if (!PermissionsHelper.hasShopPermission(player)){
+            plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getNoPermissionMessage());
             return true;
         }
 

@@ -34,10 +34,8 @@ public class EffectsCommand implements ISubCommand {
         if (!(sender instanceof Player player))
             return true;
 
-        MessagesHelper messagesHelper = this.plugin.getMessagesHelper();
-        boolean canOpen = PermissionsHelper.hasEffectsPermission(player);
-        if (!canOpen) {
-            messagesHelper.sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getNoPermissionMessage());
+        if (!PermissionsHelper.hasEffectsPermission(player)){
+            plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getNoPermissionMessage());
             return true;
         }
 

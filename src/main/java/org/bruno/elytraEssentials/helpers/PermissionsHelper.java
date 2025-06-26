@@ -58,6 +58,18 @@ public class PermissionsHelper {
                 player.hasPermission("elytraessentials.command.shop");
     }
 
+    public static boolean hasStatsPermission(Player player) {
+        return player.hasPermission("elytraessentials.*") ||
+                player.hasPermission("elytraessentials.command.*") ||
+                player.hasPermission("elytraessentials.command.stats");
+    }
+
+    public static boolean hasTopPermission(Player player) {
+        return player.hasPermission("elytraessentials.*") ||
+                player.hasPermission("elytraessentials.command.*") ||
+                player.hasPermission("elytraessentials.command.top");
+    }
+
     //</editor-fold>
 
     //<editor-fold desc="UPDATE">

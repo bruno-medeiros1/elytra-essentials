@@ -120,14 +120,16 @@ public final class ElytraEssentials extends JavaPlugin {
             return;
         }
 
-        this.messagesHelper.sendConsoleMessage("###########################################");
-        this.messagesHelper.sendConsoleMessage("&aDetected Version &d" + Bukkit.getVersion());
-        this.messagesHelper.sendConsoleMessage("&aLoading settings for Version &d" + Bukkit.getVersion());
+        this.messagesHelper.sendConsoleMessage("&e###########################################");
+        this.messagesHelper.sendConsoleMessage("&aDetected Version: &d" + Bukkit.getVersion());
+        this.messagesHelper.sendConsoleMessage("&aLoading settings for Version: &d" + Bukkit.getVersion());
 
-        this.messagesHelper.sendConsoleMessage("&aRegistering commands");
-        this.getCommand("ee").setExecutor(new ElytraEssentialsCommand(this));
+        this.messagesHelper.sendConsoleMessage("&aRegistering commands...");
+        ElytraEssentialsCommand mainCommand = new ElytraEssentialsCommand(this);
+        getCommand("ee").setExecutor(mainCommand);
+        getCommand("ee").setTabCompleter(mainCommand);
 
-        this.messagesHelper.sendConsoleMessage("&aRegistering event listeners");
+        this.messagesHelper.sendConsoleMessage("&aRegistering event listeners...");
         this.elytraFlightListener = new ElytraFlightListener(this);
         this.elytraBoostListener = new ElytraBoostListener(this);
         this.elytraEquipListener = new ElytraEquipListener(this);
@@ -162,13 +164,13 @@ public final class ElytraEssentials extends JavaPlugin {
         //  bStats
         new Metrics(this, 26164);
 
-        this.messagesHelper.sendConsoleMessage("&ePlugin by: &6&lCodingMaestro");
-        this.messagesHelper.sendConsoleMessage("&eVersion: &6&l" + this.pluginVersion);
-        this.messagesHelper.sendConsoleMessage("&ahas been loaded successfully");
-        this.messagesHelper.sendConsoleMessage("###########################################");
+        this.messagesHelper.sendConsoleMessage("&ePlugin by: &bCodingMaestro");
+        this.messagesHelper.sendConsoleMessage("&eVersion: &b" + this.pluginVersion);
+        this.messagesHelper.sendConsoleMessage("&aHas been loaded successfully!");
+        this.messagesHelper.sendConsoleMessage("&e###########################################");
         this.messagesHelper.sendDebugMessage("&eDeveloper debug mode enabled!");
-        this.messagesHelper.sendDebugMessage("&eThis WILL fill the console");
-        this.messagesHelper.sendDebugMessage("&ewith additional ElytraEssentials information!");
+        this.messagesHelper.sendDebugMessage("&eThis will fill the console");
+        this.messagesHelper.sendDebugMessage("&eWith additional ElytraEssentials information!");
         this.messagesHelper.sendDebugMessage("&eThis setting is not intended for ");
         this.messagesHelper.sendDebugMessage("&econtinous use!");
 

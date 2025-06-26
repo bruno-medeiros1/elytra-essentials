@@ -40,6 +40,12 @@ permissions:
           elytraessentials.command.effects:
             default: true
             description: "Allows the use of /ee effects command"
+          elytraessentials.command.stats:
+            default: true
+            description: "Allows the use of /ee stats command"
+          elytraessentials.command.top:
+            default: true
+            description: "Allows the use of /ee top command"
 
       elytraessentials.bypass.*:
         default: op

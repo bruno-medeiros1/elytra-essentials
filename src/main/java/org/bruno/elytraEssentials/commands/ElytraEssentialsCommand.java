@@ -7,18 +7,21 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import org.bukkit.ChatColor;
+import org.bukkit.command.TabCompleter;
+import org.jetbrains.annotations.NotNull;
 
-//  TODO: Add TabCompleter in the future for faster command prompting
-public class ElytraEssentialsCommand implements CommandExecutor {
+public class ElytraEssentialsCommand implements CommandExecutor, TabCompleter {
+
+    private final ElytraEssentials plugin;
     private final Map<String, ISubCommand> subCommands = new HashMap<>();
 
     public ElytraEssentialsCommand(ElytraEssentials plugin) {
-        subCommands.put("help", new HelpCommand());
+        this.plugin = plugin;
+        subCommands.put("help", new HelpCommand(plugin));
         subCommands.put("reload", new ReloadCommand(plugin));
         subCommands.put("ft", new FlightTimeCommand(plugin));
         subCommands.put("shop", new ShopCommand(plugin));
@@ -47,5 +50,42 @@ public class ElytraEssentialsCommand implements CommandExecutor {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+        if (args.length == 1) {
+            // Player is typing the FIRST argument (the subcommand name)
+            // e.g., /ee <HERE>
+
+            // We'll return a list of all subcommand names they have permission to use.
+            List<String> completions = new ArrayList<>();
+            for (String subCommandName : subCommands.keySet()) {
+                // TODO: Add a permission check here!
+                // For example: if (sender.hasPermission("elytraessentials.command." + subCommandName)) { ... }
+                completions.add(subCommandName);
+            }
+            // Return suggestions that start with what the player has already typed
+            return completions.stream()
+                    .filter(s -> s.toLowerCase().startsWith(args[0].toLowerCase()))
+                    .collect(Collectors.toList());
+
+        } else if (args.length > 1) {
+            // Player is typing the SECOND (or third, etc.) argument
+            // e.g., /ee top <HERE>
+
+            plugin.getLogger().info("args[0]: " + args[0]);
+
+            String subCommandName = args[0].toLowerCase();
+            ISubCommand subCommand = subCommands.get(subCommandName);
+
+            if (subCommand != null) {
+                // We found the subcommand, now we ask it for the suggestions.
+                return subCommand.getSubcommandCompletions(sender, args);
+            }
+        }
+
+        // Return an empty list if no suggestions are found
+        return List.of();
     }
 }
