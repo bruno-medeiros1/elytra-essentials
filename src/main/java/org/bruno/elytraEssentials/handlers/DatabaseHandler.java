@@ -288,6 +288,37 @@ public class DatabaseHandler {
 
 
     /**
+     * Retrieves the top N players for a specific statistic from the database.
+     *
+     * @param statColumn The name of the database column to order by (e.g., "total_distance").
+     * @param limit The number of top players to retrieve.
+     * @return A LinkedHashMap of Player UUIDs to their scores, sorted in descending order.
+     * @throws SQLException If a database error occurs.
+     */
+    public Map<UUID, Double> getTopStats(String statColumn, int limit) throws SQLException {
+        // A LinkedHashMap preserves the insertion order, which is perfect for a sorted leaderboard.
+        Map<UUID, Double> topStats = new LinkedHashMap<>();
+
+        // This query selects the top players, ordering them by the specified column.
+        String query = "SELECT uuid, " + statColumn + " FROM " + PLAYER_STATS_TABLE + " ORDER BY " + statColumn + " DESC LIMIT ?";
+
+        if (storageType == StorageType.MYSQL || storageType == StorageType.SQLITE) {
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                stmt.setInt(1, limit); // Set the LIMIT value
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        UUID uuid = UUID.fromString(rs.getString("uuid"));
+                        double value = rs.getDouble(statColumn);
+                        topStats.put(uuid, value);
+                    }
+                }
+            }
+        }
+        return topStats;
+    }
+
+
+    /**
      * Saves a player's complete statistics to the database.
      * This will create a new row if one doesn't exist, or update the existing one.
      * @param stats The PlayerStats object to save.
@@ -327,6 +358,7 @@ public class DatabaseHandler {
             stmt.executeUpdate();
         }
     }
+
 
     public final void save() throws SQLException {
         for (Player player : Bukkit.getOnlinePlayers()) {

@@ -24,6 +24,7 @@ public class ElytraEssentialsCommand implements CommandExecutor {
         subCommands.put("shop", new ShopCommand(plugin));
         subCommands.put("effects", new EffectsCommand(plugin));
         subCommands.put("stats", new StatsCommand(plugin));
+        subCommands.put("top", new TopCommand(plugin));
     }
 
     @Override
