@@ -93,7 +93,6 @@ public class FileHelper {
 
     private void EnsureMessagesFileExists() {
         if (messagesFile == null) {
-            Bukkit.getLogger().info("File does not exist, creating new messages.yml");
             messagesFile = new File(plugin.getDataFolder(), "messages.yml");
         }
         if (!messagesFile.exists()) {
@@ -103,7 +102,6 @@ public class FileHelper {
 
     private void EnsureShopFileExists() {
         if (shopFile == null) {
-            Bukkit.getLogger().info("File does not exist, creating new shop.yml");
             shopFile = new File(plugin.getDataFolder(), "shop.yml");
         }
         if (!shopFile.exists()) {

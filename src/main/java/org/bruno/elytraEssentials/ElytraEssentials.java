@@ -327,7 +327,7 @@ public final class ElytraEssentials extends JavaPlugin {
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
             this.elytraStatsExpansion = new ElytraEssentialsPlaceholders(this);
             this.elytraStatsExpansion.register();
-            getLogger().info("Successfully hooked into PlaceholderAPI!");
+            this.messagesHelper.sendConsoleMessage("&aSuccessfully hooked into PlaceholderAPI");
         } else {
             getLogger().warning("PlaceholderAPI not found! Placeholders will not work.");
         }
@@ -336,7 +336,7 @@ public final class ElytraEssentials extends JavaPlugin {
     public void unregisterPlaceholders() {
         if (this.elytraStatsExpansion != null) {
             this.elytraStatsExpansion.unregister();
-            getLogger().info("Successfully unhooked from PlaceholderAPI.");
+            this.messagesHelper.sendConsoleMessage("&aSuccessfully unhooked from PlaceholderAPI.");
         }
     }
 }
