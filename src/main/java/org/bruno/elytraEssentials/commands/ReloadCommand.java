@@ -33,11 +33,10 @@ public class ReloadCommand implements ISubCommand {
             }
             messagesHelper.sendPlayerMessage((Player)sender, messagesHandler.getReloadStartMessage());
             this.ReloadPlugin();
+            messagesHelper.sendPlayerMessage((Player)sender, messagesHandler.getReloadSuccessMessage());
         }
         else if (sender instanceof ConsoleCommandSender) {
-            messagesHelper.sendConsoleMessage(messagesHandler.getReloadStartMessage());
             this.ReloadPlugin();
-            messagesHelper.sendConsoleMessage(messagesHandler.getReloadSuccessMessage());
         }
         return true;
     }
@@ -45,6 +44,8 @@ public class ReloadCommand implements ISubCommand {
     private void ReloadPlugin() throws SQLException {
         try {
             this.plugin.getMessagesHelper().sendConsoleMessage("&e###########################################");
+            this.plugin.getMessagesHelper().sendConsoleMessage(plugin.getMessagesHandlerInstance().getReloadStartMessage());
+
             this.plugin.getMessagesHelper().sendConsoleMessage("&aShutting down background tasks...");
             Bukkit.getScheduler().cancelTasks(this.plugin);
 
@@ -52,6 +53,7 @@ public class ReloadCommand implements ISubCommand {
             this.plugin.getDatabaseHandler().save();
 
             this.plugin.getMessagesHelper().sendConsoleMessage("&aDisconnecting the database...");
+            this.plugin.getDatabaseHandler().cancelBackupTask();
             this.plugin.getDatabaseHandler().Disconnect();
 
         } catch (Exception exception) {
@@ -94,6 +96,7 @@ public class ReloadCommand implements ISubCommand {
         var database = this.plugin.getDatabaseHandler();
         database.setDatabaseVariables();
         database.Initialize();
+        database.startAutoBackupTask();
 
         this.plugin.registerPlaceholders();
 
@@ -106,6 +109,7 @@ public class ReloadCommand implements ISubCommand {
         this.plugin.getStatsHandler().start();
         this.plugin.getRecoveryHandler().start();
 
-        this.plugin.getMessagesHelper().sendConsoleMessage("&e###########################################");
+        messagesHelper.sendConsoleMessage(messagesHandler.getReloadSuccessMessage());
+        messagesHelper.sendConsoleMessage("&e###########################################");
     }
 }

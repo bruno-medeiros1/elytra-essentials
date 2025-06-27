@@ -4,10 +4,16 @@ import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.utils.PlayerStats;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.sql.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.Date;
 
 public class DatabaseHandler {
     private final static String ELYTRA_FLIGHT_TIME_TABLE = "elytra_flight_time";
@@ -26,17 +32,20 @@ public class DatabaseHandler {
     private String username;
     private String password;
 
+    private BukkitTask backupTask = null;
+    private static final int MAX_BACKUPS = 24;
+    private static final long AUTO_BACKUPS_TIME = 20L * 60 * 60;
+
+    private static final String SQLITE_DATABASE_NAME = "elytraessentials.db";
 
     public DatabaseHandler(ElytraEssentials plugin){
         this.plugin = plugin;
 
         setDatabaseVariables();
-        //  TODO: Add StartPeriodicSaving() to save data hourly
     }
 
 
     public void Initialize() throws SQLException {
-        // Read the storage type from the config, defaulting to SQLITE
         String typeFromConfig = plugin.getConfig().getString("database.type", "SQLITE").toUpperCase();
         try {
             this.storageType = StorageType.valueOf(typeFromConfig);
@@ -51,11 +60,15 @@ public class DatabaseHandler {
                     this.username, this.password
             );
         } else {
-            File dataFolder = plugin.getDataFolder();
-            if (!dataFolder.exists()) {
-                dataFolder.mkdirs();
+            File databaseFolder = new File(plugin.getDataFolder(), "database");
+            if (!databaseFolder.exists()) {
+                boolean wasCreated = databaseFolder.mkdirs();
+                if (!wasCreated) {
+                    throw new SQLException("FATAL: Failed to create database folder. Please check file system permissions!");
+                }
             }
-            File dbFile = new File(dataFolder, "elytraessentials.db");
+
+            File dbFile = new File(databaseFolder, SQLITE_DATABASE_NAME);
             connection = DriverManager.getConnection("jdbc:sqlite:" + dbFile.getAbsolutePath());
         }
 
@@ -467,6 +480,86 @@ public class DatabaseHandler {
                 stmt.executeUpdate(createPlayerStatsTableQuery);
             }
         }
-        plugin.getLogger().info("Database tables initialized.");
     }
+
+
+    //<editor-fold desc="BACKUPS">
+
+    public void startAutoBackupTask() {
+        if (storageType != StorageType.SQLITE) {
+            return;
+        }
+
+        if (this.backupTask != null && !this.backupTask.isCancelled()) {
+            return;
+        }
+
+        //  1 hour
+        long interval = AUTO_BACKUPS_TIME;
+        this.backupTask = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::backupSQLiteDatabase, interval, interval);
+    }
+
+
+    public void cancelBackupTask() {
+        if (this.backupTask != null) {
+            this.backupTask.cancel();
+            this.backupTask = null;
+        }
+    }
+
+    /**
+     * Copies the current SQLite database file to a timestamped backup file.
+     * This method is run asynchronously to prevent server lag.
+     */
+    private void backupSQLiteDatabase() {
+        File databaseFolder = new File(plugin.getDataFolder(), "database");
+        File sourceFile = new File(databaseFolder, SQLITE_DATABASE_NAME);
+
+        if (!sourceFile.exists()) {
+            plugin.getLogger().warning("SQLite database file not found. Skipping backup.");
+            return;
+        }
+
+        File backupFolder = new File(databaseFolder, "backups");
+        if (!backupFolder.exists()) {
+            boolean wasCreated = backupFolder.mkdirs();
+            if (!wasCreated) {
+                plugin.getLogger().severe("Could not create backups folder! Please check file system permissions. Skipping backup.");
+                return;
+            }
+        }
+
+        File[] backupFiles = backupFolder.listFiles((dir, name) -> name.endsWith(".db"));
+        if (backupFiles != null && backupFiles.length >= MAX_BACKUPS) {
+            // Sort files by last modified date (oldest first)
+            Arrays.sort(backupFiles, Comparator.comparingLong(File::lastModified));
+
+            // Delete the oldest backup file
+            File oldestFile = backupFiles[0];
+            if (oldestFile.delete()) {
+                plugin.getMessagesHelper().sendDebugMessage("Deleted oldest backup file: " + oldestFile.getName());
+            } else {
+                plugin.getLogger().warning("Could not delete oldest backup file: " + oldestFile.getName());
+            }
+        }
+
+        // --- Existing backup creation logic ---
+        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy_HH-mm-ss");
+        String formattedDate = formatter.format(new Date());
+
+        String backupFileName = "backup_" + formattedDate + ".db";
+        File destinationFile = new File(backupFolder, backupFileName);
+
+        try {
+            Files.copy(sourceFile.toPath(), destinationFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            plugin.getMessagesHelper().sendDebugMessage("Successfully created database backup: " + destinationFile.getName());
+        } catch (IOException e) {
+            plugin.getLogger().severe("FATAL: Could not create SQLite database backup! Check file permissions.");
+            e.printStackTrace();
+        }
+    }
+
+
+    //</editor-fold>
+
 }

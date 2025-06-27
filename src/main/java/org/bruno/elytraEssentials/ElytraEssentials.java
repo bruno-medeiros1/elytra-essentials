@@ -177,6 +177,7 @@ public final class ElytraEssentials extends JavaPlugin {
         this.getRecoveryHandler().start();
         this.getTpsHandler().start();
         this.getStatsHandler().start();
+        this.getDatabaseHandler().startAutoBackupTask();
     }
 
     @Override
@@ -186,6 +187,7 @@ public final class ElytraEssentials extends JavaPlugin {
         this.getRecoveryHandler().cancel();
         this.getTpsHandler().cancel();
         this.getStatsHandler().cancel();
+        this.getDatabaseHandler().cancelBackupTask();
 
         StackTraceElement[] stackTraceElementArray = Thread.currentThread().getStackTrace();
         boolean isReloading;
