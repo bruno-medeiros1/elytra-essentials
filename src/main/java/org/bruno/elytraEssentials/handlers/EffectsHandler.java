@@ -41,7 +41,7 @@ public class EffectsHandler {
 
             if (PermissionsHelper.hasElytraEffectsPermission(player) || player.hasPermission(effectPermission) || ownedEffects.contains(effectKey)) {
                 player.getWorld().playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 0.8f);
-                player.sendMessage(ChatColor.YELLOW + "You already own this effect!");
+                plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getEffectGuiOwned());
                 return false;
             }
 
@@ -57,7 +57,7 @@ public class EffectsHandler {
 
             if (!economy.has(player, price)) {
                 player.getWorld().playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 0.8f);
-                player.sendMessage(ChatColor.RED + "You do not have enough money to purchase this effect.");
+                plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getPurchaseFailedMoney());
                 return false;
             }
 
@@ -65,7 +65,9 @@ public class EffectsHandler {
             plugin.getDatabaseHandler().AddOwnedEffect(player.getUniqueId(), effectKey);
 
             player.getWorld().playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 0.8f);
-            player.sendMessage(ChatColor.GRAY + "You have purchased the " + ColorHelper.ParseColoredString(effect.getName()) + ChatColor.GRAY + " effect!");
+
+            String message = plugin.getMessagesHandlerInstance().getPurchaseSuccessful().replace("{0}", ColorHelper.ParseColoredString(effect.getName()));
+            plugin.getMessagesHelper().sendPlayerMessage(player, message);
             return true;
         }
         catch (SQLException e) {
@@ -96,7 +98,10 @@ public class EffectsHandler {
             plugin.getDatabaseHandler().UpdateOwnedEffect(player.getUniqueId(), effectKey, true);
 
             player.getWorld().playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 0.8f);
-            player.sendMessage(ChatColor.GRAY + "You have selected " + ColorHelper.ParseColoredString(selectedEffect.getName()) + ChatColor.GRAY + " effect!");
+
+            String message = plugin.getMessagesHandlerInstance().getEffectSelected().replace("{0}", ColorHelper.ParseColoredString(selectedEffect.getName()));
+            plugin.getMessagesHelper().sendPlayerMessage(player, message);
+
             plugin.getElytraFlightListener().UpdateEffect(selectedEffect);
             return true;
         }
@@ -131,7 +136,9 @@ public class EffectsHandler {
                 elytraEffect.setIsActive(false);
 
             player.getWorld().playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 0.8f);
-            player.sendMessage(ChatColor.GRAY + "You have cleared " + ColorHelper.ParseColoredString(elytraEffect.getName()) + ChatColor.GRAY + " effect.");
+
+            String message = plugin.getMessagesHandlerInstance().getEffectDeselected().replace("{0}", ColorHelper.ParseColoredString(elytraEffect.getName()));
+            plugin.getMessagesHelper().sendPlayerMessage(player, message);
             plugin.getElytraFlightListener().UpdateEffect(null);
             return true;
         }
@@ -163,9 +170,9 @@ public class EffectsHandler {
         lore.add("");
 
         if (player.hasPermission(effect.getPermission()) || ownedEffects.contains(effectKey)) {
-            lore.add(ChatColor.RED + "You already own this effect!");
+            lore.add(ChatColor.translateAlternateColorCodes('&', plugin.getMessagesHandlerInstance().getEffectGuiOwned()));
         } else {
-            lore.add(ChatColor.GREEN + "Click to purchase!");
+            lore.add(ChatColor.translateAlternateColorCodes('&', plugin.getMessagesHandlerInstance().getEffectGuiPurchase()));
         }
 
         if (meta != null) {
@@ -202,7 +209,7 @@ public class EffectsHandler {
         }
         lore.add("");
         if (effect.getIsActive()){
-            lore.add("§cRight Click: Clear Effect");
+            lore.add(ChatColor.translateAlternateColorCodes('&', plugin.getMessagesHandlerInstance().getEffectGuiDeselect()));
 
             if (meta != null) {
                 meta.addEnchant(Enchantment.LURE, 1, true);
@@ -210,7 +217,7 @@ public class EffectsHandler {
             }
         }
         else{
-            lore.add("§aLeft Click: Select Effect");
+            lore.add(ChatColor.translateAlternateColorCodes('&', plugin.getMessagesHandlerInstance().getEffectGuiSelect()));
         }
 
         if (meta != null) {

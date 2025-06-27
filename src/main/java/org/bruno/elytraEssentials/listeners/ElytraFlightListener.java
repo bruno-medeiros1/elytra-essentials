@@ -2,6 +2,7 @@ package org.bruno.elytraEssentials.listeners;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.handlers.ConfigHandler;
+import org.bruno.elytraEssentials.helpers.ColorHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.helpers.TimeHelper;
 import org.bruno.elytraEssentials.utils.ElytraEffect;
@@ -9,6 +10,7 @@ import org.bruno.elytraEssentials.utils.PlayerStats;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -156,7 +158,7 @@ public class ElytraFlightListener implements Listener
             if (PermissionsHelper.PlayerBypassTimeLimit(player)) {
                 //  TODO: Add customizable boss bar colors
                 if (!flightBossBars.containsKey(playerId)){
-                    String message = plugin.getMessagesHandlerInstance().getElytraBypassTimeLimitMessage();
+                    String message = plugin.getMessagesHandlerInstance().getElytraFlightTimeBypass();
                     message = ChatColor.translateAlternateColorCodes('&', message);
                     BossBar bossBar = Bukkit.createBossBar(message, BarColor.YELLOW, BarStyle.SOLID);
                     bossBar.addPlayer(player);
@@ -190,6 +192,11 @@ public class ElytraFlightListener implements Listener
             double flightDistance = currentFlightDistances.getOrDefault(player.getUniqueId(), 0.0);
 
             if (flightDistance > stats.getLongestFlight()) {
+                String message = ChatColor.translateAlternateColorCodes('&', plugin.getMessagesHandlerInstance().getNewPRLongestFlightMessage()
+                        .replace("{0}",  String.format("%.0f blocks", flightDistance)));
+                player.sendMessage(message);
+
+                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
                 stats.setLongestFlight(flightDistance);
             }
             currentFlightDistances.remove(player.getUniqueId());

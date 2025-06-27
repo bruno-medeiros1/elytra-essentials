@@ -4,70 +4,125 @@ import org.bukkit.configuration.file.FileConfiguration;
 
 public final class MessagesHandler {
     private final FileConfiguration fileConfiguration;
+
     private String prefix;
+    private String noPermission;
+    private String playerNotFound;
+    private String featureNotEnabled;
+
     private String reloadStart;
     private String reloadSuccess;
-    private String noPermission;
 
     private String elytraUsageDisabled;
     private String elytraUsageWorldDisabled;
     private String elytraEquipDisabled;
     private String elytraEquipReturned;
     private String elytraEquipDropped;
-    private String elytraTimeLimit;
-    private String elytraBypassTimeLimit;
-    private String elytraFlightTimeExpired;
-    private String elytraFlightTimeAdded;
-    private String elytraFlightTimeRemoved;
-    private String elytraFlightTimeCleared;
-    private String elytraFlightTimeSet;
-    private String elytraFlightTimeRecovery;
-    private String elytraBoostCooldown;
+
+    private String flightTimeRecovery;
+    private String flightTimeExpired;
+    private String flightTimeAdded;
+    private String flightTimeRemoved;
+    private String flightTimeSet;
+    private String flightTimeCleared;
+    private String flightTimeBypass;
+    private String flightTimeLimit;
+
+    private String boostCooldown;
+
+    private String newPRLongestFlight;
+
+    private String purchaseSuccessful;
+    private String purchaseFailedMoney;
+    private String effectSelected;
+    private String effectDeselected;
+    private String effectGuiOwned;
+    private String effectGuiPurchase;
+    private String effectGuiSelect;
+    private String effectGuiDeselect;
 
     public MessagesHandler(FileConfiguration fileConfiguration) {
         this.fileConfiguration = fileConfiguration;
-        SetMessages();
+        loadMessages();
     }
 
-    public void SetMessages(){
-        this.prefix = this.fileConfiguration.getString("prefix", "&6[&eElytraEssentials&6]");
-        this.reloadStart = this.fileConfiguration.getString("reload-start", "&aReloading ElytraEssentials... Please wait.");
-        this.reloadSuccess = this.fileConfiguration.getString("reload-success", "&aPlugin successfully reloaded! All configuration files are up to date.");
-        this.noPermission = this.fileConfiguration.getString("no-permission", "&cYou lack the required permission to perform this action.");
 
-        this.elytraUsageDisabled = this.fileConfiguration.getString("elytra-usage-disabled", "&cElytra usage is disabled on this server.");
-        this.elytraUsageWorldDisabled = this.fileConfiguration.getString("elytra-usage-world-disabled", "&cElytra usage is not allowed in this world.");
-        this.elytraEquipDisabled = this.fileConfiguration.getString("elytra-equip-disabled", "&cYou are not allowed to equip an elytra.");
-        this.elytraEquipReturned = this.fileConfiguration.getString("elytra-equip-returned", "&&6Elytra equipping is disabled. The equipped elytra has been safely returned to your inventory.");
-        this.elytraEquipDropped = this.fileConfiguration.getString("elytra-equip-dropped", "&6Elytra equipping is disabled. Your inventory is full, so the equipped elytra has been dropped on the ground.");
-        this.elytraTimeLimit = this.fileConfiguration.getString("elytra-time-limit", "&eFlight Time Left: &6{0}");
-        this.elytraBypassTimeLimit = this.fileConfiguration.getString("elytra-bypass-time-limit", "&eYou have infinite time!");
-        this.elytraFlightTimeExpired = this.fileConfiguration.getString("elytra-flight-time-expired", "&cYour elytra flight time has expired...");
-        this.elytraFlightTimeAdded = this.fileConfiguration.getString("elytra-flight-time-added", "&aYou have received {0} extra of flight time.");
-        this.elytraFlightTimeRemoved = this.fileConfiguration.getString("elytra-flight-time-removed", "&cYou have lost {0} of flight time.");
-        this.elytraFlightTimeCleared = this.fileConfiguration.getString("elytra-flight-time-cleared", "&cYour flight time has been cleared.");
-        this.elytraFlightTimeSet = this.fileConfiguration.getString("elytra-flight-time-set", "&aYour flight time has been set to {0}.");
-        this.elytraFlightTimeRecovery = this.fileConfiguration.getString("elytra-flight-time-recovery", "&7You have recovered &a{0} &7of flight time.");
-        this.elytraBoostCooldown = this.fileConfiguration.getString("elytra-boost-cooldown", "&cBoost is on cooldown! &6{0}s &cremaining...");
+    public void loadMessages(){
+        // General Messages
+        this.prefix = fileConfiguration.getString("prefix", "&6&lElytraEssentials &e»");
+        this.noPermission = fileConfiguration.getString("no-permission", "&cYou do not have permission to perform this action.");
+        this.playerNotFound = fileConfiguration.getString("player-not-found", "&cPlayer '{0}' could not be found.");
+        this.featureNotEnabled = fileConfiguration.getString("feature-not-enabled", "&cThis feature is not enabled.");
+
+        // Reload Command Messages
+        this.reloadStart = fileConfiguration.getString("reload-start", "&eReloading ElytraEssentials... Please wait.");
+        this.reloadSuccess = fileConfiguration.getString("reload-success", "&aPlugin successfully reloaded! All configuration files are up to date.");
+
+        // Restriction Messages
+        this.elytraUsageDisabled = fileConfiguration.getString("elytra-usage-disabled", "&cElytra flight is currently disabled on this server.");
+        this.elytraUsageWorldDisabled = fileConfiguration.getString("elytra-usage-world-disabled", "&cYou are not permitted to fly in this world.");
+        this.elytraEquipDisabled = fileConfiguration.getString("elytra-equip-disabled", "&cYou do not have permission to equip an elytra.");
+        this.elytraEquipReturned = fileConfiguration.getString("elytra-equip-returned", "&6Equipping is disabled. Your elytra has been returned to your inventory.");
+        this.elytraEquipDropped = fileConfiguration.getString("elytra-equip-dropped", "&6Your inventory is full! The elytra was dropped on the ground instead.");
+
+        // Flight Time Messages
+        this.flightTimeRecovery = fileConfiguration.getString("flight-time-recovery", "&7You have recovered &e{0} &7of flight time!");
+        this.flightTimeExpired = fileConfiguration.getString("flight-time-expired", "&cYour elytra flight time has expired...");
+        this.flightTimeAdded = fileConfiguration.getString("flight-time-added", "&e{0} &7have been added to your flight time.");
+        this.flightTimeRemoved = fileConfiguration.getString("flight-time-removed", "&e{0} &7 have been removed from your flight time.");
+        this.flightTimeSet = fileConfiguration.getString("flight-time-set", "&7Your flight time has been set to &e{0}&7.");
+        this.flightTimeCleared = fileConfiguration.getString("flight-time-cleared", "&cYour flight time has been cleared.");
+        this.flightTimeBypass = fileConfiguration.getString("flight-time-bypass", "&eYou have unlimited time!");
+        this.flightTimeLimit = fileConfiguration.getString("flight-time-limit", "&eFlight Time Left: &6{0}");
+
+        // Boost Messages
+        this.boostCooldown = fileConfiguration.getString("boost-cooldown", "&7You must wait &e{0} before boosting again.");
+
+        // Stats & Records
+        this.newPRLongestFlight = fileConfiguration.getString("longest-flight-pr", "&6&lNew Record! &fYour new longest flight: &e{0} blocks!");
+
+        // Shop & Effects Messages
+        this.purchaseSuccessful = fileConfiguration.getString("purchase-successful", "&aYou have successfully purchased the {0} effect!");
+        this.purchaseFailedMoney = fileConfiguration.getString("purchase-failed-money", "&cYou cannot afford this item.");
+        this.effectSelected = fileConfiguration.getString("effect-selected", "&aYou have equipped the {0} effect.");
+        this.effectDeselected = fileConfiguration.getString("effect-deselected", "&eYou have cleared the {0} effect.");
+        this.effectGuiOwned = fileConfiguration.getString("effect-gui-owned", "&cYou already own this effect!");
+        this.effectGuiPurchase = fileConfiguration.getString("effect-gui-purchase", "§aLeft Click: Select Effect");
+        this.effectGuiSelect = fileConfiguration.getString("effect-gui-select", "&aLeft Click: Select Effect");
+        this.effectGuiDeselect = fileConfiguration.getString("effect-gui-deselect", "&cRight Click: Clear Effect");
     }
 
-    public String getPrefixMessage() { return this.prefix; }
-    public String getReloadStartMessage() { return this.reloadStart; }
-    public String getReloadSuccessMessage() { return this.reloadSuccess; }
-    public String getNoPermissionMessage() { return this.noPermission; }
 
+    public String getBoostCooldown() { return this.boostCooldown; }
+
+    public String getEffectGuiOwned() { return effectGuiOwned; }
+    public String getEffectGuiPurchase() { return effectGuiPurchase; }
+    public String getEffectDeselected() { return effectDeselected; }
+    public String getEffectSelected() { return effectSelected; }
+    public String getEffectGuiDeselect() { return effectGuiDeselect; }
+    public String getEffectGuiSelect() { return effectGuiSelect; }
+
+    public String getElytraEquipDisabled() { return this.elytraEquipDisabled; }
+    public String getElytraEquipDropped() { return this.elytraEquipDropped; }
+    public String getElytraEquipReturned() { return this.elytraEquipReturned; }
+    public String getElytraFlightTimeAdded() { return this.flightTimeAdded; }
+    public String getElytraFlightTimeBypass() { return this.flightTimeBypass; }
+    public String getElytraFlightTimeCleared() { return this.flightTimeCleared; }
+    public String getElytraFlightTimeExpired() { return this.flightTimeExpired; }
+    public String getElytraFlightTimeRecovery() { return this.flightTimeRecovery; }
+    public String getElytraFlightTimeRemoved() { return this.flightTimeRemoved; }
+    public String getElytraFlightTimeSet() { return this.flightTimeSet; }
+    public String getElytraTimeLimitMessage() { return this.flightTimeLimit; }
     public String getElytraUsageDisabledMessage() { return this.elytraUsageDisabled; }
     public String getElytraUsageWorldDisabledMessage() { return this.elytraUsageWorldDisabled; }
-    public String getElytraEquipDisabledMessage() { return this.elytraEquipDisabled; }
-    public String getElytraEquipReturnedMessage() { return this.elytraEquipReturned; }
-    public String getElytraEquipDroppedMessage() { return this.elytraEquipDropped; }
-    public String getElytraTimeLimitMessage() { return this.elytraTimeLimit; }
-    public String getElytraBypassTimeLimitMessage() { return this.elytraBypassTimeLimit; }
-    public String getElytraFlightTimeExpired() { return this.elytraFlightTimeExpired; }
-    public String getElytraFlightTimeAdded() { return this.elytraFlightTimeAdded; }
-    public String getElytraFlightTimeRemoved() { return this.elytraFlightTimeRemoved; }
-    public String getElytraFlightTimeCleared() { return this.elytraFlightTimeCleared; }
-    public String getElytraFlightTimeSet() { return this.elytraFlightTimeSet; }
-    public String getElytraFlightTimeRecovery() { return this.elytraFlightTimeRecovery; }
-    public String getElytraBoostCooldown() { return this.elytraBoostCooldown; }
+    public String getNewPRLongestFlightMessage() { return this.newPRLongestFlight; }
+    public String getNoPermissionMessage() { return this.noPermission; }
+    public String getPlayerNotFound() { return playerNotFound; }
+    public String getPrefixMessage() { return this.prefix; }
+    public String getPurchaseFailedMoney() { return purchaseFailedMoney; }
+    public String getPurchaseSuccessful() { return purchaseSuccessful; }
+    public String getReloadStartMessage() { return this.reloadStart; }
+    public String getReloadSuccessMessage() { return this.reloadSuccess; }
+
+    public String getFeatureNotEnabled() { return this.featureNotEnabled; }
 }

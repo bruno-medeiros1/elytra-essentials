@@ -164,8 +164,8 @@ public final class ElytraEssentials extends JavaPlugin {
         //  bStats
         new Metrics(this, 26164);
 
-        this.messagesHelper.sendConsoleMessage("&ePlugin by: &bCodingMaestro");
-        this.messagesHelper.sendConsoleMessage("&eVersion: &b" + this.pluginVersion);
+        this.messagesHelper.sendConsoleMessage("&aPlugin by: &bCodingMaestro");
+        this.messagesHelper.sendConsoleMessage("&aVersion: &b" + this.pluginVersion);
         this.messagesHelper.sendConsoleMessage("&aHas been loaded successfully!");
         this.messagesHelper.sendConsoleMessage("&e###########################################");
         this.messagesHelper.sendDebugMessage("&eDeveloper debug mode enabled!");

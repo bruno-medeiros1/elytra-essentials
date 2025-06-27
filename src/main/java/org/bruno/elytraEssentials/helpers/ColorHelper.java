@@ -4,7 +4,7 @@ import org.bukkit.ChatColor;
 
 public class ColorHelper {
 
-    //TODO: Rever esta função
+    //  TODO: Review this method
     public static String ParseColoredString(String input) {
         // Splitting the input string into an array, keeping the '&' delimiter in the result.
         // The regex splits the string while preserving the '&' by using lookbehind and lookahead.

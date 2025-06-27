@@ -133,7 +133,7 @@ public class ElytraBoostListener implements Listener {
             long remainingMs = configuredCooldownMs - timeSinceLastBoost;
             int remainingSeconds = (int) Math.ceil(remainingMs / 1000.0);
 
-            String messageTemplate = ChatColor.translateAlternateColorCodes('&', plugin.getMessagesHandlerInstance().getElytraBoostCooldown());
+            String messageTemplate = ChatColor.translateAlternateColorCodes('&', plugin.getMessagesHandlerInstance().getBoostCooldown());
             String message = messageTemplate.replace("{0}", String.valueOf(remainingSeconds));
             plugin.getMessagesHelper().sendPlayerMessage(player, message);
             return true;

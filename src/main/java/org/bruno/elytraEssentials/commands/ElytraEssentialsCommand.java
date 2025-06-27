@@ -73,9 +73,7 @@ public class ElytraEssentialsCommand implements CommandExecutor, TabCompleter {
         } else if (args.length > 1) {
             // Player is typing the SECOND (or third, etc.) argument
             // e.g., /ee top <HERE>
-
-            plugin.getLogger().info("args[0]: " + args[0]);
-
+            
             String subCommandName = args[0].toLowerCase();
             ISubCommand subCommand = subCommands.get(subCommandName);
 

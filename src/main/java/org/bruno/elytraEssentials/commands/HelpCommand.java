@@ -22,7 +22,6 @@ public class HelpCommand implements ISubCommand {
         ChatColor text = ChatColor.GRAY;
         String arrow = "» ";
 
-        // Header
         sender.sendMessage(primary + "§m----------------------------------------------------");
         sender.sendMessage("");
         sender.sendMessage(primary + "§lElytraEssentials " + secondary + "v" + plugin.getDescription().getVersion());

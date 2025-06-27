@@ -18,7 +18,7 @@ public class StatsHandler {
 
     private final ElytraEssentials plugin;
 
-    // Use a ConcurrentHashMap for thread safety with async saving
+    //  Use a ConcurrentHashMap for thread safety with async saving
     private final Map<UUID, PlayerStats> statsCache = new ConcurrentHashMap<>();
     private final Set<UUID> glidingPlayers = new HashSet<>();
     private BukkitTask task;
@@ -27,7 +27,7 @@ public class StatsHandler {
         this.plugin = plugin;
     }
 
-    // --- Cache Management ---
+    //  Cache Management
     public void loadPlayerStats(Player player) {
         new BukkitRunnable() {
             @Override
@@ -59,17 +59,17 @@ public class StatsHandler {
                 }
             }.runTaskAsynchronously(plugin);
         }
-        // Remove from cache after saving
+        //  Remove from cache after saving
         statsCache.remove(player.getUniqueId());
         glidingPlayers.remove(player.getUniqueId());
     }
 
     public PlayerStats getStats(Player player) {
-        // Return a default object if the player's stats aren't loaded yet
+        //  Return a default object if the player's stats aren't loaded yet
         return statsCache.getOrDefault(player.getUniqueId(), new PlayerStats(player.getUniqueId()));
     }
 
-    // --- Gliding State ---
+    //  Gliding State ---
     public void setGliding(Player player, boolean isGliding) {
         if (isGliding) {
             glidingPlayers.add(player.getUniqueId());

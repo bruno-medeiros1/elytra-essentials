@@ -8,6 +8,7 @@ import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.helpers.TimeHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
@@ -36,7 +37,7 @@ public class FlightTimeCommand implements ISubCommand {
 
         boolean isTimeLimitEnabled = plugin.getConfigHandlerInstance().getIsTimeLimitEnabled();
         if (!isTimeLimitEnabled) {
-            sender.sendMessage("§cThis feature is not enabled.");
+            sender.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getMessagesHandlerInstance().getFeatureNotEnabled()));
             return true;
         }
 
@@ -58,7 +59,8 @@ public class FlightTimeCommand implements ISubCommand {
         // Get the target player
         Player target = Bukkit.getPlayer(args[1]);
         if (target == null) {
-            sender.sendMessage("&cPlayer " + args[1] + " not found.");
+            String message = ChatColor.translateAlternateColorCodes('&', plugin.getMessagesHandlerInstance().getPlayerNotFound()).replace("{0}", args[1]);
+            sender.sendMessage(message);
             return true;
         }
 

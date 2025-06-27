@@ -27,7 +27,7 @@ public class ElytraEquipListener implements Listener {
 
         if (e.getNewItem().getType() == Material.ELYTRA && configHandler.getIsElytraEquipDisabled() && !PermissionsHelper.PlayerBypassElytraEquip(player)) {
             e.setCancelled(true);
-            this.elytraEssentials.getMessagesHelper().sendPlayerMessage(player, this.elytraEssentials.getMessagesHandlerInstance().getElytraEquipDisabledMessage());
+            this.elytraEssentials.getMessagesHelper().sendPlayerMessage(player, this.elytraEssentials.getMessagesHandlerInstance().getElytraEquipDisabled());
         }
     }
 
@@ -48,10 +48,10 @@ public class ElytraEquipListener implements Listener {
                 // If there are leftovers (no space in inventory), drop the Elytra on the ground
                 if (!leftover.isEmpty()) {
                     player.getWorld().dropItemNaturally(player.getLocation(), chestplate);
-                    this.elytraEssentials.getMessagesHelper().sendPlayerMessage(player, elytraEssentials.getMessagesHandlerInstance().getElytraEquipDroppedMessage());
+                    this.elytraEssentials.getMessagesHelper().sendPlayerMessage(player, elytraEssentials.getMessagesHandlerInstance().getElytraEquipDropped());
                 }
                 else{
-                    this.elytraEssentials.getMessagesHelper().sendPlayerMessage(player, elytraEssentials.getMessagesHandlerInstance().getElytraEquipReturnedMessage());
+                    this.elytraEssentials.getMessagesHelper().sendPlayerMessage(player, elytraEssentials.getMessagesHandlerInstance().getElytraEquipReturned());
                 }
             }
         }

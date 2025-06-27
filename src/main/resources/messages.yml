@@ -1,18 +1,51 @@
-prefix: "&6[&eElytraEssentials&6]"
-reload-start: "&aReloading ElytraEssentials... Please wait."
+# ---------------------------------------------------
+#       ElytraEssentials - Messages Configuration
+# ---------------------------------------------------
+#
+# This file controls all the messages shown to players.
+# You can use standard Minecraft color codes with the '&' symbol.
+# Placeholders like {0}, {1}, etc., will be replaced by the plugin automatically.
+
+# The prefix that appears before most plugin messages.
+prefix: "&6&lElytraEssentials &e»"
+
+# General Messages
+no-permission: "&cYou do not have permission to perform this action."
+player-not-found: "&cPlayer '{0}' could not be found."
+feature-not-enabled: "&cThis feature is not enabled."
+
+# Reload Command Message
+reload-start: "&eReloading ElytraEssentials... Please wait."
 reload-success: "&aPlugin successfully reloaded! All configuration files are up to date."
-no-permission: "&cYou lack the required permission to perform this action."
-elytra-usage-disabled: "&cElytra usage is disabled on this server."
-elytra-usage-world-disabled: "&cElytra usage is not allowed in this world."
-elytra-equip-disabled: "&cYou are not allowed to equip an elytra."
-elytra-equip-returned: "&6Elytra equipping is disabled. The equipped elytra has been safely returned to your inventory."
-elytra-equip-dropped: "&6Elytra equipping is disabled. Your inventory is full, so the equipped elytra has been dropped on the ground."
-elytra-time-limit: "&eFlight Time Left: &6{0}"
-elytra-bypass-time-limit: "&eYou have infinite time!"
-elytra-flight-time-expired: "&cYour elytra flight time has expired..."
-elytra-flight-time-added: "&aYou have received {0} extra of flight time."
-elytra-flight-time-removed: "&cYou have lost {0} of flight time."
-elytra-flight-time-cleared: "&cYour flight time has been cleared."
-elytra-flight-time-set: "&aYour flight time has been set to {0}."
-elytra-flight-time-recovery: "&7You have recovered &a{0} &7of flight time."
-elytra-boost-cooldown: "&cBoost is on cooldown! &6{0}s &cremaining..."
+
+# Restriction Messages
+elytra-usage-disabled: "&cElytra flight is currently disabled on this server."
+elytra-usage-world-disabled: "&cYou are not permitted to fly in this world."
+elytra-equip-disabled: "&cYou do not have permission to equip an elytra."
+elytra-equip-returned: "&6Equipping is disabled. Your elytra has been returned to your inventory."
+elytra-equip-dropped: "&6Your inventory is full! The elytra was dropped on the ground instead."
+
+# Flight Time Messages
+flight-time-recovery: "&7You have recovered &e{0} &7of flight time!"
+flight-time-expired: "&cYour elytra flight time has expired..."
+flight-time-added: "&e{0} &7have been added to your flight time."
+flight-time-removed: "&e{0} &7 have been removed from your flight time."
+flight-time-set: "&7Your flight time has been set to &e{0}&7."
+flight-time-cleared: "&cYour flight time has been cleared."
+flight-time-bypass: "&eYou have unlimited time!"
+flight-time-limit: "&eFlight Time Left: &6{0}" # Used for the boss bar
+
+# Boost Messages
+boost-cooldown: "&7You must wait &e{0} before boosting again."
+
+# Stats & Records
+longest-flight-pr: "&6&lNew Record! &fYour new longest flight: &e{0} blocks!"
+
+# Shop & Effects Messages
+purchase-successful: "&aYou have successfully purchased the {0} effect!"
+purchase-failed-money: "&cYou cannot afford this item."
+effect-selected: "&aYou have equipped the {0} effect."
+effect-deselected: "&eYou have cleared the {0} effect."
+effect-gui-owned: "&cYou already own this effect!"
+effect-gui-select: "&aLeft Click: Select Effect"
+effect-gui-deselect: "&cRight Click: Clear Effect"

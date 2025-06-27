@@ -50,7 +50,7 @@ public class ReloadCommand implements ISubCommand {
             this.plugin.getMessagesHelper().sendDebugMessage("&eSaving to database...");
             this.plugin.getDatabaseHandler().save();
 
-            this.plugin.getMessagesHelper().sendDebugMessage("&Disconnecting the database...");
+            this.plugin.getMessagesHelper().sendDebugMessage("&eDisconnecting the database...");
             this.plugin.getDatabaseHandler().Disconnect();
 
         } catch (Exception exception) {

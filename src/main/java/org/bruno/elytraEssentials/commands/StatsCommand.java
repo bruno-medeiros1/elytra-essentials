@@ -6,6 +6,7 @@ import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.helpers.TimeHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bruno.elytraEssentials.utils.PlayerStats;
+import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -50,18 +51,33 @@ public class StatsCommand implements ISubCommand {
         if (activeEffect == null)
             activeEffect = "None";
 
-        player.sendMessage("§6--- Your Elytra Statistics ---");
-        player.sendMessage(String.format("§eTotal Distance Flown: §f%.1f km", totalDistance / METERS_IN_ONE_KILOMETER));
-        player.sendMessage("§eTotal Flight Time: §f" + TimeHelper.formatFlightTime((int) totalTime));
-        player.sendMessage(String.format("§eLongest Flight: §f%.0f blocks", stats.getLongestFlight()));
-        player.sendMessage(String.format("§eAverage Speed: §f%.1f km/h", avgSpeedKmh));
-        player.sendMessage(""); // Spacer
-        player.sendMessage(String.format("§eBoosts Used: §f%d (%d Super Boosts)", stats.getBoostsUsed(), stats.getSuperBoostsUsed()));
-        player.sendMessage(String.format("§ePlugin Saves: §f%d times", stats.getPluginSaves()));
-        player.sendMessage(String.format("§eEffects Unlocked: §f%d/%d", effectsOwned, totalEffects));
-        player.sendMessage("§eActive Effect: §f" + activeEffect);
-        player.sendMessage("§6---------------------------");
+        ChatColor primary = ChatColor.GOLD;
+        ChatColor secondary = ChatColor.YELLOW;
+        ChatColor text = ChatColor.GRAY;
+        ChatColor value = ChatColor.WHITE;
+        String arrow = "» ";
 
+        player.sendMessage(primary + "§m----------------------------------------------------");
+        player.sendMessage("");
+        player.sendMessage(primary + "§lYour Elytra Statistics");
+        player.sendMessage("");
+
+        // Flight Stats
+        player.sendMessage(secondary + arrow + text + "Total Distance Flown: " + value + String.format("%.1f km", totalDistance / METERS_IN_ONE_KILOMETER));
+        player.sendMessage(secondary + arrow + text + "Total Flight Time: " + value + TimeHelper.formatFlightTime((int) totalTime));
+        player.sendMessage(secondary + arrow + text + "Longest Flight: " + value + String.format("%.0f blocks", stats.getLongestFlight()));
+        player.sendMessage(secondary + arrow + text + "Average Speed: " + value + String.format("%.1f km/h", avgSpeedKmh));
+
+        player.sendMessage("");
+
+        // Plugin-specific Stats
+        player.sendMessage(secondary + arrow + text + "Boosts Used: " + value + String.format("%d (%d Super Boosts)", stats.getBoostsUsed(), stats.getSuperBoostsUsed()));
+        player.sendMessage(secondary + arrow + text + "Elytra Saves: " + value + String.format("%d times", stats.getPluginSaves()));
+        player.sendMessage(secondary + arrow + text + "Effects Unlocked: " + value + String.format("%d/%d", effectsOwned, totalEffects));
+        player.sendMessage(secondary + arrow + text + "Active Effect: " + value + activeEffect);
+
+        player.sendMessage("");
+        player.sendMessage(primary + "§m----------------------------------------------------");
         return true;
     }
 }
