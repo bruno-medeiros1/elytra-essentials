@@ -5,6 +5,9 @@ general:
   # Enables checking for newer versions of the plugin
   check-for-updates: true # [Default: true]
 
+  armored-elytra:
+    enabled: true # [Default: true]
+
   # Disable players from equipping Elytras.
   # Players or groups with the permission 'elytraessentials.bypass.equipment' can bypass this restriction.
   disable-elytra-equipment: false # [Default: false]

@@ -70,6 +70,18 @@ public class PermissionsHelper {
                 player.hasPermission("elytraessentials.command.top");
     }
 
+    public static boolean hasForgePermission(Player player){
+        return player.hasPermission("elytraessentials.*") ||
+                player.hasPermission("elytraessentials.command.*") ||
+                player.hasPermission("elytraessentials.command.forge");
+    }
+
+    public static boolean hasArmorPermission(Player player){
+        return player.hasPermission("elytraessentials.*") ||
+                player.hasPermission("elytraessentials.command.*") ||
+                player.hasPermission("elytraessentials.command.armor");
+    }
+
     //</editor-fold>
 
     //<editor-fold desc="UPDATE">

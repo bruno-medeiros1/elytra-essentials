@@ -3,7 +3,7 @@ package org.bruno.elytraEssentials.listeners;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.commands.EffectsCommand;
 import org.bruno.elytraEssentials.commands.ShopCommand;
-import org.bruno.elytraEssentials.constants.GuiConstants;
+import org.bruno.elytraEssentials.utils.Constants;
 import org.bruno.elytraEssentials.gui.ShopHolder;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -41,12 +41,12 @@ public class ShopGuiListener implements Listener {
 
         // Handle static control buttons
         switch (clickedSlot) {
-            case GuiConstants.SHOP_CLOSE_SLOT:
+            case Constants.GUI.SHOP_CLOSE_SLOT:
                 player.closeInventory();
                 player.playSound(player.getLocation(), Sound.BLOCK_CHEST_CLOSE, 0.8f, 0.8f);
                 return;
 
-            case GuiConstants.SHOP_PLAYER_HEAD_SLOT:
+            case Constants.GUI.SHOP_PLAYER_HEAD_SLOT:
                 player.closeInventory();
                 player.playSound(player.getLocation(), Sound.UI_LOOM_SELECT_PATTERN, 0.8f, 0.8f);
                 effectsCommand.OpenOwnedEffects(player);

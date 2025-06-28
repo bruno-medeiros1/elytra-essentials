@@ -3,7 +3,7 @@ package org.bruno.elytraEssentials.listeners;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.commands.EffectsCommand;
 import org.bruno.elytraEssentials.commands.ShopCommand;
-import org.bruno.elytraEssentials.constants.GuiConstants;
+import org.bruno.elytraEssentials.utils.Constants;
 import org.bruno.elytraEssentials.gui.EffectsHolder;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -41,12 +41,12 @@ public class EffectsGuiListener implements Listener {
         int clickedSlot = event.getSlot();
 
         switch (clickedSlot) {
-            case GuiConstants.EFFECTS_SHOP_SLOT:
+            case Constants.GUI.EFFECTS_SHOP_SLOT:
                 player.closeInventory();
                 shopCommand.OpenShop(player);
                 return;
 
-            case GuiConstants.EFFECTS_CLOSE_SLOT:
+            case Constants.GUI.EFFECTS_CLOSE_SLOT:
                 player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.8f, 0.8f);
                 player.closeInventory();
                 return;

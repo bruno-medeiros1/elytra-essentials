@@ -13,6 +13,7 @@ public class ConfigHandler {
     // General section
     private boolean isDebugModeEnabled;
     private boolean isCheckForUpdatesEnabled;
+    private boolean isArmoredElytraEnabled;
     private boolean isElytraEquipDisabled;
     private boolean isElytraBreakProtectionEnabled;
     private boolean isKineticEnergyProtectionEnabled;
@@ -53,6 +54,8 @@ public class ConfigHandler {
     public final void SetConfigVariables() {
         this.isDebugModeEnabled = this.fileConfiguration.getBoolean("general.debug-mode", false);
         this.isCheckForUpdatesEnabled = this.fileConfiguration.getBoolean("general.check-for-updates", true);
+        this.isArmoredElytraEnabled = this.fileConfiguration.getBoolean("general.armored-elytra.enabled", true);
+
         this.isElytraEquipDisabled = this.fileConfiguration.getBoolean("general.disable-elytra-equipment", false);
         this.isElytraBreakProtectionEnabled = this.fileConfiguration.getBoolean("general.elytra-break-protection", false);
         this.isKineticEnergyProtectionEnabled = this.fileConfiguration.getBoolean("general.kinetic-energy-protection", false);
@@ -104,6 +107,7 @@ public class ConfigHandler {
         return this.isDebugModeEnabled;
     }
     public final boolean getIsCheckForUpdatesEnabled() { return this.isCheckForUpdatesEnabled; }
+    public final boolean getIsArmoredElytraEnabled() { return this.isArmoredElytraEnabled; }
     public final boolean getIsElytraEquipDisabled() { return this.isElytraEquipDisabled; }
     public final boolean getIsElytraBreakProtectionEnabled() { return this.isElytraBreakProtectionEnabled; }
     public final boolean getIsKineticEnergyProtectionEnabled() { return this.isKineticEnergyProtectionEnabled; }

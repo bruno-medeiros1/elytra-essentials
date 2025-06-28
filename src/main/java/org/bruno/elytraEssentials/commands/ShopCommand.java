@@ -1,11 +1,9 @@
 package org.bruno.elytraEssentials.commands;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
-import org.bruno.elytraEssentials.constants.GuiConstants;
+import org.bruno.elytraEssentials.utils.Constants;
 import org.bruno.elytraEssentials.gui.ShopHolder;
-import org.bruno.elytraEssentials.handlers.MessagesHandler;
 import org.bruno.elytraEssentials.helpers.GuiHelper;
-import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bruno.elytraEssentials.utils.ElytraEffect;
@@ -39,7 +37,7 @@ public class ShopCommand implements ISubCommand {
     }
 
     public void OpenShop(Player player) {
-        Inventory shop = Bukkit.createInventory(new ShopHolder(), GuiConstants.SHOP_INVENTORY_SIZE, GuiConstants.SHOP_INVENTORY_NAME);
+        Inventory shop = Bukkit.createInventory(new ShopHolder(), Constants.GUI.SHOP_INVENTORY_SIZE, Constants.GUI.SHOP_INVENTORY_NAME);
 
         // Populate the shop with items, borders, and controls
         populateShopItems(shop, player);
@@ -73,10 +71,10 @@ public class ShopCommand implements ISubCommand {
     }
 
     private void addControlButtons(Inventory shop, Player player) {
-        shop.setItem(GuiConstants.SHOP_PLAYER_HEAD_SLOT, GuiHelper.createPlayerHead(player, "§bYour Effects", "§7Click to view the effects you own."));
-        shop.setItem(GuiConstants.SHOP_PREVIOUS_PAGE_SLOT, GuiHelper.createGuiItem(Material.RED_STAINED_GLASS_PANE, "§cPrevious Page", "§7You are on the first page."));
-        shop.setItem(GuiConstants.SHOP_PAGE_INFO_SLOT, GuiHelper.createGuiItem(Material.COMPASS, "§ePage 1/1", "§7More effects coming soon!"));
-        shop.setItem(GuiConstants.SHOP_NEXT_PAGE_SLOT, GuiHelper.createGuiItem(Material.GREEN_STAINED_GLASS_PANE, "§aNext Page", "§7You are on the last page."));
-        shop.setItem(GuiConstants.SHOP_CLOSE_SLOT, GuiHelper.createGuiItem(Material.BARRIER, "§cClose Menu", "§7Click to exit the shop."));
+        shop.setItem(Constants.GUI.SHOP_PLAYER_HEAD_SLOT, GuiHelper.createPlayerHead(player, "§bYour Effects", "§7Click to view the effects you own."));
+        shop.setItem(Constants.GUI.SHOP_PREVIOUS_PAGE_SLOT, GuiHelper.createGuiItem(Material.RED_STAINED_GLASS_PANE, "§cPrevious Page", "§7You are on the first page."));
+        shop.setItem(Constants.GUI.SHOP_PAGE_INFO_SLOT, GuiHelper.createGuiItem(Material.COMPASS, "§ePage 1/1", "§7More effects coming soon!"));
+        shop.setItem(Constants.GUI.SHOP_NEXT_PAGE_SLOT, GuiHelper.createGuiItem(Material.GREEN_STAINED_GLASS_PANE, "§aNext Page", "§7You are on the last page."));
+        shop.setItem(Constants.GUI.SHOP_CLOSE_SLOT, GuiHelper.createGuiItem(Material.BARRIER, "§cClose Menu", "§7Click to exit the shop."));
     }
 }

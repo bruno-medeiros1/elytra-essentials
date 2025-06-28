@@ -46,6 +46,12 @@ permissions:
           elytraessentials.command.top:
             default: true
             description: "Allows the use of /ee top command"
+          elytraessentials.command.forge:
+            default: op
+            description: "Allows the use of /ee forge command"
+          elytraessentials.command.armor:
+            default: true
+            description: "Allows the use of /ee armor command"
 
       elytraessentials.bypass.*:
         default: op

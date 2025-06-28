@@ -28,6 +28,8 @@ public class ElytraEssentialsCommand implements CommandExecutor, TabCompleter {
         subCommands.put("effects", new EffectsCommand(plugin));
         subCommands.put("stats", new StatsCommand(plugin));
         subCommands.put("top", new TopCommand(plugin));
+        subCommands.put("forge", new ForgeCommand(plugin));
+        subCommands.put("armor", new ArmorCommand(plugin));
     }
 
     @Override

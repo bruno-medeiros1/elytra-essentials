@@ -1,10 +1,9 @@
 package org.bruno.elytraEssentials.commands;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
-import org.bruno.elytraEssentials.constants.GuiConstants;
+import org.bruno.elytraEssentials.utils.Constants;
 import org.bruno.elytraEssentials.gui.EffectsHolder;
 import org.bruno.elytraEssentials.helpers.GuiHelper;
-import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bruno.elytraEssentials.utils.ElytraEffect;
@@ -46,7 +45,7 @@ public class EffectsCommand implements ISubCommand {
 
 
     public void OpenOwnedEffects(Player player) {
-        Inventory ownedEffects = Bukkit.createInventory(new EffectsHolder(), GuiConstants.EFFECTS_INVENTORY_SIZE, GuiConstants.EFFECTS_INVENTORY_NAME);
+        Inventory ownedEffects = Bukkit.createInventory(new EffectsHolder(), Constants.GUI.EFFECTS_INVENTORY_SIZE, Constants.GUI.EFFECTS_INVENTORY_NAME);
 
         try {
             List<String> keysToDisplay;
@@ -82,7 +81,7 @@ public class EffectsCommand implements ISubCommand {
         Map<String, ElytraEffect> allEffects = plugin.getEffectsHandler().getEffectsRegistry();
 
         for (int i = 0; i < playerOwnedKeys.size(); i++) {
-            if (i >= GuiConstants.EFFECTS_ITEM_DISPLAY_LIMIT)
+            if (i >= Constants.GUI.EFFECTS_ITEM_DISPLAY_LIMIT)
                 break;
 
             String effectKey = playerOwnedKeys.get(i);
@@ -102,10 +101,10 @@ public class EffectsCommand implements ISubCommand {
 
     //  Creates and places the static control buttons at the bottom of the GUI.
     private void addControlButtons(Inventory inv) {
-        inv.setItem(GuiConstants.EFFECTS_SHOP_SLOT, GuiHelper.createGuiItem(Material.CHEST, "§aShop", "§7Click here to buy more effects."));
-        inv.setItem(GuiConstants.EFFECTS_PREVIOUS_PAGE_SLOT, GuiHelper.createGuiItem(Material.RED_STAINED_GLASS_PANE, "§cPrevious Page", "§7You are on the first page."));
-        inv.setItem(GuiConstants.EFFECTS_PAGE_INFO_SLOT, GuiHelper.createGuiItem(Material.COMPASS, "§ePage 1/1"));
-        inv.setItem(GuiConstants.EFFECTS_NEXT_PAGE_SLOT, GuiHelper.createGuiItem(Material.GREEN_STAINED_GLASS_PANE, "§aNext Page", "§7You are on the last page."));
-        inv.setItem(GuiConstants.EFFECTS_CLOSE_SLOT, GuiHelper.createGuiItem(Material.BARRIER, "§cClose Menu", "§7Click to exit."));
+        inv.setItem(Constants.GUI.EFFECTS_SHOP_SLOT, GuiHelper.createGuiItem(Material.CHEST, "§aShop", "§7Click here to buy more effects."));
+        inv.setItem(Constants.GUI.EFFECTS_PREVIOUS_PAGE_SLOT, GuiHelper.createGuiItem(Material.RED_STAINED_GLASS_PANE, "§cPrevious Page", "§7You are on the first page."));
+        inv.setItem(Constants.GUI.EFFECTS_PAGE_INFO_SLOT, GuiHelper.createGuiItem(Material.COMPASS, "§ePage 1/1"));
+        inv.setItem(Constants.GUI.EFFECTS_NEXT_PAGE_SLOT, GuiHelper.createGuiItem(Material.GREEN_STAINED_GLASS_PANE, "§aNext Page", "§7You are on the last page."));
+        inv.setItem(Constants.GUI.EFFECTS_CLOSE_SLOT, GuiHelper.createGuiItem(Material.BARRIER, "§cClose Menu", "§7Click to exit."));
     }
 }
