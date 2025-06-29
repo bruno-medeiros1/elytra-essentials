@@ -8,7 +8,7 @@ public final class Constants {
     public static final class GUI {
         //  Shop GUI Constants
         public static final int SHOP_INVENTORY_SIZE = 36;
-        public static final String SHOP_INVENTORY_NAME = "§aShop";
+        public static final String SHOP_INVENTORY_NAME = "§8Shop";
         public static final int SHOP_PLAYER_HEAD_SLOT = 27;
         public static final int SHOP_PREVIOUS_PAGE_SLOT = 30;
         public static final int SHOP_PAGE_INFO_SLOT = 31;
@@ -17,7 +17,7 @@ public final class Constants {
 
         //  Owned Effects GUI Constants
         public static final int EFFECTS_INVENTORY_SIZE = 27;
-        public static final String EFFECTS_INVENTORY_NAME = "§bYour Effects";
+        public static final String EFFECTS_INVENTORY_NAME = "§8Owned Effects";
         public static final int EFFECTS_ITEM_DISPLAY_LIMIT = 18;
         public static final int EFFECTS_SHOP_SLOT = 18;
         public static final int EFFECTS_PREVIOUS_PAGE_SLOT = 21;
@@ -26,12 +26,15 @@ public final class Constants {
         public static final int EFFECTS_CLOSE_SLOT = 26;
 
         // Elytra Forge GUI Constants ---
-        public static final int FORGE_INVENTORY_SIZE = 27;
+        public static final int FORGE_INVENTORY_SIZE = 36;
         public static final String FORGE_INVENTORY_NAME = "§8Elytra Forge";
         public static final int FORGE_ELYTRA_SLOT = 10;
         public static final int FORGE_ARMOR_SLOT = 16;
         public static final int FORGE_RESULT_SLOT = 13;
-        public static final int FORGE_INFO_ANVIL_SLOT = 22;
+        public static final int FORGE_INFO_ANVIL_SLOT = 31;
+        public static final int FORGE_CANCEL_SLOT = 30;
+        public static final int FORGE_CONFIRM_SLOT = 32;
+
     }
 
     public static final class Permissions {
@@ -49,5 +52,6 @@ public final class Constants {
         public static final String ARMOR_DURABILITY_TAG = "armor-durability";
         public static final String MAX_ARMOR_DURABILITY_TAG = "max-armor-durability";
         public static final String ARMOR_MATERIAL_TAG = "armor-material";
+        public static final String PREVIEW_ITEM_TAG = "preview_item";
     }
 }

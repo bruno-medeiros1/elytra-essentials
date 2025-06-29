@@ -2,6 +2,7 @@ package org.bruno.elytraEssentials.listeners;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.commands.ForgeCommand;
+import org.bruno.elytraEssentials.helpers.GuiHelper;
 import org.bruno.elytraEssentials.utils.Constants;
 import org.bruno.elytraEssentials.gui.ForgeHolder;
 import org.bukkit.Material;
@@ -18,6 +19,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -32,21 +34,26 @@ public class ForgeGuiListener implements Listener {
     private final ElytraEssentials plugin;
     private final ForgeCommand forgeCommand;
 
+    private final NamespacedKey armoredElytraKey;
+    private final NamespacedKey materialKey;
+    private final NamespacedKey previewItemKey;
+
     public ForgeGuiListener(ElytraEssentials plugin, ForgeCommand forgeCommand) {
         this.plugin = plugin;
         this.forgeCommand = forgeCommand;
+
+        this.armoredElytraKey = new NamespacedKey(plugin, Constants.NBT.ARMORED_ELYTRA_TAG);
+        this.materialKey = new NamespacedKey(plugin, Constants.NBT.ARMOR_MATERIAL_TAG);
+        this.previewItemKey = new NamespacedKey(plugin, Constants.NBT.PREVIEW_ITEM_TAG);
     }
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        if (!plugin.getConfigHandlerInstance().getIsArmoredElytraEnabled()){
+        if (!plugin.getConfigHandlerInstance().getIsArmoredElytraEnabled()) {
             return;
         }
 
-        Inventory clickedInventory = event.getClickedInventory();
         Inventory topInventory = event.getView().getTopInventory();
-
-        // Check if the opened inventory is our forge
         if (topInventory.getHolder() == null || !(topInventory.getHolder() instanceof ForgeHolder)) {
             return;
         }
@@ -55,104 +62,124 @@ public class ForgeGuiListener implements Listener {
             return;
         }
 
-        //  Handle Clicks within the Forge GUI
-        if (clickedInventory != null && clickedInventory.getHolder() instanceof ForgeHolder) {
-            // Allow them to take the result if it exists
-            if (event.getSlot() == Constants.GUI.FORGE_RESULT_SLOT) {
-                handleResultClick(event, player);
-            } else {
-                // Prevent taking items from any other slot (inputs, panes)
-                event.setCancelled(true);
-            }
+        // We schedule an update after every click to keep the GUI state correct.
+        // The one-tick delay allows Bukkit to process the click action first.
+        scheduleResultUpdate(topInventory);
 
-        } else if (clickedInventory != null) {
-            // Player is clicking in their own inventory
-            if (event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
-                // This is a shift-click. Cancel it and handle it manually.
+        Inventory clickedInventory = event.getClickedInventory();
+
+        // Handle Shift-Clicks from the Player's Inventory
+        if (event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
+            if (clickedInventory != null && clickedInventory.equals(player.getInventory())) {
                 event.setCancelled(true);
                 handleShiftClick(event.getCurrentItem(), topInventory);
+                return;
             }
         }
 
-        // Schedule an update to the result slot after the event has been processed
-        scheduleResultUpdate(topInventory);
+        if (topInventory.equals(clickedInventory)) {
+            int slot = event.getSlot();
+            ItemStack clickedItem = event.getCurrentItem();
+
+            switch (slot) {
+                case Constants.GUI.FORGE_CONFIRM_SLOT:
+                    plugin.getLogger().info("confirmed!");
+                    event.setCancelled(true);
+                    //  Only handle click if the confirm button is actually there ---
+                    if (clickedItem != null && clickedItem.getType() == Material.GREEN_STAINED_GLASS_PANE) {
+                        handleConfirmClick(topInventory, player);
+                    }
+                    break;
+                case Constants.GUI.FORGE_CANCEL_SLOT:
+                    plugin.getLogger().info("canceled!");
+
+                    event.setCancelled(true);
+                    if (clickedItem != null && clickedItem.getType() == Material.RED_STAINED_GLASS_PANE) {
+                        player.closeInventory();
+                    }
+                    break;
+                default:
+                    event.setCancelled(true);
+                    break;
+            }
+        }
     }
 
 
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
-        if (!plugin.getConfigHandlerInstance().getIsArmoredElytraEnabled()){
-            return;
-        }
+        if (event.getInventory().getHolder() == null || !(event.getInventory().getHolder() instanceof ForgeHolder)) return;
 
-        if (event.getInventory().getHolder() == null || !(event.getInventory().getHolder() instanceof ForgeHolder)) {
-            return;
-        }
-
-        Inventory forge = event.getInventory();
         Player player = (Player) event.getPlayer();
+        Inventory forge = event.getInventory();
 
-        ItemStack elytraItem = forge.getItem(Constants.GUI.FORGE_ELYTRA_SLOT);
-        ItemStack armorItem = forge.getItem(Constants.GUI.FORGE_ARMOR_SLOT);
+        // Return only the non-preview items to the player.
+        returnItemToPlayer(player, forge.getItem(Constants.GUI.FORGE_ELYTRA_SLOT));
+        returnItemToPlayer(player, forge.getItem(Constants.GUI.FORGE_ARMOR_SLOT));
+        returnItemToPlayer(player, forge.getItem(Constants.GUI.FORGE_RESULT_SLOT));
 
-        if (elytraItem != null) {
-            HashMap<Integer, ItemStack> leftovers = player.getInventory().addItem(elytraItem);
-            if (!leftovers.isEmpty()) {
-                player.getWorld().dropItem(player.getLocation(), elytraItem);
-                player.sendMessage("§cYour inventory was full, so the Elytra was dropped on the ground!");
-            }
+        if (forge.getItem(Constants.GUI.FORGE_ELYTRA_SLOT) != null
+                ||  forge.getItem(Constants.GUI.FORGE_ARMOR_SLOT) != null
+                    || forge.getItem(Constants.GUI.FORGE_RESULT_SLOT) != null)
+        {
+            player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.8f, 0.8f);
         }
-        if (armorItem != null) {
-            HashMap<Integer, ItemStack> leftovers = player.getInventory().addItem(armorItem);
+    }
+
+
+    private void handleConfirmClick(Inventory forge, Player player) {
+        ItemStack resultItem = forge.getItem(Constants.GUI.FORGE_RESULT_SLOT);
+        ItemStack revertedElytra = forge.getItem(Constants.GUI.FORGE_ELYTRA_SLOT);
+        ItemStack revertedArmor = forge.getItem(Constants.GUI.FORGE_ARMOR_SLOT);
+
+        plugin.getLogger().info("resultItem: " + resultItem);
+        plugin.getLogger().info("revertedElytra: " + revertedElytra);
+        plugin.getLogger().info("revertedArmor: " + revertedArmor);
+
+        if (isPreviewItem(resultItem)) {
+            plugin.getLogger().info("Creating armored elytra");
+            // Crafting
+            returnItemToPlayer(player, createCleanCopy(resultItem));
+            forge.clear();
+            player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_USE, 1.0f, 1.0f);
+            player.closeInventory();
+        }
+        else if (isPreviewItem(revertedElytra) && isPreviewItem(revertedArmor)) { // Reverting
+            plugin.getLogger().info("Reverting armored elytra");
+
+            returnItemToPlayer(player, createCleanCopy(revertedElytra));
+            returnItemToPlayer(player, createCleanCopy(revertedArmor));
+            forge.clear();
+            player.playSound(player.getLocation(), Sound.BLOCK_GRINDSTONE_USE, 1.0f, 1.0f);
+            player.closeInventory();
+        }
+    }
+
+    private void returnItemToPlayer(Player player, ItemStack item) {
+        if (item != null && item.getType() != Material.AIR && !isPreviewItem(item)) {
+            HashMap<Integer, ItemStack> leftovers = player.getInventory().addItem(item);
             if (!leftovers.isEmpty()) {
-                player.getWorld().dropItem(player.getLocation(), armorItem);
-                player.sendMessage("§cYour inventory was full, so the Chestplate was dropped on the ground!");
+                player.getWorld().dropItem(player.getLocation(), item);
             }
         }
     }
 
-    private void handleResultClick(InventoryClickEvent event, Player player) {
-        event.setCancelled(true);
-        ItemStack resultItem = event.getCurrentItem();
-
-        if (resultItem == null || resultItem.getType() == Material.AIR) {
-            return;
-        }
-
-        HashMap<Integer, ItemStack> leftovers = player.getInventory().addItem(resultItem.clone());
-
-        if (!leftovers.isEmpty()) {
-            player.getWorld().dropItem(player.getLocation(), resultItem);
-            player.sendMessage("§cYour inventory was full, so the Armored Elytra was dropped on the ground!");
-        }
-
-        // Whether the item was given or dropped, the craft was successful.
-        event.getInventory().setItem(Constants.GUI.FORGE_ELYTRA_SLOT, null);
-        event.getInventory().setItem(Constants.GUI.FORGE_ARMOR_SLOT, null);
-        event.getInventory().setItem(Constants.GUI.FORGE_RESULT_SLOT, null);
-
-        player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_USE, 1.0f, 1.0f);
-    }
 
     private void handleShiftClick(ItemStack clickedItem, Inventory forge) {
-        if (clickedItem == null || clickedItem.getType() == Material.AIR) {
-            return;
-        }
+        if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
 
-        if (clickedItem.getType() == Material.ELYTRA) {
-            // Try to move it to the elytra slot
-            ItemStack elytraSlot = forge.getItem(Constants.GUI.FORGE_ELYTRA_SLOT);
-            if (elytraSlot == null || elytraSlot.getType() == Material.AIR) {
-                forge.setItem(Constants.GUI.FORGE_ELYTRA_SLOT, clickedItem.clone());
-                clickedItem.setAmount(0); // Remove from player's inventory
-            }
-        } else if (isChestplate(clickedItem)) {
-            // Try to move it to the armor slot
-            ItemStack armorSlot = forge.getItem(Constants.GUI.FORGE_ARMOR_SLOT);
-            if (armorSlot == null || armorSlot.getType() == Material.AIR) {
-                forge.setItem(Constants.GUI.FORGE_ARMOR_SLOT, clickedItem.clone());
-                clickedItem.setAmount(0); // Remove from player's inventory
-            }
+        ItemStack singleItem = clickedItem.clone();
+        singleItem.setAmount(1);
+
+        if (isPlainElytra(clickedItem) && isEmpty(forge.getItem(Constants.GUI.FORGE_ELYTRA_SLOT))) {
+            forge.setItem(Constants.GUI.FORGE_ELYTRA_SLOT, singleItem);
+            clickedItem.setAmount(clickedItem.getAmount() - 1);
+        } else if (isChestplate(clickedItem) && isEmpty(forge.getItem(Constants.GUI.FORGE_ARMOR_SLOT))) {
+            forge.setItem(Constants.GUI.FORGE_ARMOR_SLOT, singleItem);
+            clickedItem.setAmount(clickedItem.getAmount() - 1);
+        } else if (isArmoredElytra(clickedItem) && isEmpty(forge.getItem(Constants.GUI.FORGE_RESULT_SLOT))) {
+            forge.setItem(Constants.GUI.FORGE_RESULT_SLOT, singleItem);
+            clickedItem.setAmount(clickedItem.getAmount() - 1);
         }
     }
 
@@ -168,19 +195,129 @@ public class ForgeGuiListener implements Listener {
     private void updateForgeResult(Inventory forge) {
         ItemStack elytraSlot = forge.getItem(Constants.GUI.FORGE_ELYTRA_SLOT);
         ItemStack armorSlot = forge.getItem(Constants.GUI.FORGE_ARMOR_SLOT);
+        ItemStack middleSlot = forge.getItem(Constants.GUI.FORGE_RESULT_SLOT);
 
-        if (elytraSlot != null && elytraSlot.getType() == Material.ELYTRA &&
-                isChestplate(armorSlot)) {
+        if (isArmoredElytra(middleSlot) && !isPreviewItem(middleSlot)) {
+            displayRevertedItems(forge, middleSlot);
+            showActionButtons(forge, "Revert");
+        } else if (isPlainElytra(elytraSlot) && isChestplate(armorSlot) && !isPreviewItem(elytraSlot) && !isPreviewItem(armorSlot)) {
             ItemStack armoredElytra = createArmoredElytra(elytraSlot, armorSlot);
             forge.setItem(Constants.GUI.FORGE_RESULT_SLOT, armoredElytra);
-        } else {
-            forge.setItem(Constants.GUI.FORGE_RESULT_SLOT, null);
+            showActionButtons(forge, "Forge");
         }
+        else {
+            clearActionButtons(forge);
+        }
+    }
+
+    private void showActionButtons(Inventory forge, String action) {
+        ItemStack confirmButton = GuiHelper.createGuiItem(Material.GREEN_STAINED_GLASS_PANE, "§aConfirm " + action, "§7Click to complete the process.");
+        ItemStack cancelButton = GuiHelper.createGuiItem(Material.RED_STAINED_GLASS_PANE, "§cCancel", "§7Click to close the menu.");
+        forge.setItem(Constants.GUI.FORGE_CONFIRM_SLOT, confirmButton);
+        forge.setItem(Constants.GUI.FORGE_CANCEL_SLOT, cancelButton);
+    }
+
+    private void clearActionButtons(Inventory forge) {
+        forge.setItem(Constants.GUI.FORGE_CONFIRM_SLOT, null);
+        forge.setItem(Constants.GUI.FORGE_CANCEL_SLOT, null);
+    }
+
+    private void displayRevertedItems(Inventory forge, ItemStack armoredElytra) {
+        ItemStack plainElytra = new ItemStack(Material.ELYTRA);
+
+        plugin.getLogger().info("armoredElytra: " + armoredElytra);
+        ItemStack chestplate = reassembleChestplate(armoredElytra);
+
+        // Tag them as preview items
+        ItemMeta metaPlainElytra = plainElytra.getItemMeta();
+        if (metaPlainElytra != null){
+            metaPlainElytra.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.PREVIEW_ITEM_TAG), PersistentDataType.BOOLEAN, true);
+            plainElytra.setItemMeta(metaPlainElytra);
+        }
+
+        forge.setItem(Constants.GUI.FORGE_ELYTRA_SLOT, plainElytra);
+        forge.setItem(Constants.GUI.FORGE_ARMOR_SLOT, chestplate);
+    }
+
+    //  TODO: Resolver items encantados quando tento revert elytra armada
+    private ItemStack reassembleChestplate(ItemStack armoredElytra) {
+        ItemMeta sourceMeta = armoredElytra.getItemMeta();
+        if (sourceMeta == null) return null;
+
+        PersistentDataContainer container = sourceMeta.getPersistentDataContainer();
+
+        // Re-create the chestplate from its stored material type
+        String materialName = container.get(materialKey, PersistentDataType.STRING);
+        Material armorType = (materialName != null) ? Material.matchMaterial(materialName) : Material.DIAMOND_CHESTPLATE;
+        ItemStack chestplate = null;
+        if (armorType != null) {
+            chestplate = new ItemStack(armorType);
+        }
+        ItemMeta chestMeta = null;
+        if (chestplate != null) {
+            chestMeta = chestplate.getItemMeta();
+        }
+
+        if (chestMeta != null) {
+            // Loop through all possible enchantments
+            for (Enchantment enchantment : Enchantment.values()) {
+                // Create the key we would have used to store this enchantment
+                NamespacedKey key = new NamespacedKey(plugin, "enchant_" + enchantment.getKey().getKey());
+
+                // Check if the Armored Elytra has a stored level for this enchantment
+                if (container.has(key, PersistentDataType.INTEGER)) {
+                    int level = container.get(key, PersistentDataType.INTEGER);
+                    // Re-apply the enchantment to the new chestplate
+                    chestMeta.addEnchant(enchantment, level, true);
+                }
+            }
+
+            chestMeta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.PREVIEW_ITEM_TAG), PersistentDataType.BOOLEAN, true);
+            chestplate.setItemMeta(chestMeta);
+        }
+        plugin.getLogger().info("Reverted Chestplate: " + chestplate);
+        return chestplate;
+    }
+
+    //  ############### HELPER METHODS #######################
+
+
+    private ItemStack createCleanCopy(ItemStack item) {
+        if (item == null) return null;
+        ItemStack copy = item.clone();
+        ItemMeta meta = copy.getItemMeta();
+        if (meta != null) {
+            meta.getPersistentDataContainer().remove(previewItemKey);
+            copy.setItemMeta(meta);
+        }
+        return copy;
+    }
+
+    private boolean isArmoredElytra(ItemStack item) {
+        if (item == null || item.getType() != Material.ELYTRA) return false;
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return false;
+        return meta.getPersistentDataContainer().has(armoredElytraKey, PersistentDataType.BOOLEAN);
+    }
+
+    private boolean isPreviewItem(ItemStack item) {
+        if (item == null || item.getType() == Material.AIR) return false;
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return false;
+        return meta.getPersistentDataContainer().has(previewItemKey, PersistentDataType.BOOLEAN);
     }
 
     private boolean isChestplate(ItemStack item) {
         if (item == null) return false;
         return item.getType().name().endsWith("_CHESTPLATE");
+    }
+
+    private boolean isPlainElytra(ItemStack item) {
+        return item != null && item.getType() == Material.ELYTRA && !isArmoredElytra(item);
+    }
+
+    private boolean isEmpty(ItemStack item) {
+        return item == null || item.getType() == Material.AIR;
     }
 
     private ItemStack createArmoredElytra(ItemStack elytra, ItemStack chestplate) {
@@ -212,7 +349,7 @@ public class ForgeGuiListener implements Listener {
                 lore.add(String.format(" §f- §7Armor Toughness: §a+%d", armorToughness));
             }
             lore.add("");
-            lore.add(String.format("§6Armor Plating: §f%d / §c%d", maxDurability, maxDurability));
+            lore.add(String.format("§6Armor Plating: §7%d / §a%d", maxDurability, maxDurability));
 
             //  Get the enchantments from the input chestplate.
             Map<Enchantment, Integer> enchantments = chestplate.getEnchantments();
@@ -245,6 +382,7 @@ public class ForgeGuiListener implements Listener {
             meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.ARMOR_DURABILITY_TAG), PersistentDataType.INTEGER, maxDurability);
             meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.MAX_ARMOR_DURABILITY_TAG), PersistentDataType.INTEGER, maxDurability);
             meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.ARMOR_MATERIAL_TAG), PersistentDataType.STRING, chestplate.getType().name());
+            meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.PREVIEW_ITEM_TAG), PersistentDataType.BOOLEAN, true);
 
             armoredElytra.setItemMeta(meta);
         }

@@ -42,13 +42,13 @@ public class ForgeCommand implements ISubCommand {
         return true;
     }
 
-    private void OpenForgeGUI(Player player) {
+    public void OpenForgeGUI(Player player) {
         Inventory forge = Bukkit.createInventory(new ForgeHolder(), Constants.GUI.FORGE_INVENTORY_SIZE, Constants.GUI.FORGE_INVENTORY_NAME);
 
         ItemStack grayPane = GuiHelper.createGuiItem(Material.BLACK_STAINED_GLASS_PANE, " ");
 
         // First, fill the entire inventory with the gray filler pane
-        for (int i = 0; i < Constants.GUI.FORGE_INVENTORY_SIZE; i++) {
+        for (int i = 0; i < Constants.GUI.FORGE_INVENTORY_SIZE - 9; i++) {
             forge.setItem(i, grayPane);
         }
 
@@ -60,8 +60,8 @@ public class ForgeCommand implements ISubCommand {
         // Place the instructional anvil item at the bottom
         ItemStack infoAnvil = GuiHelper.createGuiItem(Material.ANVIL,
                 "§eElytra Forging",
-                "§7Place an Elytra in the left slot",
-                "§7and a Chestplate in the right slot.",
+                "§7Place an §aelytra §7in the left slot",
+                "§7and a §achestplate §7in the right slot.",
                 "§7The result will appear in the middle."
         );
         forge.setItem(Constants.GUI.FORGE_INFO_ANVIL_SLOT, infoAnvil);

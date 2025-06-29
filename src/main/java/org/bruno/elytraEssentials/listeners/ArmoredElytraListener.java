@@ -52,7 +52,6 @@ public class ArmoredElytraListener implements Listener {
         }
         // Check if the click could have affected the chestplate slot
         if (event.getSlotType() == InventoryType.SlotType.ARMOR || event.getSlot() == 6 || event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
-            plugin.getLogger().info("onInventoryClick...");
             scheduleArmorCheck(player);
         }
     }
