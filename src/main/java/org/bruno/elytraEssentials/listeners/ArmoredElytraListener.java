@@ -120,9 +120,6 @@ public class ArmoredElytraListener implements Listener {
         double armorPoints = getArmorPoints(armorType);
         double armorToughness = getArmorToughness(armorType);
 
-        plugin.getLogger().info("armorPoints: " + armorPoints);
-        plugin.getLogger().info("armorToughness: " + armorToughness);
-
         AttributeInstance armorAttr = player.getAttribute(Attribute.ARMOR);
         AttributeInstance toughnessAttr = player.getAttribute(Attribute.ARMOR_TOUGHNESS);
         if (armorAttr == null || toughnessAttr == null) return;

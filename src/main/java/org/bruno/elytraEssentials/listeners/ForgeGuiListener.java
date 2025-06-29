@@ -83,15 +83,14 @@ public class ForgeGuiListener implements Listener {
 
             switch (slot) {
                 case Constants.GUI.FORGE_CONFIRM_SLOT:
-                    plugin.getLogger().info("confirmed!");
                     event.setCancelled(true);
-                    //  Only handle click if the confirm button is actually there ---
+
+                    //  Only handle click if the confirm button is actually there
                     if (clickedItem != null && clickedItem.getType() == Material.GREEN_STAINED_GLASS_PANE) {
                         handleConfirmClick(topInventory, player);
                     }
                     break;
                 case Constants.GUI.FORGE_CANCEL_SLOT:
-                    plugin.getLogger().info("canceled!");
 
                     event.setCancelled(true);
                     if (clickedItem != null && clickedItem.getType() == Material.RED_STAINED_GLASS_PANE) {
@@ -132,21 +131,15 @@ public class ForgeGuiListener implements Listener {
         ItemStack revertedElytra = forge.getItem(Constants.GUI.FORGE_ELYTRA_SLOT);
         ItemStack revertedArmor = forge.getItem(Constants.GUI.FORGE_ARMOR_SLOT);
 
-        plugin.getLogger().info("resultItem: " + resultItem);
-        plugin.getLogger().info("revertedElytra: " + revertedElytra);
-        plugin.getLogger().info("revertedArmor: " + revertedArmor);
-
         if (isPreviewItem(resultItem)) {
-            plugin.getLogger().info("Creating armored elytra");
             // Crafting
             returnItemToPlayer(player, createCleanCopy(resultItem));
             forge.clear();
             player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_USE, 1.0f, 1.0f);
             player.closeInventory();
         }
-        else if (isPreviewItem(revertedElytra) && isPreviewItem(revertedArmor)) { // Reverting
-            plugin.getLogger().info("Reverting armored elytra");
-
+        else if (isPreviewItem(revertedElytra) && isPreviewItem(revertedArmor)) {
+            // Reverting
             returnItemToPlayer(player, createCleanCopy(revertedElytra));
             returnItemToPlayer(player, createCleanCopy(revertedArmor));
             forge.clear();
@@ -224,8 +217,6 @@ public class ForgeGuiListener implements Listener {
 
     private void displayRevertedItems(Inventory forge, ItemStack armoredElytra) {
         ItemStack plainElytra = new ItemStack(Material.ELYTRA);
-
-        plugin.getLogger().info("armoredElytra: " + armoredElytra);
         ItemStack chestplate = reassembleChestplate(armoredElytra);
 
         // Tag them as preview items
@@ -275,7 +266,6 @@ public class ForgeGuiListener implements Listener {
             chestMeta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.PREVIEW_ITEM_TAG), PersistentDataType.BOOLEAN, true);
             chestplate.setItemMeta(chestMeta);
         }
-        plugin.getLogger().info("Reverted Chestplate: " + chestplate);
         return chestplate;
     }
 
