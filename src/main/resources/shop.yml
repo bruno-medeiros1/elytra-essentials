@@ -1,5 +1,15 @@
-# You should just do changes on price, permission, name and lore other than that
-# don't do any changes, otherwise it will break the shop system
+# --------------------------------------------------
+#        ElytraEssentials - Shop Configuration
+# --------------------------------------------------
+#
+# This file controls all the items available in the /ee shop GUI.
+# Each item is identified by a unique key (e.g., FIRE_TRAIL).
+#
+# You can customize the following for each effect:
+#   price: The cost of the effect (requires Vault).
+#   permission: The permission node required to purchase or use the effect.
+#   name: The display name of the item in the shop (supports '&' color codes).
+#   lore: The description text that appears below the item's name.
 
 shop:
   FIRE_TRAIL:

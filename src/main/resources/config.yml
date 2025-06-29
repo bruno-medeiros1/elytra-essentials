@@ -1,3 +1,17 @@
+# ----------------------------------------------------
+#        ElytraEssentials - Main Configuration
+# ----------------------------------------------------
+#
+# This file controls all core features of the plugin.
+#
+# Sections:
+#   general: Toggles for plugin-wide features like armored elytras and protections.
+#   storage: Configure your database settings (SQLite or MySQL).
+#   flight:  Control all aspects of elytra mechanics like speed, time, and worlds.
+#   boost:   Settings for the elytra boost feature.
+#
+# For messages and shop items, please see messages.yml and shop.yml.
+
 general:
   # Enable detailed debug messages in the server console.
   debug-mode: false # [Default: false]
