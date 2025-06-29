@@ -93,8 +93,8 @@ public final class MessagesHandler {
         // Shop & Effects Messages
         this.purchaseSuccessful = fileConfiguration.getString("purchase-successful", "&aYou have successfully purchased the {0} effect!");
         this.purchaseFailedMoney = fileConfiguration.getString("purchase-failed-money", "&cYou cannot afford this item.");
-        this.effectSelected = fileConfiguration.getString("effect-selected", "&aYou have equipped the {0} effect.");
-        this.effectDeselected = fileConfiguration.getString("effect-deselected", "&eYou have cleared the {0} effect.");
+        this.effectSelected = fileConfiguration.getString("effect-selected", "&7You have equipped the {0} &7effect.");
+        this.effectDeselected = fileConfiguration.getString("effect-deselected", "&7You have cleared the {0} &7effect.");
         this.effectGuiOwned = fileConfiguration.getString("effect-gui-owned", "&cYou already own this effect!");
         this.effectGuiPurchase = fileConfiguration.getString("effect-gui-purchase", "§aLeft Click: Select Effect");
         this.effectGuiSelect = fileConfiguration.getString("effect-gui-select", "&aLeft Click: Select Effect");

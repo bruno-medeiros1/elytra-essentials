@@ -17,10 +17,7 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.util.Vector;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class EffectsHandler {
     private final ElytraEssentials plugin;
@@ -111,6 +108,14 @@ public class EffectsHandler {
             player.sendMessage(ChatColor.RED + "An error occurred while trying to activate the effect!" );
         }
         return false;
+    }
+
+    public String getActiveEffect(UUID playerUuid) {
+        try {
+            return plugin.getDatabaseHandler().getPlayerActiveEffect(playerUuid);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**

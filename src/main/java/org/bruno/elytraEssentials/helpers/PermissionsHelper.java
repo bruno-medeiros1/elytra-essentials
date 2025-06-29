@@ -52,6 +52,12 @@ public class PermissionsHelper {
                 player.hasPermission("elytraessentials.command.effects");
     }
 
+    public static boolean hasClearEffectsCommandPermission(Player player){
+        return player.hasPermission("elytraessentials.*") ||
+                player.hasPermission("elytraessentials.command.*") ||
+                player.hasPermission("elytraessentials.command.effects.clear");
+    }
+
     public static boolean hasShopPermission(Player player) {
         return player.hasPermission("elytraessentials.*") ||
                 player.hasPermission("elytraessentials.command.*") ||

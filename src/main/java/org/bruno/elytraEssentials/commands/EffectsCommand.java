@@ -33,16 +33,42 @@ public class EffectsCommand implements ISubCommand {
         if (!(sender instanceof Player player))
             return true;
 
-        if (!PermissionsHelper.hasEffectsPermission(player)){
-            plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getNoPermissionMessage());
+        if (args.length == 0) {
+            if (!PermissionsHelper.hasEffectsPermission(player)) {
+                plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getNoPermissionMessage());
+                return true;
+            }
+            player.playSound(player.getLocation(), Sound.UI_LOOM_SELECT_PATTERN, 0.8f, 0.8f);
+            OpenOwnedEffects(player);
+            return true;
+
+        } else if (args.length == 1 && args[0].equalsIgnoreCase("clear")) {
+            if (!PermissionsHelper.hasClearEffectsCommandPermission(player)) {
+                plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getNoPermissionMessage());
+                return true;
+            }
+            handleClearEffect(player);
+            return true;
+
+        } else {
+            player.sendMessage(ChatColor.RED + "Usage: /ee effects <clear>");
             return true;
         }
-
-        player.playSound(player.getLocation(), Sound.UI_LOOM_SELECT_PATTERN, 0.8f, 0.8f);
-        OpenOwnedEffects(player);
-        return true;
     }
 
+
+    private void handleClearEffect(Player player) {
+        String activeEffectKey = plugin.getEffectsHandler().getActiveEffect(player.getUniqueId());
+        plugin.getLogger().info(activeEffectKey);
+
+        if (activeEffectKey == null) {
+            player.sendMessage(ChatColor.RED + "You do not have an active elytra effect to clear.");
+            return;
+        }
+
+        // Use the existing deselection handler to turn the effect off
+        plugin.getEffectsHandler().handleDeselection(player, activeEffectKey);
+    }
 
     public void OpenOwnedEffects(Player player) {
         Inventory ownedEffects = Bukkit.createInventory(new EffectsHolder(), Constants.GUI.EFFECTS_INVENTORY_SIZE, Constants.GUI.EFFECTS_INVENTORY_NAME);
@@ -106,5 +132,20 @@ public class EffectsCommand implements ISubCommand {
         inv.setItem(Constants.GUI.EFFECTS_PAGE_INFO_SLOT, GuiHelper.createGuiItem(Material.COMPASS, "§ePage 1/1"));
         inv.setItem(Constants.GUI.EFFECTS_NEXT_PAGE_SLOT, GuiHelper.createGuiItem(Material.GREEN_STAINED_GLASS_PANE, "§aNext Page", "§7You are on the last page."));
         inv.setItem(Constants.GUI.EFFECTS_CLOSE_SLOT, GuiHelper.createGuiItem(Material.BARRIER, "§cClose Menu", "§7Click to exit."));
+    }
+
+    @Override
+    public List<String> getSubcommandCompletions(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player player))
+            return List.of();
+
+        if (args.length == 2) {
+            if (PermissionsHelper.hasClearEffectsCommandPermission(player)) {
+                if ("clear".startsWith(args[1].toLowerCase())) {
+                    return List.of("clear");
+                }
+            }
+        }
+        return List.of();
     }
 }
