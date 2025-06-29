@@ -46,6 +46,9 @@ permissions:
           elytraessentials.command.stats:
             default: true
             description: "Allows the use of /ee stats command"
+          elytraessentials.command.stats.others:
+            default: op
+            description: "Allows the use of /ee stats <player> command"
           elytraessentials.command.top:
             default: true
             description: "Allows the use of /ee top command"

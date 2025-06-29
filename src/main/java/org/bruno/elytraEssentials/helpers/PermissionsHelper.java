@@ -70,6 +70,12 @@ public class PermissionsHelper {
                 player.hasPermission("elytraessentials.command.stats");
     }
 
+    public static boolean hasOthersStatsPermission(Player player){
+        return player.hasPermission("elytraessentials.*") ||
+                player.hasPermission("elytraessentials.command.*") ||
+                player.hasPermission("elytraessentials.command.stats.others");
+    }
+
     public static boolean hasTopPermission(Player player) {
         return player.hasPermission("elytraessentials.*") ||
                 player.hasPermission("elytraessentials.command.*") ||
