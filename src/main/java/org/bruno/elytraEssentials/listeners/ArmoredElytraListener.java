@@ -1,5 +1,6 @@
 package org.bruno.elytraEssentials.listeners;
 
+import com.github.jewishbanana.playerarmorchangeevent.PlayerArmorChangeEvent;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.utils.Constants;
 import org.bukkit.Material;
@@ -12,12 +13,10 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockDispenseArmorEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.inventory.InventoryAction;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerItemBreakEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -45,14 +44,13 @@ public class ArmoredElytraListener implements Listener {
         this.durabilityKey = new NamespacedKey(plugin, Constants.NBT.ARMOR_DURABILITY_TAG);
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onInventoryClick(InventoryClickEvent event) {
-        if (event.getAction() == InventoryAction.NOTHING || !(event.getWhoClicked() instanceof Player player)) {
+    @EventHandler
+    public void onArmorChange(PlayerArmorChangeEvent e) {
+        if (!plugin.getConfigHandlerInstance().getIsArmoredElytraEnabled())
             return;
-        }
-        // Check if the click could have affected the chestplate slot
-        if (event.getSlotType() == InventoryType.SlotType.ARMOR || event.getSlot() == 6 || event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
-            scheduleArmorCheck(player);
+
+        if (e.getSlot() == EquipmentSlot.CHEST) {
+            scheduleArmorCheck(e.getPlayer());
         }
     }
 
