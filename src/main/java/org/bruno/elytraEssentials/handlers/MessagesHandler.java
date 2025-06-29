@@ -30,6 +30,10 @@ public final class MessagesHandler {
 
     private String boostCooldown;
 
+    private String speedoMeterNormal;
+    private String speedoMeterBoost;
+    private String speedoMeterSuperBoost;
+
     private String newPRLongestFlight;
 
     private String purchaseSuccessful;
@@ -78,6 +82,11 @@ public final class MessagesHandler {
         // Boost Messages
         this.boostCooldown = fileConfiguration.getString("boost-cooldown", "&7You must wait &e{0} before boosting again.");
 
+        //  SpeedoMeter
+        this.speedoMeterNormal = fileConfiguration.getString("speedometer-normal", "&eSpeed: {0}{1} &ekm/h");
+        this.speedoMeterBoost = fileConfiguration.getString("speedometer-boost", "&a&l+ &eSpeed: {0}{1} &ekm/h &a&l+");
+        this.speedoMeterSuperBoost = fileConfiguration.getString("speedometer-super-boost", "&c&l++ &eSpeed: {0}{1} &ekm/h &c&l++");
+
         // Stats & Records
         this.newPRLongestFlight = fileConfiguration.getString("longest-flight-pr", "&6&lNew Record! &fYour new longest flight: &e{0} blocks!");
 
@@ -92,6 +101,9 @@ public final class MessagesHandler {
         this.effectGuiDeselect = fileConfiguration.getString("effect-gui-deselect", "&cRight Click: Clear Effect");
     }
 
+    public String getSpeedoMeterNormal() { return this.speedoMeterNormal; }
+    public String getSpeedoMeterBoost() { return this.speedoMeterBoost; }
+    public String getSpeedoMeterSuperBoost() { return this.speedoMeterSuperBoost; }
 
     public String getBoostCooldown() { return this.boostCooldown; }
 

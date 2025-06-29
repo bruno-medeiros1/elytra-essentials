@@ -325,11 +325,14 @@ public class ElytraFlightListener implements Listener
         String color = CalculateSpeedColor(finalSpeed);
 
         if (showSuperBoostMessage) {
-            message = String.format("§a§l++ §eSpeed: %s%.1f §ekm/h §a§l++", color, finalSpeed);
+            String format = plugin.getMessagesHandlerInstance().getSpeedoMeterSuperBoost();
+            message = ChatColor.translateAlternateColorCodes('&', format.replace("{0}", color).replace("{1}", String.format("%.1f", finalSpeed)));
         } else if (showBoostMessage) {
-            message = String.format("§a§l+ §eSpeed: %s%.1f §ekm/h §a§l+", color, finalSpeed);
+            String format = plugin.getMessagesHandlerInstance().getSpeedoMeterBoost();
+            message = ChatColor.translateAlternateColorCodes('&', format.replace("{0}", color).replace("{1}", String.format("%.1f", finalSpeed)));
         } else {
-            message = String.format("§eSpeed: %s%.1f §ekm/h", color, finalSpeed);
+            String format = plugin.getMessagesHandlerInstance().getSpeedoMeterNormal();
+            message = ChatColor.translateAlternateColorCodes('&', format.replace("{0}", color).replace("{1}", String.format("%.1f", finalSpeed)));
 
             // Clean up any expired timers from the maps
             if (boostExpiryTime != null) {

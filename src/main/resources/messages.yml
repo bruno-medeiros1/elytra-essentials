@@ -38,6 +38,11 @@ flight-time-limit: "&eFlight Time Left: &6{0}" # Used for the boss bar
 # Boost Messages
 boost-cooldown: "&7You must wait &e{0} before boosting again."
 
+# Speedometer Messages (Action Bar)
+speedometer-normal: "&eSpeed: {0}{1} &ekm/h"
+speedometer-boost: "&a&l+ &eSpeed: {0}{1} &ekm/h &a&l+"
+speedometer-super-boost: "&c&l++ &eSpeed: {0}{1} &ekm/h &c&l++"
+
 # Stats & Records
 longest-flight-pr: "&6&lNew Record! &fYour new longest flight: &e{0} blocks!"
 
