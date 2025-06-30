@@ -77,10 +77,16 @@ public class ArmorCommand implements ISubCommand {
         // Display Armor Plating Durability
         double percentage = (maxDurability > 0) ? (double) currentDurability / maxDurability : 0;
         String durabilityColor;
-        if (percentage > 0.6) durabilityColor = "§a"; // Green
-        else if (percentage > 0.2) durabilityColor = "§e"; // Yellow
-        else durabilityColor = "§c"; // Red
-        player.sendMessage(secondary + arrow + text + "Armor Plating: " + durabilityColor + currentDurability + " / " + maxDurability);
+        if (percentage == 1){
+            durabilityColor = "§a";
+        } else if (percentage > 0.5) {
+            durabilityColor = "§e";
+        } else if (percentage > 0.2) {
+            durabilityColor = "§c";
+        } else {
+            durabilityColor = "§4";
+        }
+        player.sendMessage(secondary + arrow + text + "Armor Plating: " + durabilityColor + currentDurability + " §7/ §a" + maxDurability);
 
         // Display Base Material
         player.sendMessage(secondary + arrow + text + "Base Material: " + value + getCapitalizedName(materialName));

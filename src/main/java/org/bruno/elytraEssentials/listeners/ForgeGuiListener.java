@@ -38,6 +38,8 @@ public class ForgeGuiListener implements Listener {
     private final NamespacedKey armoredElytraKey;
     private final NamespacedKey materialKey;
     private final NamespacedKey previewItemKey;
+    private final NamespacedKey durabilityKey;
+    private final NamespacedKey maxDurabilityKey;
 
     public ForgeGuiListener(ElytraEssentials plugin, ForgeCommand forgeCommand) {
         this.plugin = plugin;
@@ -46,6 +48,8 @@ public class ForgeGuiListener implements Listener {
         this.armoredElytraKey = new NamespacedKey(plugin, Constants.NBT.ARMORED_ELYTRA_TAG);
         this.materialKey = new NamespacedKey(plugin, Constants.NBT.ARMOR_MATERIAL_TAG);
         this.previewItemKey = new NamespacedKey(plugin, Constants.NBT.PREVIEW_ITEM_TAG);
+        this.durabilityKey = new NamespacedKey(plugin, Constants.NBT.ARMOR_DURABILITY_TAG);
+        this.maxDurabilityKey = new NamespacedKey(plugin, Constants.NBT.MAX_ARMOR_DURABILITY_TAG);
     }
 
     @EventHandler
@@ -252,6 +256,14 @@ public class ForgeGuiListener implements Listener {
         ItemMeta chestMeta = chestplate.getItemMeta();
 
         if (chestMeta != null) {
+
+            //  Transfer armor durability back to the chestplate
+            if (chestMeta instanceof Damageable targetDamage) {
+                int max = container.getOrDefault(maxDurabilityKey, PersistentDataType.INTEGER, 1);
+                int current = container.getOrDefault(durabilityKey, PersistentDataType.INTEGER, 0);
+                targetDamage.setDamage(max - current);
+            }
+
             // Loop through all enchantments and look for ones stored with the "chestplate_" prefix
             for (Enchantment enchantment : Enchantment.values()) {
                 NamespacedKey key = new NamespacedKey(plugin, "chestplate_enchant_" + enchantment.getKey().getKey());
