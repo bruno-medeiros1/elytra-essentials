@@ -289,6 +289,8 @@ public final class ElytraEssentials extends JavaPlugin {
 
     public ElytraBoostListener getElytraBoostListener() { return this.elytraBoostListener; }
 
+    public ShopGuiListener getShopGuiListener() { return this.shopGuiListener; }
+
     public DatabaseHandler getDatabaseHandler() {
         return this.databaseHandler;
     }

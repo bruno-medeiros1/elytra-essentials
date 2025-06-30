@@ -322,7 +322,108 @@ public class EffectsHandler {
                 List.of("§7Spread love wherever you fly!"), 1250, "elytraessentials.effect.heart"
         ));
 
-        //  Register version-dependent effects
+        effectsRegistry.put("WITCHS_BREW", new ElytraEffect(
+                "Witch's Brew", Material.BREWING_STAND, Particle.WITCH,
+                List.of("§7A swirling, magical concoction follows you."), 2200, "elytraessentials.effect.witch"
+        ));
+
+        effectsRegistry.put("SOUL_FIRE", new ElytraEffect(
+                "Soul Fire", Material.SOUL_LANTERN, Particle.SOUL_FIRE_FLAME,
+                List.of("§7A trail of eerie, blue soul fire."), 1800, "elytraessentials.effect.soulfire"
+        ));
+
+        effectsRegistry.put("MUSICAL_FLIGHT", new ElytraEffect(
+                "Musical Flight", Material.JUKEBOX, Particle.NOTE,
+                List.of("§7Leave a trail of musical notes as you fly."), 1300, "elytraessentials.effect.note"
+        ));
+
+        effectsRegistry.put("CLOUD_SURFER", new ElytraEffect(
+                "Cloud Surfer", Material.WHITE_WOOL, Particle.CLOUD,
+                List.of("§7Fly on your own personal cloud."), 800, "elytraessentials.effect.cloud"
+        ));
+
+        effectsRegistry.put("SLIME_TRAIL", new ElytraEffect(
+                "Slime Trail", Material.SLIME_BALL, Particle.ITEM_SLIME,
+                List.of("§7Leave a gooey, green trail behind."), 900, "elytraessentials.effect.slime"
+        ));
+
+        effectsRegistry.put("CRITICAL_AURA", new ElytraEffect(
+                "Critical Aura", Material.DIAMOND_SWORD, Particle.CRIT,
+                List.of("§7Fly with the power of a critical hit!"), 2100, "elytraessentials.effect.crit"
+        ));
+
+        effectsRegistry.put("ENDERS_WAKE", new ElytraEffect(
+                "Ender's Wake", Material.ENDER_EYE, Particle.PORTAL,
+                List.of("§7A swirling vortex of the void follows you."), 2800, "elytraessentials.effect.portal"
+        ));
+
+        effectsRegistry.put("SPORE_BLOOM", new ElytraEffect(
+                "Spore Bloom", Material.SPORE_BLOSSOM, Particle.SPORE_BLOSSOM_AIR,
+                List.of("§7A trail of beautiful, floating spores."), 2800, "elytraessentials.effect.spore"
+        ));
+
+        effectsRegistry.put("BUBBLE_STREAM", new ElytraEffect(
+                "Bubble Stream", Material.GLASS_BOTTLE, Particle.BUBBLE_POP,
+                List.of("§7A stream of popping bubbles."), 950, "elytraessentials.effect.bubble"
+        ));
+
+        effectsRegistry.put("DRAGON_BREATH", new ElytraEffect(
+                "Dragon Breath", Material.DRAGON_EGG, Particle.DRAGON_BREATH,
+                List.of("§7The spark of dragon breath."), 2400, "elytraessentials.effect.dragon"
+        ));
+
+        effectsRegistry.put("DOLPHINS_GRACE", new ElytraEffect(
+                "Dolphin's Grace", Material.HEART_OF_THE_SEA, Particle.DOLPHIN,
+                List.of("§7Swim through the air with a dolphin's help."), 3200, "elytraessentials.effect.dolphin"
+        ));
+
+        effectsRegistry.put("DAMAGE_FLASH", new ElytraEffect(
+                "Damage Flash", Material.REDSTONE, Particle.DAMAGE_INDICATOR,
+                List.of("§7A flash of red damage particles."), 1650, "elytraessentials.effect.damage"
+        ));
+
+        effectsRegistry.put("WAXED_WINGS", new ElytraEffect(
+                "Waxed Wings", Material.HONEYCOMB, Particle.WAX_ON,
+                List.of("§7A trail of waxy particles."), 1400, "elytraessentials.effect.wax"
+        ));
+
+        registerVersionDependentEffect("EXPLOSIVE_TRAIL", "Explosive Trail", Material.TNT,
+                Map.of(
+                        ServerVersion.V_1_18, "EXPLOSION_NORMAL",
+                        ServerVersion.V_1_19, "EXPLOSION_NORMAL",
+                        ServerVersion.V_1_20, "EXPLOSION_NORMAL",
+                        ServerVersion.V_1_21, "EXPLOSION"
+                ),
+                List.of("§7A trail of small explosions."), 1100, "elytraessentials.effect.explosion");
+
+        registerVersionDependentEffect("SMOKE_SCREEN", "Smoke Screen", Material.BLACK_DYE,
+                Map.of(
+                        ServerVersion.V_1_18, "SMOKE_LARGE",
+                        ServerVersion.V_1_19, "SMOKE_LARGE",
+                        ServerVersion.V_1_20, "SMOKE_LARGE",
+                        ServerVersion.V_1_21, "LARGE_SMOKE"
+                ),
+                List.of("§7Create a screen of thick smoke."), 1100, "elytraessentials.effect.smoke");
+
+        registerVersionDependentEffect("TOTEM_BLESSING", "Totem's Blessing", Material.TOTEM_OF_UNDYING,
+                Map.of(
+                        ServerVersion.V_1_18, "TOTEM",
+                        ServerVersion.V_1_19, "TOTEM",
+                        ServerVersion.V_1_20, "TOTEM",
+                        ServerVersion.V_1_21, "TOTEM_OF_UNDYING"
+                ),
+                List.of("§7Fly with the blessing of immortality!"), 3500, "elytraessentials.effect.totem");
+
+
+        registerVersionDependentEffect("LAVA_DRIP", "Lava Trail", Material.LAVA_BUCKET,
+                Map.of(
+                        ServerVersion.V_1_18, "DRIP_LAVA",
+                        ServerVersion.V_1_19, "DRIP_LAVA",
+                        ServerVersion.V_1_20, "DRIP_LAVA",
+                        ServerVersion.V_1_21, "DRIPPING_LAVA"
+                ),
+                List.of("§7Drips of hot magma follow you."), 1900, "elytraessentials.effect.lavadrip");
+
         registerVersionDependentEffect("WATER_TRAIL", "Water Trail", Material.WATER_BUCKET,
                 Map.of(
                         ServerVersion.V_1_18, "DRIP_WATER",
@@ -332,7 +433,6 @@ public class EffectsHandler {
                 ),
                 List.of("§7Trails of water follow you!"), 2000, "elytraessentials.effect.water");
 
-        // For Arcane Trail
         registerVersionDependentEffect("ARCANE_TRAIL", "Arcane Trail", Material.ENCHANTING_TABLE,
                 Map.of(
                         ServerVersion.V_1_18, "ENCHANTMENT_TABLE",
@@ -342,7 +442,6 @@ public class EffectsHandler {
                 ),
                 List.of("§7Leave a trail of mystical runes."), 2500, "elytraessentials.effect.arcane");
 
-        // For Emerald Spark
         registerVersionDependentEffect("EMERALD_SPARK", "Emerald Spark", Material.EMERALD,
                 Map.of(
                         ServerVersion.V_1_18, "VILLAGER_HAPPY",
@@ -351,6 +450,14 @@ public class EffectsHandler {
                         ServerVersion.V_1_21, "HAPPY_VILLAGER" // Renamed in 1.21
                 ),
                 List.of("§7Show off with a glittering green trail."), 3000, "elytraessentials.effect.emerald");
+
+
+        if (ServerVersion.getCurrent() == ServerVersion.V_1_20 || ServerVersion.getCurrent() == ServerVersion.V_1_21) {
+            effectsRegistry.put("CHERRY_BLOSSOM", new ElytraEffect(
+                    "Waxed Cherry Blossom", Material.CHERRY_LEAVES, Particle.CHERRY_LEAVES,
+                    List.of("§7A beautiful trail of cherry petals."), 1550, "elytraessentials.effect.cherry"
+            ));
+        }
     }
 
     private void registerVersionDependentEffect(String key, String name, Material material,

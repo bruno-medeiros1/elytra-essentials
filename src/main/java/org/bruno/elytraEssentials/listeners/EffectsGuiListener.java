@@ -43,7 +43,8 @@ public class EffectsGuiListener implements Listener {
         switch (clickedSlot) {
             case Constants.GUI.EFFECTS_SHOP_SLOT:
                 player.closeInventory();
-                shopCommand.OpenShop(player);
+                player.playSound(player.getLocation(), Sound.BLOCK_CHEST_OPEN, 0.8f, 0.8f);
+                shopCommand.OpenShop(player, 0);
                 return;
 
             case Constants.GUI.EFFECTS_CLOSE_SLOT:
