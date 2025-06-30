@@ -18,6 +18,7 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
@@ -219,6 +220,15 @@ public class ForgeGuiListener implements Listener {
         ItemStack plainElytra = new ItemStack(Material.ELYTRA);
         ItemStack chestplate = reassembleChestplate(armoredElytra);
 
+        //  handle armored elytra durability
+        if (armoredElytra.getItemMeta() instanceof Damageable sourceDamage) {
+            ItemMeta plainMeta = plainElytra.getItemMeta();
+            if (plainMeta instanceof Damageable targetDamage) {
+                targetDamage.setDamage(sourceDamage.getDamage());
+                plainElytra.setItemMeta(targetDamage);
+            }
+        }
+
         // Tag them as preview items
         ItemMeta metaPlainElytra = plainElytra.getItemMeta();
         if (metaPlainElytra != null){
@@ -230,7 +240,6 @@ public class ForgeGuiListener implements Listener {
         forge.setItem(Constants.GUI.FORGE_ARMOR_SLOT, chestplate);
     }
 
-    //  TODO: Resolver items encantados quando tento revert elytra armada
     private ItemStack reassembleChestplate(ItemStack armoredElytra) {
         ItemMeta sourceMeta = armoredElytra.getItemMeta();
         if (sourceMeta == null) return null;
@@ -313,6 +322,14 @@ public class ForgeGuiListener implements Listener {
     private ItemStack createArmoredElytra(ItemStack elytra, ItemStack chestplate) {
         ItemStack armoredElytra = new ItemStack(Material.ELYTRA);
         ItemMeta meta = armoredElytra.getItemMeta();
+
+        //  handle elytra durability
+        if (elytra.getItemMeta() instanceof Damageable sourceDamage) {
+            if (meta instanceof Damageable targetDamage) {
+                targetDamage.setDamage(sourceDamage.getDamage());
+            }
+        }
+
         Material armorType = chestplate.getType();
         int maxDurability = armorType.getMaxDurability();
 
