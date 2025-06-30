@@ -347,14 +347,13 @@ public class ForgeGuiListener implements Listener {
             targetDamage.setDamage(sourceDamage.getDamage());
         }
 
-        int maxArmorDurability = chestplate.getType().getMaxDurability();
-        int currentArmorDurability = maxArmorDurability;
-        if (chestplate.getItemMeta() instanceof Damageable sourceArmorDamage) {
-            currentArmorDurability = maxArmorDurability - sourceArmorDamage.getDamage();
-        }
-
         Material armorType = chestplate.getType();
-        int maxDurability = armorType.getMaxDurability();
+        int maxArmorDurability = armorType.getMaxDurability();
+        int currentArmorDamage = 0;
+        if (chestplate.getItemMeta() instanceof Damageable sourceArmorDamage) {
+            currentArmorDamage = sourceArmorDamage.getDamage();
+        }
+        int currentArmorDurability = maxArmorDurability - currentArmorDamage;
 
         int armorPoints = 0;
         int armorToughness = 0;
@@ -379,12 +378,19 @@ public class ForgeGuiListener implements Listener {
                 lore.add(String.format(" §f- §7Armor Toughness: §a+%d", armorToughness));
             }
             lore.add("");
-            if (currentArmorDurability == maxArmorDurability){
-                lore.add(String.format("§6Armor Plating: §a%d / %d", currentArmorDurability, maxArmorDurability));
-            }else {
-                //  TODO: Add dynamic color for the armor as the armor lost protection
-                lore.add(String.format("§6Armor Plating: §e%d / §a%d", currentArmorDurability, maxArmorDurability));
+
+            double percentage = (maxArmorDurability > 0) ? (double) currentArmorDurability / maxArmorDurability : 0;
+            String durabilityColor;
+            if (percentage == 1){
+                durabilityColor = "§a";
+            } else if (percentage > 0.5) {
+                durabilityColor = "§e";
+            } else if (percentage > 0.2) {
+                durabilityColor = "§c";
+            } else {
+                durabilityColor = "§4";
             }
+            lore.add(String.format("§6Armor Plating: %s%d §7/ §a%d", durabilityColor, currentArmorDurability, maxArmorDurability));
 
             //  Get enchantments from both input items.
             Map<Enchantment, Integer> elytraEnchants = elytra.getEnchantments();
@@ -423,8 +429,8 @@ public class ForgeGuiListener implements Listener {
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
 
             meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.ARMORED_ELYTRA_TAG), PersistentDataType.BOOLEAN, true);
-            meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.ARMOR_DURABILITY_TAG), PersistentDataType.INTEGER, maxDurability);
-            meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.MAX_ARMOR_DURABILITY_TAG), PersistentDataType.INTEGER, maxDurability);
+            meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.ARMOR_DURABILITY_TAG), PersistentDataType.INTEGER, currentArmorDurability);
+            meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.MAX_ARMOR_DURABILITY_TAG), PersistentDataType.INTEGER, maxArmorDurability);
             meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.ARMOR_MATERIAL_TAG), PersistentDataType.STRING, chestplate.getType().name());
             meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.PREVIEW_ITEM_TAG), PersistentDataType.BOOLEAN, true);
 

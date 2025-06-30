@@ -111,15 +111,16 @@ public class ArmoredElytraDamageListener implements Listener {
 
         double percentage = (max > 0) ? (double) current / max : 0;
         String durabilityColor;
-        if (percentage > 0.6) {
-            durabilityColor = "§a"; // Green
+        if (percentage == 1){
+            durabilityColor = "§a";
+        } else if (percentage > 0.5) {
+            durabilityColor = "§e";
         } else if (percentage > 0.2) {
-            durabilityColor = "§e"; // Yellow
+            durabilityColor = "§c";
         } else {
-            durabilityColor = "§c"; // Red
+            durabilityColor = "§4";
         }
-
-        String durabilityLine = String.format("§6Armor Plating: %s%d / %d", durabilityColor, current, max);
+        String durabilityLine = String.format("§6Armor Plating: %s%d §7/ §a%d", durabilityColor, current, max);
 
         boolean found = false;
         for (int i = 0; i < lore.size(); i++) {
