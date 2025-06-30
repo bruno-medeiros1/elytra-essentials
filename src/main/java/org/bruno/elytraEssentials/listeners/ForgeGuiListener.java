@@ -217,7 +217,7 @@ public class ForgeGuiListener implements Listener {
     }
 
     private void displayRevertedItems(Inventory forge, ItemStack armoredElytra) {
-        ItemStack plainElytra = new ItemStack(Material.ELYTRA);
+        ItemStack plainElytra = reassembleElytra(armoredElytra);
         ItemStack chestplate = reassembleChestplate(armoredElytra);
 
         //  handle armored elytra durability
@@ -246,36 +246,55 @@ public class ForgeGuiListener implements Listener {
 
         PersistentDataContainer container = sourceMeta.getPersistentDataContainer();
 
-        // Re-create the chestplate from its stored material type
         String materialName = container.get(materialKey, PersistentDataType.STRING);
         Material armorType = (materialName != null) ? Material.matchMaterial(materialName) : Material.DIAMOND_CHESTPLATE;
-        ItemStack chestplate = null;
-        if (armorType != null) {
-            chestplate = new ItemStack(armorType);
-        }
-        ItemMeta chestMeta = null;
-        if (chestplate != null) {
-            chestMeta = chestplate.getItemMeta();
-        }
+        ItemStack chestplate = new ItemStack(armorType);
+        ItemMeta chestMeta = chestplate.getItemMeta();
 
         if (chestMeta != null) {
-            // Loop through all possible enchantments
+            // Loop through all enchantments and look for ones stored with the "chestplate_" prefix
             for (Enchantment enchantment : Enchantment.values()) {
-                // Create the key we would have used to store this enchantment
-                NamespacedKey key = new NamespacedKey(plugin, "enchant_" + enchantment.getKey().getKey());
-
-                // Check if the Armored Elytra has a stored level for this enchantment
+                NamespacedKey key = new NamespacedKey(plugin, "chestplate_enchant_" + enchantment.getKey().getKey());
                 if (container.has(key, PersistentDataType.INTEGER)) {
                     int level = container.get(key, PersistentDataType.INTEGER);
-                    // Re-apply the enchantment to the new chestplate
                     chestMeta.addEnchant(enchantment, level, true);
                 }
             }
-
             chestMeta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.PREVIEW_ITEM_TAG), PersistentDataType.BOOLEAN, true);
+
             chestplate.setItemMeta(chestMeta);
         }
         return chestplate;
+    }
+
+    private ItemStack reassembleElytra(ItemStack armoredElytra) {
+        ItemMeta sourceMeta = armoredElytra.getItemMeta();
+        if (sourceMeta == null) return null;
+
+        PersistentDataContainer container = sourceMeta.getPersistentDataContainer();
+        ItemStack plainElytra = new ItemStack(Material.ELYTRA);
+        ItemMeta elytraMeta = plainElytra.getItemMeta();
+
+        if (elytraMeta instanceof Damageable targetDamage) {
+            if (sourceMeta instanceof Damageable sourceDamage) {
+                targetDamage.setDamage(sourceDamage.getDamage());
+            }
+        }
+
+        if (elytraMeta != null) {
+            // Loop through all enchantments and look for ones stored with the "elytra_" prefix
+            for (Enchantment enchantment : Enchantment.values()) {
+                NamespacedKey key = new NamespacedKey(plugin, "elytra_enchant_" + enchantment.getKey().getKey());
+                if (container.has(key, PersistentDataType.INTEGER)) {
+                    int level = container.get(key, PersistentDataType.INTEGER);
+                    elytraMeta.addEnchant(enchantment, level, true);
+                }
+            }
+            elytraMeta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.PREVIEW_ITEM_TAG), PersistentDataType.BOOLEAN, true);
+
+            plainElytra.setItemMeta(elytraMeta);
+        }
+        return plainElytra;
     }
 
     //  ############### HELPER METHODS #######################
@@ -358,29 +377,38 @@ public class ForgeGuiListener implements Listener {
             lore.add("");
             lore.add(String.format("§6Armor Plating: §7%d / §a%d", maxDurability, maxDurability));
 
-            //  Get the enchantments from the input chestplate.
-            Map<Enchantment, Integer> enchantments = chestplate.getEnchantments();
-            if (!enchantments.isEmpty()) {
+            //  Get enchantments from both input items.
+            Map<Enchantment, Integer> elytraEnchants = elytra.getEnchantments();
+            Map<Enchantment, Integer> chestplateEnchants = chestplate.getEnchantments();
+
+            //  Create a map for display purposes, merging the two lists
+            //  and keeping the higher level of any duplicate enchantments.
+            Map<Enchantment, Integer> displayEnchants = new HashMap<>(chestplateEnchants);
+            elytraEnchants.forEach((enchant, level) ->
+                    displayEnchants.merge(enchant, level, Integer::max)
+            );
+
+            //  Build the lore using the clean, merged display map.
+            if (!displayEnchants.isEmpty()) {
                 lore.add("");
                 lore.add("§dEnchantments:");
             }
-
-            //  Loop through each enchantment and store it in the item's NBT.
-            for (Map.Entry<Enchantment, Integer> entry : enchantments.entrySet()) {
-                Enchantment enchantment = entry.getKey();
-                int level = entry.getValue();
-
-                // Create a unique key for each enchantment, e.g., "enchant_protection"
-                NamespacedKey key = new NamespacedKey(plugin, "enchant_" + enchantment.getKey().getKey());
-
-                // Store the enchantment level in the Persistent Data Container.
-                meta.getPersistentDataContainer().set(key, PersistentDataType.INTEGER, level);
-
-                // Add the enchantment to the lore to show the player it was transferred.
-                lore.add(String.format(" §f- §7%s %d", getEnchantmentName(enchantment), level));
+            for (Map.Entry<Enchantment, Integer> entry : displayEnchants.entrySet()) {
+                lore.add(String.format(" §f- §7%s %d", getEnchantmentName(entry.getKey()), entry.getValue()));
             }
 
             meta.setLore(lore);
+
+            //  Save the original enchantments to NBT with prefixes to preserve their source.
+            //  This is crucial for the revert process to work correctly.
+            for (Map.Entry<Enchantment, Integer> entry : elytraEnchants.entrySet()) {
+                NamespacedKey key = new NamespacedKey(plugin, "elytra_enchant_" + entry.getKey().getKey().getKey());
+                meta.getPersistentDataContainer().set(key, PersistentDataType.INTEGER, entry.getValue());
+            }
+            for (Map.Entry<Enchantment, Integer> entry : chestplateEnchants.entrySet()) {
+                NamespacedKey key = new NamespacedKey(plugin, "chestplate_enchant_" + entry.getKey().getKey().getKey());
+                meta.getPersistentDataContainer().set(key, PersistentDataType.INTEGER, entry.getValue());
+            }
 
             meta.addEnchant(Enchantment.LURE, 1, true);
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
