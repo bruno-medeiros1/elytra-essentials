@@ -342,11 +342,15 @@ public class ForgeGuiListener implements Listener {
         ItemStack armoredElytra = new ItemStack(Material.ELYTRA);
         ItemMeta meta = armoredElytra.getItemMeta();
 
-        //  handle elytra durability
-        if (elytra.getItemMeta() instanceof Damageable sourceDamage) {
-            if (meta instanceof Damageable targetDamage) {
-                targetDamage.setDamage(sourceDamage.getDamage());
-            }
+        //  handle chestplate and elytra durability
+        if (elytra.getItemMeta() instanceof Damageable sourceDamage && meta instanceof Damageable targetDamage) {
+            targetDamage.setDamage(sourceDamage.getDamage());
+        }
+
+        int maxArmorDurability = chestplate.getType().getMaxDurability();
+        int currentArmorDurability = maxArmorDurability;
+        if (chestplate.getItemMeta() instanceof Damageable sourceArmorDamage) {
+            currentArmorDurability = maxArmorDurability - sourceArmorDamage.getDamage();
         }
 
         Material armorType = chestplate.getType();
@@ -375,7 +379,12 @@ public class ForgeGuiListener implements Listener {
                 lore.add(String.format(" §f- §7Armor Toughness: §a+%d", armorToughness));
             }
             lore.add("");
-            lore.add(String.format("§6Armor Plating: §7%d / §a%d", maxDurability, maxDurability));
+            if (currentArmorDurability == maxArmorDurability){
+                lore.add(String.format("§6Armor Plating: §a%d / %d", currentArmorDurability, maxArmorDurability));
+            }else {
+                //  TODO: Add dynamic color for the armor as the armor lost protection
+                lore.add(String.format("§6Armor Plating: §e%d / §a%d", currentArmorDurability, maxArmorDurability));
+            }
 
             //  Get enchantments from both input items.
             Map<Enchantment, Integer> elytraEnchants = elytra.getEnchantments();
