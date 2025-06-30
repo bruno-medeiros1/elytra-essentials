@@ -1,5 +1,10 @@
 package org.bruno.elytraEssentials.commands;
 
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.helpers.TimeHelper;
@@ -8,6 +13,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -28,17 +34,26 @@ public class TopCommand implements ISubCommand {
 
     @Override
     public boolean Execute(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player player))
-            //  TODO: Add message "only players are allowed to execute this"
-            return true;
-
-        if (!PermissionsHelper.hasTopPermission(player)){
-            plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getNoPermissionMessage());
+        if (!(sender instanceof Player || sender instanceof ConsoleCommandSender)) {
+            sender.sendMessage("§cThis command can only be run by players or the console.");
             return true;
         }
 
-        if (args.length < 1) {
+        if (args.length > 1){
             sender.sendMessage(ChatColor.RED + "Usage: /ee top <distance,time,longest>");
+            return true;
+        }
+
+        if (sender instanceof Player player){
+            if (!PermissionsHelper.hasTopPermission(player)){
+                plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getNoPermissionMessage());
+                return true;
+            }
+        }
+
+
+        if (args.length < 1) {
+            sendLeaderboardMenu(sender);
             return true;
         }
 
@@ -68,8 +83,6 @@ public class TopCommand implements ISubCommand {
                 sender.sendMessage(ChatColor.RED + "Invalid category. Use: distance, time, longestflight");
                 return true;
         }
-
-        sender.sendMessage(ChatColor.YELLOW + "Fetching leaderboard data...");
 
         // Run the database query asynchronously to prevent server lag
         new BukkitRunnable() {
@@ -123,14 +136,64 @@ public class TopCommand implements ISubCommand {
         return true;
     }
 
+    private void sendLeaderboardMenu(CommandSender sender) {
+        // The sender must be a player to receive interactive components.
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage("§6--- ElytraEssentials Leaderboards ---");
+            sender.sendMessage("§eUse /ee top <category> to view a leaderboard.");
+            sender.sendMessage("§7Categories: distance, time, longest");
+            return;
+        }
+
+        player.sendMessage("§6§m----------------------------------------------------");
+        player.sendMessage("");
+        player.sendMessage("§6§lElytraEssentials Leaderboards");
+        player.sendMessage("§7Click a category to view the top players.");
+        player.sendMessage("");
+
+        sendLeaderboardLine(player, "§bTotal Distance Flown", "/ee top distance");
+        sendLeaderboardLine(player, "§bTotal Flight Time", "/ee top time");
+        sendLeaderboardLine(player, "§bLongest Single Flight", "/ee top longest");
+
+        player.sendMessage("");
+        player.sendMessage("§6§m----------------------------------------------------");
+    }
+
+    /**
+     * Helper method to build and send a single clickable line for the menu.
+     */
+    private void sendLeaderboardLine(Player player, String categoryName, String commandToRun) {
+        TextComponent message = new TextComponent(TextComponent.fromLegacyText("§e» "));
+
+        TextComponent categoryComponent = new TextComponent(TextComponent.fromLegacyText(categoryName));
+        categoryComponent.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, commandToRun));
+
+        // Create the hover text
+        BaseComponent[] hoverText = new TextComponent[]{
+                new TextComponent(TextComponent.fromLegacyText("§aClick to view the\n")),
+                new TextComponent(TextComponent.fromLegacyText(categoryName)),
+                new TextComponent(TextComponent.fromLegacyText("\n§aleaderboard."))
+        };
+        categoryComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(hoverText)));
+
+        message.addExtra(categoryComponent);
+        player.spigot().sendMessage(message);
+    }
+
+
     @Override
     public List<String> getSubcommandCompletions(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player))
+        if (!(sender instanceof Player || sender instanceof ConsoleCommandSender)) {
             return List.of();
+        }
+
 
         if (args.length == 2) {
-            if (!PermissionsHelper.hasTopPermission((Player) sender))
-                return List.of();
+            if (sender instanceof Player player) {
+                if (!PermissionsHelper.hasTopPermission(player))
+                    return List.of();
+            }
+
 
             // A list of all possible leaderboard categories
             List<String> allCategories = List.of("distance", "time", "longest");
