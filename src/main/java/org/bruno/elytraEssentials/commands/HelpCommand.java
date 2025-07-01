@@ -58,6 +58,16 @@ public class HelpCommand implements ISubCommand {
             sender.sendMessage(secondary + arrow + "/ee top <category>" + text + " - View leaderboard statistics.");
         }
 
+        boolean canForge = !(sender instanceof Player) || PermissionsHelper.hasForgePermission((Player) sender);
+        if (canForge) {
+            sender.sendMessage(secondary + arrow + "/ee forge" + text + " - Opens the forge GUI.");
+        }
+
+        boolean canArmor = !(sender instanceof Player) || PermissionsHelper.hasArmorPermission((Player) sender);
+        if (canArmor) {
+            sender.sendMessage(secondary + arrow + "/ee armor" + text + " - Outputs the status and remaining Armor Plating durability of a worn Armored Elytra.");
+        }
+
         sender.sendMessage("");
         sender.sendMessage(primary + "§m----------------------------------------------------");
 

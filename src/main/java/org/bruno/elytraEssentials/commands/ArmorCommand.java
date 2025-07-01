@@ -25,6 +25,29 @@ public class ArmorCommand implements ISubCommand {
         this.plugin = plugin;
     }
 
+    ///
+    /// TODO: Adicionar Item History
+    /// ...
+    /// §eItem History:
+    /// §f - §7Total Damage Absorbed: §a1,240
+    /// §f - §7Times Plating Shattered: §c2
+    /// §f - §7Forged By: §dbruno_medeiros1
+    /// ...
+    ///
+    /// TODO: Adicionar Repair Cost Preview
+    ///
+    /// §b--- Armored Elytra Status ---
+    /// §eArmor Plating: §c150 / 525
+    /// §eBase Material: §fDiamond
+    ///
+    /// §eRepair Cost:
+    /// §f - §7Diamonds: §a12
+    /// §f - §7Experience Levels: §a5
+    ///
+    /// §eStored Enchantments:
+    /// §f - §7Protection 4
+    /// ...
+
     @Override
     public boolean Execute(CommandSender sender, String[] args) {
         if (!(sender instanceof Player player))
