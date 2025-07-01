@@ -58,7 +58,7 @@ public class EffectsHandler {
 
             if (!economy.has(player, price)) {
                 player.getWorld().playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 0.8f);
-                plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getPurchaseFailedMoney());
+                plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getNotEnoughMoney());
                 return false;
             }
 

@@ -10,6 +10,7 @@ public final class MessagesHandler {
     private String playerNotFound;
     private String featureNotEnabled;
     private String notEnoughXP;
+    private String notEnoughMoney;
 
     private String reloadStart;
     private String reloadSuccess;
@@ -38,13 +39,15 @@ public final class MessagesHandler {
     private String newPRLongestFlight;
 
     private String purchaseSuccessful;
-    private String purchaseFailedMoney;
     private String effectSelected;
     private String effectDeselected;
     private String effectGuiOwned;
     private String effectGuiPurchase;
     private String effectGuiSelect;
     private String effectGuiDeselect;
+
+    private String forgeSuccessful;
+    private String revertSuccessful;
 
     public MessagesHandler(FileConfiguration fileConfiguration) {
         this.fileConfiguration = fileConfiguration;
@@ -59,6 +62,7 @@ public final class MessagesHandler {
         this.playerNotFound = fileConfiguration.getString("player-not-found", "&cPlayer '{0}' could not be found.");
         this.featureNotEnabled = fileConfiguration.getString("feature-not-enabled", "&cThis feature is not enabled.");
         this.notEnoughXP = fileConfiguration.getString("not-enough-xp", "&cYou do not have enough experience levels.");
+        this.notEnoughMoney = fileConfiguration.getString("not-enough-money", "&cYou don't have enough money.");
 
         // Reload Command Messages
         this.reloadStart = fileConfiguration.getString("reload-start", "&eReloading ElytraEssentials... Please wait.");
@@ -94,33 +98,38 @@ public final class MessagesHandler {
 
         // Shop & Effects Messages
         this.purchaseSuccessful = fileConfiguration.getString("purchase-successful", "&aYou have successfully purchased the {0} effect!");
-        this.purchaseFailedMoney = fileConfiguration.getString("purchase-failed-money", "&cYou cannot afford this item.");
         this.effectSelected = fileConfiguration.getString("effect-selected", "&7You have equipped the {0} &7effect.");
         this.effectDeselected = fileConfiguration.getString("effect-deselected", "&7You have cleared the {0} &7effect.");
         this.effectGuiOwned = fileConfiguration.getString("effect-gui-owned", "&cYou already own this effect!");
         this.effectGuiPurchase = fileConfiguration.getString("effect-gui-purchase", "§aLeft Click: Select Effect");
         this.effectGuiSelect = fileConfiguration.getString("effect-gui-select", "&aLeft Click: Select Effect");
         this.effectGuiDeselect = fileConfiguration.getString("effect-gui-deselect", "&cRight Click: Clear Effect");
+
+        //  Forge
+        this.forgeSuccessful = fileConfiguration.getString("forge-successful", "&aYou have successfully forged an Armored Elytra!");
+        this.revertSuccessful = fileConfiguration.getString("revert-successful", "&aYou have successfully reverted your Armored Elytra.");
     }
 
+    // General Messages
+    public String getPrefixMessage() { return this.prefix; }
+    public String getNoPermissionMessage() { return this.noPermission; }
+    public String getPlayerNotFound() { return playerNotFound; }
+    public String getFeatureNotEnabled() { return this.featureNotEnabled; }
     public String getNotEnoughXP() { return this.notEnoughXP; }
+    public String getNotEnoughMoney() { return notEnoughMoney; }
 
-    public String getSpeedoMeterNormal() { return this.speedoMeterNormal; }
-    public String getSpeedoMeterBoost() { return this.speedoMeterBoost; }
-    public String getSpeedoMeterSuperBoost() { return this.speedoMeterSuperBoost; }
+    // Reload Command Messages
+    public String getReloadStartMessage() { return this.reloadStart; }
+    public String getReloadSuccessMessage() { return this.reloadSuccess; }
 
-    public String getBoostCooldown() { return this.boostCooldown; }
-
-    public String getEffectGuiOwned() { return effectGuiOwned; }
-    public String getEffectGuiPurchase() { return effectGuiPurchase; }
-    public String getEffectDeselected() { return effectDeselected; }
-    public String getEffectSelected() { return effectSelected; }
-    public String getEffectGuiDeselect() { return effectGuiDeselect; }
-    public String getEffectGuiSelect() { return effectGuiSelect; }
-
+    // Restriction Messages
+    public String getElytraUsageDisabledMessage() { return this.elytraUsageDisabled; }
+    public String getElytraUsageWorldDisabledMessage() { return this.elytraUsageWorldDisabled; }
     public String getElytraEquipDisabled() { return this.elytraEquipDisabled; }
     public String getElytraEquipDropped() { return this.elytraEquipDropped; }
     public String getElytraEquipReturned() { return this.elytraEquipReturned; }
+
+    // Flight Time Messages
     public String getElytraFlightTimeAdded() { return this.flightTimeAdded; }
     public String getElytraFlightTimeBypass() { return this.flightTimeBypass; }
     public String getElytraFlightTimeCleared() { return this.flightTimeCleared; }
@@ -129,16 +138,29 @@ public final class MessagesHandler {
     public String getElytraFlightTimeRemoved() { return this.flightTimeRemoved; }
     public String getElytraFlightTimeSet() { return this.flightTimeSet; }
     public String getElytraTimeLimitMessage() { return this.flightTimeLimit; }
-    public String getElytraUsageDisabledMessage() { return this.elytraUsageDisabled; }
-    public String getElytraUsageWorldDisabledMessage() { return this.elytraUsageWorldDisabled; }
-    public String getNewPRLongestFlightMessage() { return this.newPRLongestFlight; }
-    public String getNoPermissionMessage() { return this.noPermission; }
-    public String getPlayerNotFound() { return playerNotFound; }
-    public String getPrefixMessage() { return this.prefix; }
-    public String getPurchaseFailedMoney() { return purchaseFailedMoney; }
-    public String getPurchaseSuccessful() { return purchaseSuccessful; }
-    public String getReloadStartMessage() { return this.reloadStart; }
-    public String getReloadSuccessMessage() { return this.reloadSuccess; }
 
-    public String getFeatureNotEnabled() { return this.featureNotEnabled; }
+    // Boost Messages
+    public String getBoostCooldown() { return this.boostCooldown; }
+
+    //  SpeedoMeter
+    public String getSpeedoMeterNormal() { return this.speedoMeterNormal; }
+    public String getSpeedoMeterBoost() { return this.speedoMeterBoost; }
+    public String getSpeedoMeterSuperBoost() { return this.speedoMeterSuperBoost; }
+
+    // Stats & Records
+    public String getNewPRLongestFlightMessage() { return this.newPRLongestFlight; }
+
+    // Shop & Effects Messages
+    public String getEffectGuiOwned() { return effectGuiOwned; }
+    public String getEffectGuiPurchase() { return effectGuiPurchase; }
+    public String getEffectDeselected() { return effectDeselected; }
+    public String getEffectSelected() { return effectSelected; }
+    public String getEffectGuiDeselect() { return effectGuiDeselect; }
+    public String getEffectGuiSelect() { return effectGuiSelect; }
+    public String getPurchaseSuccessful() { return purchaseSuccessful; }
+
+    //  Forge
+    public String getForgeSuccessful() { return forgeSuccessful; }
+    public String getRevertSuccessful() { return revertSuccessful; }
+
 }

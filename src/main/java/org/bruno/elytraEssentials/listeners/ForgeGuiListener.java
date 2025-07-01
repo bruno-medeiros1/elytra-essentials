@@ -131,7 +131,8 @@ public class ForgeGuiListener implements Listener {
 
 
     private void handleConfirmClick(Inventory forge, Player player) {
-        if (!handlePayment(player)) {
+        boolean paymentSuccess = handlePayment(player);
+        if (!paymentSuccess) {
             return;
         }
 
@@ -144,6 +145,7 @@ public class ForgeGuiListener implements Listener {
             returnItemToPlayer(player, createCleanCopy(resultItem));
             forge.clear();
             player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_USE, 1.0f, 1.0f);
+            plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getForgeSuccessful());
             player.closeInventory();
         }
         else if (isPreviewItem(revertedElytra) && isPreviewItem(revertedArmor)) {
@@ -152,6 +154,7 @@ public class ForgeGuiListener implements Listener {
             returnItemToPlayer(player, createCleanCopy(revertedArmor));
             forge.clear();
             player.playSound(player.getLocation(), Sound.BLOCK_GRINDSTONE_USE, 1.0f, 1.0f);
+            plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getRevertSuccessful());
             player.closeInventory();
         }
     }
@@ -502,7 +505,7 @@ public class ForgeGuiListener implements Listener {
             }
             if (!economy.has(player, moneyCost)) {
                 player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 0.8f);
-                plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getPurchaseFailedMoney());
+                plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getNotEnoughMoney());
                 return false; // Payment failed
             }
         }
