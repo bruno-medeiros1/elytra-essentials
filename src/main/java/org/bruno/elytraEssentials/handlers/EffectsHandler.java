@@ -51,6 +51,10 @@ public class EffectsHandler {
 
             double price = effect.getPrice();
             Economy economy = plugin.getEconomy();
+            if (economy == null) {
+                plugin.getLogger().warning("Vault economy cost is enabled, but Vault is not hooked. Cannot charge player.");
+                return true;
+            }
 
             if (!economy.has(player, price)) {
                 player.getWorld().playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 0.8f);

@@ -13,6 +13,7 @@ prefix: "&6&lElytraEssentials &e»"
 no-permission: "&cYou do not have permission to perform this action."
 player-not-found: "&cPlayer '{0}' could not be found."
 feature-not-enabled: "&cThis feature is not enabled."
+not-enough-xp: "&cYou do not have enough experience levels."
 
 # Reload Command Message
 reload-start: "&eReloading ElytraEssentials... Please wait."

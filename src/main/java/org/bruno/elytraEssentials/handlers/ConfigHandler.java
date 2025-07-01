@@ -13,7 +13,6 @@ public class ConfigHandler {
     // General section
     private boolean isDebugModeEnabled;
     private boolean isCheckForUpdatesEnabled;
-    private boolean isArmoredElytraEnabled;
     private boolean isElytraEquipDisabled;
     private boolean isElytraBreakProtectionEnabled;
     private boolean isKineticEnergyProtectionEnabled;
@@ -46,6 +45,11 @@ public class ConfigHandler {
     private String boostItem;
     private int boostCooldown;
 
+    //  Armored Elytra section
+    private boolean isArmoredElytraEnabled;
+    private double forgeCostMoney;
+    private int forgeCostXpLevels;
+
     public ConfigHandler(FileConfiguration fileConfiguration) {
         this.fileConfiguration = fileConfiguration;
         SetConfigVariables();
@@ -54,8 +58,6 @@ public class ConfigHandler {
     public final void SetConfigVariables() {
         this.isDebugModeEnabled = this.fileConfiguration.getBoolean("general.debug-mode", false);
         this.isCheckForUpdatesEnabled = this.fileConfiguration.getBoolean("general.check-for-updates", true);
-        this.isArmoredElytraEnabled = this.fileConfiguration.getBoolean("general.armored-elytra.enabled", true);
-
         this.isElytraEquipDisabled = this.fileConfiguration.getBoolean("general.disable-elytra-equipment", false);
         this.isElytraBreakProtectionEnabled = this.fileConfiguration.getBoolean("general.elytra-break-protection", false);
         this.isKineticEnergyProtectionEnabled = this.fileConfiguration.getBoolean("general.kinetic-energy-protection", false);
@@ -101,13 +103,16 @@ public class ConfigHandler {
         this.isBoostEnabled = this.fileConfiguration.getBoolean("flight.boost.enabled", true);
         this.boostItem = this.fileConfiguration.getString("flight.boost.item", "FEATHER");
         this.boostCooldown = this.fileConfiguration.getInt("flight.boost.cooldown", 2000);
+
+        this.isArmoredElytraEnabled = this.fileConfiguration.getBoolean("armored-elytra.enabled", true);
+        this.forgeCostMoney = this.fileConfiguration.getDouble("armored-elytra.cost.money", 5000);
+        this.forgeCostXpLevels = this.fileConfiguration.getInt("armored-elytra.cost.xp-levels", 10);
     }
 
     public final boolean getIsDebugModeEnabled() {
         return this.isDebugModeEnabled;
     }
     public final boolean getIsCheckForUpdatesEnabled() { return this.isCheckForUpdatesEnabled; }
-    public final boolean getIsArmoredElytraEnabled() { return this.isArmoredElytraEnabled; }
     public final boolean getIsElytraEquipDisabled() { return this.isElytraEquipDisabled; }
     public final boolean getIsElytraBreakProtectionEnabled() { return this.isElytraBreakProtectionEnabled; }
     public final boolean getIsKineticEnergyProtectionEnabled() { return this.isKineticEnergyProtectionEnabled; }
@@ -142,4 +147,9 @@ public class ConfigHandler {
     public final Boolean getIsBoostEnabled() { return this.isBoostEnabled; }
     public final String getBoostItem() { return this.boostItem; }
     public final Integer getBoostCooldown() { return this.boostCooldown; }
+
+    public final boolean getIsArmoredElytraEnabled() { return this.isArmoredElytraEnabled; }
+    public final double getForgeCostMoney() { return this.forgeCostMoney; }
+    public final int getForgeCostXpLevels() { return this.forgeCostXpLevels; }
+
 }

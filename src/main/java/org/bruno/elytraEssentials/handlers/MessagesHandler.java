@@ -9,6 +9,7 @@ public final class MessagesHandler {
     private String noPermission;
     private String playerNotFound;
     private String featureNotEnabled;
+    private String notEnoughXP;
 
     private String reloadStart;
     private String reloadSuccess;
@@ -57,6 +58,7 @@ public final class MessagesHandler {
         this.noPermission = fileConfiguration.getString("no-permission", "&cYou do not have permission to perform this action.");
         this.playerNotFound = fileConfiguration.getString("player-not-found", "&cPlayer '{0}' could not be found.");
         this.featureNotEnabled = fileConfiguration.getString("feature-not-enabled", "&cThis feature is not enabled.");
+        this.notEnoughXP = fileConfiguration.getString("not-enough-xp", "&cYou do not have enough experience levels.");
 
         // Reload Command Messages
         this.reloadStart = fileConfiguration.getString("reload-start", "&eReloading ElytraEssentials... Please wait.");
@@ -100,6 +102,8 @@ public final class MessagesHandler {
         this.effectGuiSelect = fileConfiguration.getString("effect-gui-select", "&aLeft Click: Select Effect");
         this.effectGuiDeselect = fileConfiguration.getString("effect-gui-deselect", "&cRight Click: Clear Effect");
     }
+
+    public String getNotEnoughXP() { return this.notEnoughXP; }
 
     public String getSpeedoMeterNormal() { return this.speedoMeterNormal; }
     public String getSpeedoMeterBoost() { return this.speedoMeterBoost; }

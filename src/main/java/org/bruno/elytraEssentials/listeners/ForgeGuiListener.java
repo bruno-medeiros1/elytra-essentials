@@ -1,5 +1,6 @@
 package org.bruno.elytraEssentials.listeners;
 
+import net.milkbowl.vault.economy.Economy;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.commands.ForgeCommand;
 import org.bruno.elytraEssentials.helpers.GuiHelper;
@@ -89,14 +90,12 @@ public class ForgeGuiListener implements Listener {
             switch (slot) {
                 case Constants.GUI.FORGE_CONFIRM_SLOT:
                     event.setCancelled(true);
-
                     //  Only handle click if the confirm button is actually there
                     if (clickedItem != null && clickedItem.getType() == Material.GREEN_STAINED_GLASS_PANE) {
                         handleConfirmClick(topInventory, player);
                     }
                     break;
                 case Constants.GUI.FORGE_CANCEL_SLOT:
-
                     event.setCancelled(true);
                     if (clickedItem != null && clickedItem.getType() == Material.RED_STAINED_GLASS_PANE) {
                         player.closeInventory();
@@ -132,6 +131,10 @@ public class ForgeGuiListener implements Listener {
 
 
     private void handleConfirmClick(Inventory forge, Player player) {
+        if (!handlePayment(player)) {
+            return;
+        }
+
         ItemStack resultItem = forge.getItem(Constants.GUI.FORGE_RESULT_SLOT);
         ItemStack revertedElytra = forge.getItem(Constants.GUI.FORGE_ELYTRA_SLOT);
         ItemStack revertedArmor = forge.getItem(Constants.GUI.FORGE_ARMOR_SLOT);
@@ -209,8 +212,31 @@ public class ForgeGuiListener implements Listener {
     }
 
     private void showActionButtons(Inventory forge, String action) {
-        ItemStack confirmButton = GuiHelper.createGuiItem(Material.GREEN_STAINED_GLASS_PANE, "§aConfirm " + action, "§7Click to complete the process.");
+        List<String> confirmLore = new ArrayList<>();
+        confirmLore.add("§7Click to complete the process.");
+
+        double moneyCost = plugin.getConfigHandlerInstance().getForgeCostMoney();
+        int xpCost = plugin.getConfigHandlerInstance().getForgeCostXpLevels();
+
+        // Check if there are any costs to display
+        if (moneyCost > 0 || xpCost > 0) {
+            confirmLore.add(""); // Add a spacer
+            confirmLore.add("§6Requirements:");
+
+            if (moneyCost > 0) {
+                confirmLore.add(String.format(" §f- §e$%.2f", moneyCost));
+            }
+            if (xpCost > 0) {
+                if (xpCost == 1)
+                    confirmLore.add(String.format(" §f- §e%d XP Level", xpCost));
+                else
+                    confirmLore.add(String.format(" §f- §e%d XP Levels", xpCost));
+            }
+        }
+
+        ItemStack confirmButton = GuiHelper.createGuiItem(Material.GREEN_STAINED_GLASS_PANE, "§aConfirm " + action, confirmLore.toArray(new String[0]));
         ItemStack cancelButton = GuiHelper.createGuiItem(Material.RED_STAINED_GLASS_PANE, "§cCancel", "§7Click to close the menu.");
+
         forge.setItem(Constants.GUI.FORGE_CONFIRM_SLOT, confirmButton);
         forge.setItem(Constants.GUI.FORGE_CANCEL_SLOT, cancelButton);
     }
@@ -460,5 +486,43 @@ public class ForgeGuiListener implements Listener {
             capitalized.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1)).append(" ");
         }
         return capitalized.toString().trim();
+    }
+
+    private boolean handlePayment(Player player) {
+        // Get both cost values from the config
+        double moneyCost = plugin.getConfigHandlerInstance().getForgeCostMoney();
+        int xpCost = plugin.getConfigHandlerInstance().getForgeCostXpLevels();
+
+        // Check Money requirement
+        if (moneyCost > 0) {
+            Economy economy = plugin.getEconomy();
+            if (economy == null) {
+                plugin.getLogger().warning("Vault economy cost is enabled, but Vault is not hooked. Cannot charge player.");
+                return false;
+            }
+            if (!economy.has(player, moneyCost)) {
+                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 0.8f);
+                plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getPurchaseFailedMoney());
+                return false; // Payment failed
+            }
+        }
+
+        // Check XP requirement
+        if (xpCost > 0) {
+            if (player.getLevel() < xpCost) {
+                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 0.8f);
+                plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getNotEnoughXP());
+                return false; // Payment failed
+            }
+        }
+
+        if (moneyCost > 0) {
+            plugin.getEconomy().withdrawPlayer(player, moneyCost);
+        }
+        if (xpCost > 0) {
+            player.setLevel(player.getLevel() - xpCost);
+        }
+
+        return true; // Payment successful
     }
 }
