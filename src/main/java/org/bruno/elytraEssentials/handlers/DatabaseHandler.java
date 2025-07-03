@@ -559,6 +559,33 @@ public class DatabaseHandler {
         }
     }
 
+    /**
+     * Retrieves a list of all available SQLite backup file names.
+     * @return A list of backup file names, or an empty list if none are found.
+     */
+    public List<String> getBackupFileNames() {
+        // This check ensures the method only runs if SQLite is being used.
+        if (storageType != StorageType.SQLITE) {
+            return Collections.emptyList();
+        }
+
+        List<String> fileNames = new ArrayList<>();
+        File backupFolder = new File(plugin.getDataFolder(), "database/backups");
+
+        // Check if the backup folder exists and is a directory
+        if (backupFolder.exists() && backupFolder.isDirectory()) {
+            // List only files that end with .db
+            File[] files = backupFolder.listFiles((dir, name) -> name.toLowerCase().endsWith(".db"));
+
+            if (files != null) {
+                for (File file : files) {
+                    fileNames.add(file.getName());
+                }
+            }
+        }
+        return fileNames;
+    }
+
 
     //</editor-fold>
 

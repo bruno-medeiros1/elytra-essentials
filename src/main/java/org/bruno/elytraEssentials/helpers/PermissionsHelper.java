@@ -94,10 +94,16 @@ public class PermissionsHelper {
                 player.hasPermission("elytraessentials.command.forge");
     }
 
-    public static boolean hasArmorPermission(Player player){
+    public static boolean hasArmorPermission(Player player) {
         return player.hasPermission("elytraessentials.*") ||
                 player.hasPermission("elytraessentials.command.*") ||
                 player.hasPermission("elytraessentials.command.armor");
+    }
+
+    public static boolean hasImportDbPermission(Player player){
+        return player.hasPermission("elytraessentials.*") ||
+                player.hasPermission("elytraessentials.command.*") ||
+                player.hasPermission("elytraessentials.command.importdb");
     }
 
     //</editor-fold>

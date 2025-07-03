@@ -193,22 +193,14 @@ public final class ElytraEssentials extends JavaPlugin {
         this.messagesHelper.sendDebugMessage("&eThis setting is not intended for ");
         this.messagesHelper.sendDebugMessage("&econtinous use!");
 
-        this.getRecoveryHandler().start();
-        this.getTpsHandler().start();
-        this.getStatsHandler().start();
-        this.getDatabaseHandler().startAutoBackupTask();
-        this.getCombatTagListener().start();
+        startAllPluginTasks();
     }
 
     @Override
     public void onDisable() {
 
         //  Disable tasks
-        this.getRecoveryHandler().cancel();
-        this.getTpsHandler().cancel();
-        this.getStatsHandler().cancel();
-        this.getDatabaseHandler().cancelBackupTask();
-        this.getCombatTagListener().cancel();
+        cancelAllPluginTasks();
 
         StackTraceElement[] stackTraceElementArray = Thread.currentThread().getStackTrace();
         boolean isReloading;
@@ -372,5 +364,24 @@ public final class ElytraEssentials extends JavaPlugin {
             this.elytraStatsExpansion.unregister();
             this.messagesHelper.sendConsoleMessage("&aSuccessfully unhooked from PlaceholderAPI.");
         }
+    }
+
+
+    //  HELPERS
+
+    public void cancelAllPluginTasks(){
+        this.getRecoveryHandler().cancel();
+        this.getTpsHandler().cancel();
+        this.getStatsHandler().cancel();
+        this.getDatabaseHandler().cancelBackupTask();
+        this.getCombatTagListener().cancel();
+    }
+
+    public void startAllPluginTasks(){
+        this.getRecoveryHandler().start();
+        this.getTpsHandler().start();
+        this.getStatsHandler().start();
+        this.getDatabaseHandler().startAutoBackupTask();
+        this.getCombatTagListener().start();
     }
 }
