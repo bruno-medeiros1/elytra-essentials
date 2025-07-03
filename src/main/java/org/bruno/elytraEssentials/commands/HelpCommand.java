@@ -68,6 +68,11 @@ public class HelpCommand implements ISubCommand {
             sender.sendMessage(secondary + arrow + "/ee armor" + text + " - Outputs the status and remaining Armor Plating durability of a worn Armored Elytra.");
         }
 
+        boolean canImport = !(sender instanceof Player) || PermissionsHelper.hasImportDbPermission((Player) sender);
+        if (canImport) {
+            sender.sendMessage(secondary + arrow + "/ee importdb <backup_filename> --confirm" + text + " - Restores a SQLite database backup.");
+        }
+
         sender.sendMessage("");
         sender.sendMessage(primary + "§m----------------------------------------------------");
 
