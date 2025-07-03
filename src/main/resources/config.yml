@@ -104,3 +104,18 @@ flight:
 
     # Players or groups with the permission 'elytraessentials.bypass.boostcooldown' can bypass this cooldown.
     cooldown: 2000 # Cooldown time in milliseconds
+
+  combat-tag:
+    # Set to true to disable a player's elytra for a short time after they take damage while flying.
+    enabled: true # [Default: true]
+
+    # How long (in seconds) the player is prevented from gliding after being hit.
+    duration: 10
+
+    # If true, the player will be protected from the fall damage that occurs
+    # immediately after their elytra is disabled by combat.
+    prevent-fall-damage: true # [Default: true]
+
+    # Set to true to only disable elytra from player-inflicted damage.
+    # Set to false to disable elytra from ANY damage source (players, mobs, environment).
+    player-damage-only: true  # [Default: true]

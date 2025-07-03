@@ -74,7 +74,10 @@ permissions:
             description: "Bypasses restrictions on equipping elytra."
           elytraessentials.bypass.boostcooldown:
             default: op
-            description: "Bypasses restrictions on boost while flying with elytra"
+            description: "Bypasses restrictions on boost while flying with elytra."
+          elytraessentials.bypass.combattag:
+            default: op
+            description: "Player will not be grounded by damage while flying."
 
       elytraessentials.update.notify:
         default: op

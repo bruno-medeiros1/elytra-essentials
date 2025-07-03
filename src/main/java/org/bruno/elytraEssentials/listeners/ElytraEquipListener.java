@@ -31,7 +31,6 @@ public class ElytraEquipListener implements Listener {
         }
     }
 
-    //TODO: Add VersionManager check for newer versions
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();

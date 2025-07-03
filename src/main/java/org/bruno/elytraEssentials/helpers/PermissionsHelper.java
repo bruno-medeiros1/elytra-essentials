@@ -30,6 +30,12 @@ public class PermissionsHelper {
                 player.hasPermission("elytraessentials.bypass.equipment");
     }
 
+    public static boolean PlayerBypassCombatTag(Player player){
+        return player.hasPermission("elytraessentials.*") ||
+                player.hasPermission("elytraessentials.bypass.*") ||
+                player.hasPermission("elytraessentials.bypass.combattag");
+    }
+
     //</editor-fold>
 
     //<editor-fold desc="COMMANDS">

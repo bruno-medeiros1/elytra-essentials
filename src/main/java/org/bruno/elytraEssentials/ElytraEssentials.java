@@ -43,6 +43,7 @@ public final class ElytraEssentials extends JavaPlugin {
     private EffectsGuiListener effectsGuiListener;
     private ShopGuiListener shopGuiListener;
     private ForgeGuiListener forgeGuiListener;
+    private CombatTagListener combatTagListener;
 
     private MessagesHandler messagesHandler;
     private MessagesHelper messagesHelper;
@@ -143,6 +144,7 @@ public final class ElytraEssentials extends JavaPlugin {
         this.elytraUpdaterListener = new ElytraUpdaterListener(this);
         this.armoredElytraListener = new ArmoredElytraListener(this);
         this.armoredElytraDamageListener = new ArmoredElytraDamageListener(this);
+        this.combatTagListener = new CombatTagListener(this);
 
         this.effectsGuiListener = new EffectsGuiListener(this, new EffectsCommand(this), new ShopCommand(this));
         this.shopGuiListener = new ShopGuiListener(this, new EffectsCommand(this), new ShopCommand(this));
@@ -154,6 +156,7 @@ public final class ElytraEssentials extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(this.elytraUpdaterListener, this);
         Bukkit.getPluginManager().registerEvents(this.armoredElytraListener, this);
         Bukkit.getPluginManager().registerEvents(this.armoredElytraDamageListener, this);
+        Bukkit.getPluginManager().registerEvents(this.combatTagListener, this);
 
         Bukkit.getPluginManager().registerEvents(this.effectsGuiListener, this);
         Bukkit.getPluginManager().registerEvents(this.shopGuiListener, this);
@@ -194,6 +197,7 @@ public final class ElytraEssentials extends JavaPlugin {
         this.getTpsHandler().start();
         this.getStatsHandler().start();
         this.getDatabaseHandler().startAutoBackupTask();
+        this.getCombatTagListener().start();
     }
 
     @Override
@@ -204,6 +208,7 @@ public final class ElytraEssentials extends JavaPlugin {
         this.getTpsHandler().cancel();
         this.getStatsHandler().cancel();
         this.getDatabaseHandler().cancelBackupTask();
+        this.getCombatTagListener().cancel();
 
         StackTraceElement[] stackTraceElementArray = Thread.currentThread().getStackTrace();
         boolean isReloading;
@@ -263,6 +268,7 @@ public final class ElytraEssentials extends JavaPlugin {
         this.messagesHelper.sendConsoleMessage("&aPlugin shutdown successfully!");
         this.messagesHelper.sendConsoleMessage("&aGoodbye");
         this.messagesHelper.sendConsoleMessage("-------------------------------------------");
+
         this.elytraFlightListener = null;
         this.elytraBoostListener = null;
         this.elytraEquipListener = null;
@@ -272,6 +278,8 @@ public final class ElytraEssentials extends JavaPlugin {
         this.effectsGuiListener = null;
         this.shopGuiListener = null;
         this.forgeGuiListener = null;
+        this.combatTagListener = null;
+
         this.messagesHandler = null;
         this.messagesHelper = null;
         this.configHandler = null;
@@ -293,6 +301,9 @@ public final class ElytraEssentials extends JavaPlugin {
     public ElytraBoostListener getElytraBoostListener() { return this.elytraBoostListener; }
 
     public ShopGuiListener getShopGuiListener() { return this.shopGuiListener; }
+
+    public CombatTagListener getCombatTagListener() { return this.combatTagListener; }
+
 
     public DatabaseHandler getDatabaseHandler() {
         return this.databaseHandler;
