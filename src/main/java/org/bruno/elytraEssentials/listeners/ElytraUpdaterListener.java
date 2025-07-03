@@ -6,7 +6,6 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bruno.elytraEssentials.ElytraEssentials;
-import org.bruno.elytraEssentials.handlers.UpdaterHandler;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.utils.ServerVersion;
 import org.bukkit.ChatColor;
@@ -18,19 +17,20 @@ import org.jetbrains.annotations.NotNull;
 
 public class ElytraUpdaterListener implements Listener {
     private final ElytraEssentials plugin;
-    private final UpdaterHandler updaterHandler;
 
     public ElytraUpdaterListener(ElytraEssentials plugin) {
         this.plugin = plugin;
-        this.updaterHandler = new UpdaterHandler(plugin, 126002);
     }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
+        boolean isCheckForUpdatesEnabled = plugin.getConfigHandlerInstance().getIsCheckForUpdatesEnabled();
+        if (!isCheckForUpdatesEnabled) return;
+
         Player player = event.getPlayer();
 
         // Check for updates and send the interactive notification
-        if (PermissionsHelper.hasUpdateNotifyPermission(player) && !plugin.isNewerVersionAvailable) {
+        if (PermissionsHelper.hasUpdateNotifyPermission(player) && plugin.isNewerVersionAvailable) {
             sendUpdateNotification(player);
         }
     }
