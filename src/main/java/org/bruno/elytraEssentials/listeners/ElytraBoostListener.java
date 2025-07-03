@@ -20,8 +20,7 @@ import java.util.HashMap;
 import java.util.UUID;
 
 public class ElytraBoostListener implements Listener {
-    // Cooldown
-    private static final long MINIMUM_COOLDOWN_MS = 500; // A small internal cooldown to prevent spam
+    private static final long MINIMUM_SPAM_DELAY_MS = 50; // The absolute minimum cooldown
 
     // Boost strengths
     private static final double BOOST_MULTIPLIER = 0.5;
@@ -115,28 +114,33 @@ public class ElytraBoostListener implements Listener {
      * @return True if the player is on cooldown, false otherwise.
      */
     private boolean isOnCooldown(Player player) {
+        long effectiveCooldownMs;
         int configuredCooldownMs = plugin.getConfigHandlerInstance().getBoostCooldown();
-        if (configuredCooldownMs <= MINIMUM_COOLDOWN_MS) {
-            return false; // Cooldown is disabled or too short in config.
-        }
 
-        // Bypass permission check
         if (PermissionsHelper.PlayerBypassBoostCooldown(player)) {
-            return false;
+            // Players with bypass permission are still subject to the minimum anti-spam delay.
+            effectiveCooldownMs = MINIMUM_SPAM_DELAY_MS;
+        } else {
+            // For normal players, use the configured value, but ensure it's never less than our minimum.
+            effectiveCooldownMs = Math.max(configuredCooldownMs, MINIMUM_SPAM_DELAY_MS);
         }
 
         long lastBoostTime = cooldowns.getOrDefault(player.getUniqueId(), 0L);
         long timeSinceLastBoost = System.currentTimeMillis() - lastBoostTime;
 
-        if (timeSinceLastBoost < configuredCooldownMs) {
+        if (timeSinceLastBoost < effectiveCooldownMs) {
             // Player is on cooldown, send them the message
-            long remainingMs = configuredCooldownMs - timeSinceLastBoost;
-            int remainingSeconds = (int) Math.ceil(remainingMs / 1000.0);
 
-            String messageTemplate = ChatColor.translateAlternateColorCodes('&', plugin.getMessagesHandlerInstance().getBoostCooldown());
-            String message = messageTemplate.replace("{0}", String.valueOf(remainingSeconds));
-            plugin.getMessagesHelper().sendPlayerMessage(player, message);
-            return true;
+            // Only send the "wait X seconds" message if the cooldown is significant (e.g., > 1 second)
+            if (effectiveCooldownMs > 1000) {
+                long remainingMs = effectiveCooldownMs - timeSinceLastBoost;
+                int remainingSeconds = (int) Math.ceil(remainingMs / 1000.0);
+
+                String messageTemplate = plugin.getMessagesHandlerInstance().getBoostCooldown();
+                String message = messageTemplate.replace("{0}", String.valueOf(remainingSeconds));
+                plugin.getMessagesHelper().sendPlayerMessage(player, message);
+            }
+            return true; // Player is on cooldown
         }
 
         return false;
