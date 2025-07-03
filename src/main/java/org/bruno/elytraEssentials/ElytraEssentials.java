@@ -56,7 +56,10 @@ public final class ElytraEssentials extends JavaPlugin {
     private TpsHandler tpsHandler;
 
     private boolean databaseConnectionSuccessful = false;
-    public boolean newerVersion = false;
+
+    public boolean isNewerVersionAvailable = false;
+    public String latestVersion;
+
     private static Economy economy  = null;
     private ElytraEssentialsPlaceholders elytraStatsExpansion;
 
@@ -166,10 +169,10 @@ public final class ElytraEssentials extends JavaPlugin {
             new UpdaterHandler(this, 126002).getVersion(latestVersion -> {
                 String currentVersion = this.getDescription().getVersion();
                 if (VersionHelper.isNewerVersion(currentVersion, latestVersion)) {
-                    this.messagesHelper.sendConsoleMessage("&eA new version is available! &6https://www.spigotmc.org/resources/126002/");
-                    this.newerVersion = true;
-                } else {
-                    this.messagesHelper.sendConsoleMessage("&aThe plugin is up-to-date.");
+                    this.messagesHelper.sendConsoleMessage("§av" + latestVersion + " §eis available at &ahttps://www.spigotmc.org/resources/126002/");
+                    this.messagesHelper.sendConsoleMessage("&ePlease update as you are currently using &cv" + currentVersion);
+                    this.isNewerVersionAvailable = true;
+                    this.latestVersion = latestVersion;
                 }
             });
         }
