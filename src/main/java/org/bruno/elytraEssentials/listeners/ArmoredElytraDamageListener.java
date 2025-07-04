@@ -56,12 +56,17 @@ public class ArmoredElytraDamageListener implements Listener {
         // If armor plating is broken, it offers no protection.
         if (currentDurability <= 0) return;
 
-        // --- Apply Custom Enchantment Protection ---
+        //  Damage absorption logic from original chestplate enchantments
         double initialDamage = event.getDamage();
         double finalDamage = applyAllProtection(initialDamage, container, event.getCause());
         event.setDamage(finalDamage);
 
-        // --- Handle Armor Durability ---
+        double absorbed = initialDamage - finalDamage;
+        double totalAbsorbed = container.getOrDefault(new NamespacedKey(plugin, Constants.NBT.DAMAGE_ABSORBED_TAG), PersistentDataType.DOUBLE, 0.0);
+        container.set(new NamespacedKey(plugin, Constants.NBT.DAMAGE_ABSORBED_TAG), PersistentDataType.DOUBLE, totalAbsorbed + absorbed);
+
+        //  Handle Armor Durability
+        //  TODO: Improve durability to not be so narrow to just removing 1 point
         int newDurability = currentDurability - 1;
         container.set(durabilityKey, PersistentDataType.INTEGER, newDurability);
 
@@ -69,8 +74,11 @@ public class ArmoredElytraDamageListener implements Listener {
         updateDurabilityLore(meta);
         chestplate.setItemMeta(meta);
 
+        // Armor plating broke on this hit!
         if (newDurability <= 0) {
-            // Armor plating broke on this hit!
+            int shatteredCount = container.getOrDefault(new NamespacedKey(plugin, Constants.NBT.PLATING_SHATTERED_TAG), PersistentDataType.INTEGER, 0);
+            container.set(new NamespacedKey(plugin, Constants.NBT.PLATING_SHATTERED_TAG), PersistentDataType.INTEGER, shatteredCount + 1);
+
             player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
             player.sendMessage("§cYour Armored Elytra's plating has shattered!");
         }
@@ -79,21 +87,21 @@ public class ArmoredElytraDamageListener implements Listener {
     private double applyAllProtection(double damage, PersistentDataContainer container, EntityDamageEvent.DamageCause cause) {
 
         // Each level reduces applicable damage by 4%. Capped at 80% total reduction from all sources.
-        NamespacedKey protKey = new NamespacedKey(plugin, "enchant_" + Enchantment.PROTECTION.getKey().getKey());
+        NamespacedKey protKey = new NamespacedKey(plugin, "chestplate_enchant_" + Enchantment.PROTECTION.getKey().getKey());
         int protectionLevel = container.getOrDefault(protKey, PersistentDataType.INTEGER, 0);
         damage = damage * (1.0 - (protectionLevel * 0.04));
 
         // Each level reduces that specific damage type by 8%.
         if (isFireDamage(cause)) {
-            NamespacedKey fireProtKey = new NamespacedKey(plugin, "enchant_" + Enchantment.FIRE_PROTECTION.getKey().getKey());
+            NamespacedKey fireProtKey = new NamespacedKey(plugin, "chestplate_enchant_" + Enchantment.FIRE_PROTECTION.getKey().getKey());
             int fireProtLevel = container.getOrDefault(fireProtKey, PersistentDataType.INTEGER, 0);
             damage = damage * (1.0 - (fireProtLevel * 0.08));
         } else if (cause == EntityDamageEvent.DamageCause.ENTITY_EXPLOSION || cause == EntityDamageEvent.DamageCause.BLOCK_EXPLOSION) {
-            NamespacedKey blastProtKey = new NamespacedKey(plugin, "enchant_" + Enchantment.BLAST_PROTECTION.getKey().getKey());
+            NamespacedKey blastProtKey = new NamespacedKey(plugin, "chestplate_enchant_" + Enchantment.BLAST_PROTECTION.getKey().getKey());
             int blastProtLevel = container.getOrDefault(blastProtKey, PersistentDataType.INTEGER, 0);
             damage = damage * (1.0 - (blastProtLevel * 0.08));
         } else if (cause == EntityDamageEvent.DamageCause.PROJECTILE) {
-            NamespacedKey projProtKey = new NamespacedKey(plugin, "enchant_" + Enchantment.PROJECTILE_PROTECTION.getKey().getKey());
+            NamespacedKey projProtKey = new NamespacedKey(plugin, "chestplate_enchant_" + Enchantment.PROJECTILE_PROTECTION.getKey().getKey());
             int projProtLevel = container.getOrDefault(projProtKey, PersistentDataType.INTEGER, 0);
             damage = damage * (1.0 - (projProtLevel * 0.08));
         }

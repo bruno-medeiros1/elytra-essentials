@@ -70,7 +70,7 @@ public class ForgeGuiListener implements Listener {
 
         // We schedule an update after every click to keep the GUI state correct.
         // The one-tick delay allows Bukkit to process the click action first.
-        scheduleResultUpdate(topInventory);
+        scheduleResultUpdate(topInventory, player);
 
         Inventory clickedInventory = event.getClickedInventory();
 
@@ -187,16 +187,16 @@ public class ForgeGuiListener implements Listener {
         }
     }
 
-    private void scheduleResultUpdate(Inventory forge) {
+    private void scheduleResultUpdate(Inventory forge, Player player) {
         new BukkitRunnable() {
             @Override
             public void run() {
-                updateForgeResult(forge);
+                updateForgeResult(forge, player);
             }
         }.runTask(plugin);
     }
 
-    private void updateForgeResult(Inventory forge) {
+    private void updateForgeResult(Inventory forge, Player player) {
         ItemStack elytraSlot = forge.getItem(Constants.GUI.FORGE_ELYTRA_SLOT);
         ItemStack armorSlot = forge.getItem(Constants.GUI.FORGE_ARMOR_SLOT);
         ItemStack middleSlot = forge.getItem(Constants.GUI.FORGE_RESULT_SLOT);
@@ -205,7 +205,7 @@ public class ForgeGuiListener implements Listener {
             displayRevertedItems(forge, middleSlot);
             showActionButtons(forge, "Revert");
         } else if (isPlainElytra(elytraSlot) && isChestplate(armorSlot) && !isPreviewItem(elytraSlot) && !isPreviewItem(armorSlot)) {
-            ItemStack armoredElytra = createArmoredElytra(elytraSlot, armorSlot);
+            ItemStack armoredElytra = createArmoredElytra(elytraSlot, armorSlot, player);
             forge.setItem(Constants.GUI.FORGE_RESULT_SLOT, armoredElytra);
             showActionButtons(forge, "Forge");
         }
@@ -379,7 +379,7 @@ public class ForgeGuiListener implements Listener {
         return item == null || item.getType() == Material.AIR;
     }
 
-    private ItemStack createArmoredElytra(ItemStack elytra, ItemStack chestplate) {
+    private ItemStack createArmoredElytra(ItemStack elytra, ItemStack chestplate, Player player) {
         ItemStack armoredElytra = new ItemStack(Material.ELYTRA);
         ItemMeta meta = armoredElytra.getItemMeta();
 
@@ -474,6 +474,9 @@ public class ForgeGuiListener implements Listener {
             meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.MAX_ARMOR_DURABILITY_TAG), PersistentDataType.INTEGER, maxArmorDurability);
             meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.ARMOR_MATERIAL_TAG), PersistentDataType.STRING, chestplate.getType().name());
             meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.PREVIEW_ITEM_TAG), PersistentDataType.BOOLEAN, true);
+            meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.FORGED_BY_TAG), PersistentDataType.STRING, player.getName());
+            meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.DAMAGE_ABSORBED_TAG), PersistentDataType.DOUBLE, 0.0);
+            meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.PLATING_SHATTERED_TAG), PersistentDataType.INTEGER, 0);
 
             armoredElytra.setItemMeta(meta);
         }

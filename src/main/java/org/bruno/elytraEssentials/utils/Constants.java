@@ -54,5 +54,8 @@ public final class Constants {
         public static final String MAX_ARMOR_DURABILITY_TAG = "max-armor-durability";
         public static final String ARMOR_MATERIAL_TAG = "armor-material";
         public static final String PREVIEW_ITEM_TAG = "preview_item";
+        public static final String DAMAGE_ABSORBED_TAG = "damage-absorbed";
+        public static final String PLATING_SHATTERED_TAG = "plating-shattered";
+        public static final String FORGED_BY_TAG = "forged-by";
     }
 }

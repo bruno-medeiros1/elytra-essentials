@@ -16,7 +16,9 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ArmorCommand implements ISubCommand {
     private final ElytraEssentials plugin;
@@ -32,20 +34,6 @@ public class ArmorCommand implements ISubCommand {
     /// §f - §7Total Damage Absorbed: §a1,240
     /// §f - §7Times Plating Shattered: §c2
     /// §f - §7Forged By: §dbruno_medeiros1
-    /// ...
-    ///
-    /// TODO: Adicionar Repair Cost Preview
-    ///
-    /// §b--- Armored Elytra Status ---
-    /// §eArmor Plating: §c150 / 525
-    /// §eBase Material: §fDiamond
-    ///
-    /// §eRepair Cost:
-    /// §f - §7Diamonds: §a12
-    /// §f - §7Experience Levels: §a5
-    ///
-    /// §eStored Enchantments:
-    /// §f - §7Protection 4
     /// ...
 
     @Override
@@ -84,37 +72,31 @@ public class ArmorCommand implements ISubCommand {
         String materialName = container.getOrDefault(new NamespacedKey(plugin, Constants.NBT.ARMOR_MATERIAL_TAG), PersistentDataType.STRING, "Unknown");
         materialName = materialName.replace("_CHESTPLATE", "").replace("_", " "); // Format for display
 
-        // --- Formatting inspired by your /ee help command ---
+        //  Get Item History Data
+        double damageAbsorbed = container.getOrDefault(new NamespacedKey(plugin, Constants.NBT.DAMAGE_ABSORBED_TAG), PersistentDataType.DOUBLE, 0.0);
+        int timesShattered = container.getOrDefault(new NamespacedKey(plugin, Constants.NBT.PLATING_SHATTERED_TAG), PersistentDataType.INTEGER, 0);
+        String forgedBy = container.getOrDefault(new NamespacedKey(plugin, Constants.NBT.FORGED_BY_TAG), PersistentDataType.STRING, "§kUnknown");
+
+        //  Formatting
         ChatColor primary = ChatColor.AQUA;
         ChatColor secondary = ChatColor.DARK_AQUA;
         ChatColor text = ChatColor.GRAY;
         ChatColor value = ChatColor.WHITE;
         String arrow = "» ";
 
-        // --- Build and send the message ---
+        //  Build and send the message ---
         player.sendMessage(primary + "§m----------------------------------------------------");
         player.sendMessage("");
         player.sendMessage(primary + "§lArmored Elytra Info");
         player.sendMessage("");
 
         // Display Armor Plating Durability
-        double percentage = (maxDurability > 0) ? (double) currentDurability / maxDurability : 0;
-        String durabilityColor;
-        if (percentage == 1){
-            durabilityColor = "§a";
-        } else if (percentage > 0.5) {
-            durabilityColor = "§e";
-        } else if (percentage > 0.2) {
-            durabilityColor = "§c";
-        } else {
-            durabilityColor = "§4";
-        }
-        player.sendMessage(secondary + arrow + text + "Armor Plating: " + durabilityColor + currentDurability + " §7/ §a" + maxDurability);
-
-        // Display Base Material
+        player.sendMessage("§3» Armor Plating");
+        player.sendMessage(createDurabilityBar(currentDurability, maxDurability));
+        player.sendMessage("");
         player.sendMessage(secondary + arrow + text + "Base Material: " + value + getCapitalizedName(materialName));
 
-        // Display Stored Enchantments
+        //  Display Stored Enchantments
         List<String> enchantmentLines = getEnchantmentLines(container);
         if (!enchantmentLines.isEmpty()) {
             player.sendMessage("");
@@ -124,10 +106,56 @@ public class ArmorCommand implements ISubCommand {
             }
         }
 
+        //  Display Item History
+        player.sendMessage("");
+        player.sendMessage(secondary + "Item History:");
+
+        double damageInHearts = damageAbsorbed / 2.0;
+        player.sendMessage(String.format("%s" + arrow + "%sTotal Damage Absorbed: %s%.1f ❤", secondary, text, "§a", damageInHearts));
+        player.sendMessage(String.format("%s" + arrow + "%sTimes Plating Shattered: %s%d", secondary, text, "§c", timesShattered));
+        player.sendMessage(String.format("%s" + arrow + "%sForged By: %s%s", secondary, text, "§f", forgedBy));
+
         player.sendMessage("");
         player.sendMessage(primary + "§m----------------------------------------------------");
 
         return true;
+    }
+
+    private String createDurabilityBar(int current, int max) {
+        // Ensure we don't divide by zero if max durability is 0 for some reason
+        double percentage = (max > 0) ? (double) current / max : 0;
+
+        // Determine the color based on the percentage
+        String barColor;
+        if (percentage == 1) {
+            barColor = "§a"; // Full health
+        } else if (percentage > 0.5) {
+            barColor = "§e"; // Medium health
+        } else if (percentage > 0.2) {
+            barColor = "§c"; // Low health
+        } else {
+            barColor = "§4"; // Critically low health
+        }
+
+        int totalSegments = 20; // The total width of the bar in characters
+        int filledSegments = (int) (totalSegments * percentage);
+
+        // Build the string for the bar itself
+        StringBuilder bar = new StringBuilder();
+        bar.append(barColor);
+        for (int i = 0; i < totalSegments; i++) {
+            if (i < filledSegments) {
+                bar.append("▆"); // Filled segment
+            } else {
+                // Use a gray color for the empty part of the bar
+                bar.append("§f▆");
+            }
+        }
+
+        double displayPercentage = percentage * 100.0;
+        bar.append(String.format(" %s§l%.2f%%", barColor, displayPercentage));
+
+        return bar.toString();
     }
 
     private boolean isArmoredElytra(ItemStack item) {
@@ -139,16 +167,32 @@ public class ArmorCommand implements ISubCommand {
 
     private List<String> getEnchantmentLines(PersistentDataContainer container) {
         List<String> lines = new ArrayList<>();
-        ChatColor valueColor = ChatColor.AQUA;
-        ChatColor textColor = ChatColor.GRAY;
+        Map<Enchantment, Integer> displayEnchants = new HashMap<>();
 
+        // Loop through all possible enchantments
         for (Enchantment enchantment : Enchantment.values()) {
-            NamespacedKey key = new NamespacedKey(plugin, "enchant_" + enchantment.getKey().getKey());
-            if (container.has(key, PersistentDataType.INTEGER)) {
-                int level = container.get(key, PersistentDataType.INTEGER);
-                lines.add(String.format(" %s- %s%s %d", textColor, valueColor, getCapitalizedName(enchantment.getKey().getKey()), level));
+            // Create keys for both potential sources
+            NamespacedKey elytraEnchantKey = new NamespacedKey(plugin, "elytra_enchant_" + enchantment.getKey().getKey());
+            NamespacedKey chestplateEnchantKey = new NamespacedKey(plugin, "chestplate_enchant_" + enchantment.getKey().getKey());
+
+            int elytraLevel = container.getOrDefault(elytraEnchantKey, PersistentDataType.INTEGER, 0);
+            int chestplateLevel = container.getOrDefault(chestplateEnchantKey, PersistentDataType.INTEGER, 0);
+
+            // Keep only the highest level of the enchantment
+            int highestLevel = Math.max(elytraLevel, chestplateLevel);
+
+            if (highestLevel > 0) {
+                displayEnchants.put(enchantment, highestLevel);
             }
         }
+
+        // Build the lore lines from the clean map
+        if (!displayEnchants.isEmpty()) {
+            for (Map.Entry<Enchantment, Integer> entry : displayEnchants.entrySet()) {
+                lines.add(String.format("§3» §b%s %d", getCapitalizedName(entry.getKey().getKey().getKey()), entry.getValue()));
+            }
+        }
+
         return lines;
     }
 
