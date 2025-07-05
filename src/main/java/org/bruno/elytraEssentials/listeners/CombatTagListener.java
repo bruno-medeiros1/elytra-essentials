@@ -7,9 +7,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.entity.Arrow;
-import org.bukkit.entity.Firework;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -54,28 +52,21 @@ public class CombatTagListener implements Listener {
 
         if (playerDamageOnly) {
             if (event instanceof EntityDamageByEntityEvent damageByEntityEvent) {
-                if (damageByEntityEvent.getDamager() instanceof Player damager) {
-                    //  Ensure the damager is not the same as the player being damaged
-                    if (!damager.getUniqueId().equals(player.getUniqueId())) {
-                        damageSourceIsValid = true;
-                    }
-                }
-                // Check for player-shot projectile damage
-                else if (damageByEntityEvent.getDamager() instanceof Arrow arrow && arrow.getShooter() instanceof Player shooter) {
-                    if (!shooter.getUniqueId().equals(player.getUniqueId())) {
-                        damageSourceIsValid = true;
-                    }
-                }
-                //  Check for player-launched firework damage
-                else if (damageByEntityEvent.getDamager() instanceof Firework firework && firework.getShooter() instanceof Player shooter) {
-                    // Only tag if the firework was shot by a DIFFERENT player.
-                    if (!shooter.getUniqueId().equals(player.getUniqueId())) {
-                        damageSourceIsValid = true;
-                    }
+                Player damageSource = getPlayerDamager(damageByEntityEvent);
+                if (damageSource != null && !damageSource.getUniqueId().equals(player.getUniqueId())) {
+                    damageSourceIsValid = true;
                 }
             }
         } else {
-            damageSourceIsValid = true;
+            if (event instanceof EntityDamageByEntityEvent damageByEntityEvent) {
+                Player damageSource = getPlayerDamager(damageByEntityEvent);
+                if (damageSource != null && !damageSource.getUniqueId().equals(player.getUniqueId())) {
+                    damageSourceIsValid = true;
+                }
+            } else {
+                // Damage was not from an entity (e.g., fall, fire, cactus), so it's valid.
+                damageSourceIsValid = true;
+            }
         }
 
         if (damageSourceIsValid) {
@@ -211,5 +202,24 @@ public class CombatTagListener implements Listener {
     private boolean isCombatTagged(Player player) {
         Long expiryTime = combatTaggedPlayers.get(player.getUniqueId());
         return expiryTime != null && System.currentTimeMillis() < expiryTime;
+    }
+
+    private Player getPlayerDamager(EntityDamageByEntityEvent event) {
+        Entity damager = event.getDamager();
+
+        if (damager instanceof Player p) {
+            return p;
+        }
+
+        // Projectiles (covers Arrows, Tridents, Potions, etc.)
+        if (damager instanceof Projectile proj && proj.getShooter() instanceof Player p) {
+            return p;
+        }
+
+        // Player-lit TNT
+        if (damager instanceof org.bukkit.entity.TNTPrimed tnt && tnt.getSource() instanceof Player p) {
+            return p;
+        }
+        return null;
     }
 }
