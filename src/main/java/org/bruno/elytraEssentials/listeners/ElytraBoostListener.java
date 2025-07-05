@@ -45,7 +45,6 @@ public class ElytraBoostListener implements Listener {
 
     @EventHandler
     public void onRightClick(PlayerInteractEvent event) {
-        // This event now acts as a router for both features.
         if (event.getHand() == EquipmentSlot.OFF_HAND) return;
 
         Action action = event.getAction();
@@ -120,7 +119,8 @@ public class ElytraBoostListener implements Listener {
     }
 
     private void handleChargedJump(Player player) {
-        if (!plugin.getConfigHandlerInstance().getIsChargedJumpEnabled()) return;
+        if (!plugin.getConfigHandlerInstance().getIsBoostEnabled() ||
+                !plugin.getConfigHandlerInstance().getIsChargedJumpEnabled()) return;
         if (chargingTasks.containsKey(player.getUniqueId())) return; // Already charging
 
         //  Permission Check
