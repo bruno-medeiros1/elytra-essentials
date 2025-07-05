@@ -96,3 +96,6 @@ permissions:
       elytraessentials.elytra.superboost:
         default: op
         description: "Allows the player to use the elytra super boost with right click + shift click"
+      elytraessentials.elytra.chargedjump:
+        default: op
+        description: "Allows the player to use the elytra charged jump while holding the boost item"

@@ -105,6 +105,16 @@ flight:
     # Players or groups with the permission 'elytraessentials.bypass.boostcooldown' can bypass this cooldown.
     cooldown: 2000 # Cooldown time in milliseconds
 
+    charged-jump:
+      # Set to true to enable the charged jump feature from the ground.
+      enabled: true
+
+      # The time in seconds it takes to fully charge the jump.
+      charge-time: 2
+
+      # The strength of the upward launch. 1.5 is a strong vertical boost.
+      jump-strength: 1.5
+
   combat-tag:
     # Set to true to disable a player's elytra for a short time after they take damage while flying.
     enabled: true # [Default: true]

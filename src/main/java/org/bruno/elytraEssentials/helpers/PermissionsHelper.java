@@ -138,5 +138,10 @@ public class PermissionsHelper {
                 player.hasPermission("elytraessentials.elytra.superboost");
     }
 
+    public static boolean hasChargedJumpPermission(Player player){
+        return player.hasPermission("elytraessentials.*") ||
+                player.hasPermission("elytraessentials.elytra.chargedjump");
+    }
+
     //</editor-fold>
 }

@@ -44,6 +44,9 @@ public class ConfigHandler {
     private boolean isBoostEnabled;
     private String boostItem;
     private int boostCooldown;
+    private boolean isChargedJumpEnabled;
+    private int chargeTime;
+    private double jumpStrength;
 
     //  Armored Elytra section
     private boolean isArmoredElytraEnabled;
@@ -109,6 +112,9 @@ public class ConfigHandler {
         this.isBoostEnabled = this.fileConfiguration.getBoolean("flight.boost.enabled", true);
         this.boostItem = this.fileConfiguration.getString("flight.boost.item", "FEATHER");
         this.boostCooldown = this.fileConfiguration.getInt("flight.boost.cooldown", 2000);
+        this.isChargedJumpEnabled = this.fileConfiguration.getBoolean("flight.boost.charged-jump.enabled", true);
+        this.chargeTime = this.fileConfiguration.getInt("flight.boost.charged-jump.charge-time", 2);
+        this.jumpStrength = this.fileConfiguration.getDouble("flight.boost.charged-jump.jump-strength", 1.5);
 
         this.isArmoredElytraEnabled = this.fileConfiguration.getBoolean("armored-elytra.enabled", true);
         this.forgeCostMoney = this.fileConfiguration.getDouble("armored-elytra.cost.money", 5000);
@@ -155,9 +161,12 @@ public class ConfigHandler {
     public String getUsername() { return this.username; }
     public String getPassword() { return this.password; }
 
-    public final Boolean getIsBoostEnabled() { return this.isBoostEnabled; }
+    public final boolean getIsBoostEnabled() { return this.isBoostEnabled; }
     public final String getBoostItem() { return this.boostItem; }
     public final Integer getBoostCooldown() { return this.boostCooldown; }
+    public final boolean getIsChargedJumpEnabled() { return this.isChargedJumpEnabled; }
+    public final int getChargeTime() { return this.chargeTime; }
+    public final double getJumpStrength() { return this.jumpStrength; }
 
     public final boolean getIsArmoredElytraEnabled() { return this.isArmoredElytraEnabled; }
     public final double getForgeCostMoney() { return this.forgeCostMoney; }
