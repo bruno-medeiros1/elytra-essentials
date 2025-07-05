@@ -35,7 +35,7 @@ public class CombatTagListener implements Listener {
         this.plugin = plugin;
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerDamage(EntityDamageEvent event) {
         if (!(event.getEntity() instanceof Player player)) {
             return;
@@ -95,7 +95,7 @@ public class CombatTagListener implements Listener {
 
         if (event.isGliding() && isCombatTagged(player)) {
             event.setCancelled(true);
-            plugin.getMessagesHelper().sendActionBarMessage(player, "&cYou cannot glide while in combat!");
+            plugin.getMessagesHelper().sendActionBarMessage(player, "§cYou cannot glide while in combat!");
         }
     }
 
@@ -169,7 +169,7 @@ public class CombatTagListener implements Listener {
                         bossBar.removeAll();
                         combatTagBossBars.remove(playerId);
                         iterator.remove(); // Remove from the combat tag map
-                        plugin.getMessagesHelper().sendActionBarMessage(player, "&aYou can use your elytra again!");
+                        plugin.getMessagesHelper().sendActionBarMessage(player, "§aYou can use your elytra again!");
                     }
                 }
             }
@@ -205,7 +205,7 @@ public class CombatTagListener implements Listener {
             return newBar;
         });
 
-        plugin.getMessagesHelper().sendActionBarMessage(player, "&cYour elytra has been disabled due to combat!");
+        plugin.getMessagesHelper().sendActionBarMessage(player, "§cYour elytra has been disabled due to combat!");
     }
 
     private boolean isCombatTagged(Player player) {
