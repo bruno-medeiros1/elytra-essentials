@@ -119,9 +119,13 @@ public class ElytraBoostListener implements Listener {
     }
 
     private void handleChargedJump(Player player) {
-        if (!plugin.getConfigHandlerInstance().getIsBoostEnabled() ||
-                !plugin.getConfigHandlerInstance().getIsChargedJumpEnabled()) return;
+        if (!plugin.getConfigHandlerInstance().getIsBoostEnabled() || !plugin.getConfigHandlerInstance().getIsChargedJumpEnabled()) return;
         if (chargingTasks.containsKey(player.getUniqueId())) return; // Already charging
+
+        ItemStack chestplate = player.getInventory().getChestplate();
+        if (chestplate == null || chestplate.getType() != Material.ELYTRA) {
+            return;
+        }
 
         //  Permission Check
         if (!PermissionsHelper.hasChargedJumpPermission(player)) {
