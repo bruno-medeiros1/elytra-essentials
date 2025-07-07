@@ -1,5 +1,11 @@
 package org.bruno.elytraEssentials.commands;
 
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.chat.hover.content.Text;
+import net.milkbowl.vault.economy.Economy;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
@@ -7,6 +13,7 @@ import org.bruno.elytraEssentials.utils.Constants;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -27,98 +34,228 @@ public class ArmorCommand implements ISubCommand {
         this.plugin = plugin;
     }
 
-    ///
-    /// TODO: Adicionar Item History
-    /// ...
-    /// §eItem History:
-    /// §f - §7Total Damage Absorbed: §a1,240
-    /// §f - §7Times Plating Shattered: §c2
-    /// §f - §7Forged By: §dbruno_medeiros1
-    /// ...
-
     @Override
     public boolean Execute(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player player))
+        if (args.length == 0) {
+            handleInfoCommand(sender);
             return true;
-
-        if (!plugin.getConfigHandlerInstance().getIsArmoredElytraEnabled()){
-            plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getFeatureNotEnabled());
+        } else if (args.length == 1 && args[0].equalsIgnoreCase("repair")) {
+            handleRepairCommand(sender);
             return true;
         }
 
-        if (!PermissionsHelper.hasArmorPermission(player)){
+        sender.sendMessage(ChatColor.RED + "Usage: /ee armor <repair>");
+        return true;
+    }
+
+    private void handleInfoCommand(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(ChatColor.RED + "This command can only be run by a player.");
+            return;
+        }
+
+        if (!PermissionsHelper.hasArmorPermission(player)) {
             plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getNoPermissionMessage());
-            return true;
+            return;
         }
 
         ItemStack chestplate = player.getInventory().getChestplate();
-
-        // Check if the player is wearing an Armored Elytra
         if (!isArmoredElytra(chestplate)) {
             player.sendMessage(ChatColor.RED + "You are not currently wearing an Armored Elytra.");
-            return true;
+            return;
         }
 
-        // --- Get all the data from the item ---
         ItemMeta meta = chestplate.getItemMeta();
         if (meta == null) {
             player.sendMessage(ChatColor.RED + "Error: Could not read item data.");
-            return true;
+            return;
         }
 
         PersistentDataContainer container = meta.getPersistentDataContainer();
+
         int currentDurability = container.getOrDefault(new NamespacedKey(plugin, Constants.NBT.ARMOR_DURABILITY_TAG), PersistentDataType.INTEGER, 0);
         int maxDurability = container.getOrDefault(new NamespacedKey(plugin, Constants.NBT.MAX_ARMOR_DURABILITY_TAG), PersistentDataType.INTEGER, 1);
         String materialName = container.getOrDefault(new NamespacedKey(plugin, Constants.NBT.ARMOR_MATERIAL_TAG), PersistentDataType.STRING, "Unknown");
-        materialName = materialName.replace("_CHESTPLATE", "").replace("_", " "); // Format for display
+        materialName = materialName.replace("_CHESTPLATE", "").replace("_", " ");
 
-        //  Get Item History Data
         double damageAbsorbed = container.getOrDefault(new NamespacedKey(plugin, Constants.NBT.DAMAGE_ABSORBED_TAG), PersistentDataType.DOUBLE, 0.0);
         int timesShattered = container.getOrDefault(new NamespacedKey(plugin, Constants.NBT.PLATING_SHATTERED_TAG), PersistentDataType.INTEGER, 0);
         String forgedBy = container.getOrDefault(new NamespacedKey(plugin, Constants.NBT.FORGED_BY_TAG), PersistentDataType.STRING, "§kUnknown");
 
-        //  Formatting
-        ChatColor primary = ChatColor.AQUA;
-        ChatColor secondary = ChatColor.DARK_AQUA;
-        ChatColor text = ChatColor.GRAY;
-        ChatColor value = ChatColor.WHITE;
+        //  Build and send the interactive message
+        sendArmorInfoMessage(player, currentDurability, maxDurability, materialName, damageAbsorbed, timesShattered, forgedBy, container);
+    }
+
+    private void handleRepairCommand(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(ChatColor.RED + "This command can only be run by a player.");
+            return;
+        }
+
+        if (!PermissionsHelper.hasRepairPermission(player)) {
+            plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getNoPermissionMessage());
+            return;
+        }
+
+        ItemStack chestplate = player.getInventory().getChestplate();
+        if (!isArmoredElytra(chestplate)) {
+            player.sendMessage(ChatColor.RED + "You must be wearing an Armored Elytra to repair it.");
+            return;
+        }
+
+        ItemMeta meta = chestplate.getItemMeta();
+        if (meta == null) return;
+
+        PersistentDataContainer container = meta.getPersistentDataContainer();
+        NamespacedKey durabilityKey = new NamespacedKey(plugin, Constants.NBT.ARMOR_DURABILITY_TAG);
+        NamespacedKey maxDurabilityKey = new NamespacedKey(plugin, Constants.NBT.MAX_ARMOR_DURABILITY_TAG);
+
+        int currentDurability = container.getOrDefault(durabilityKey, PersistentDataType.INTEGER, 0);
+        int maxDurability = container.getOrDefault(maxDurabilityKey, PersistentDataType.INTEGER, 1);
+
+        if (currentDurability >= maxDurability) {
+            player.sendMessage(ChatColor.GREEN + "Your Armored Elytra's plating is already at full durability!");
+            return;
+        }
+
+        // Handle payment for the repair
+        if (!handleRepairPayment(player)) {
+            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 0.8f);
+            return;
+        }
+
+        // Set durability to max
+        container.set(durabilityKey, PersistentDataType.INTEGER, maxDurability);
+
+        // Update the lore
+        updateDurabilityLore(meta);
+        chestplate.setItemMeta(meta);
+
+        player.playSound(player.getLocation(), Sound.ENTITY_IRON_GOLEM_REPAIR, 1.0f, 1.2f);
+        player.sendMessage(ChatColor.GREEN + "Your Armored Elytra's plating has been fully repaired!");
+    }
+
+    private boolean handleRepairPayment(Player player) {
+        double moneyCost = plugin.getConfigHandlerInstance().getRepairCostMoney();
+        int xpCost = plugin.getConfigHandlerInstance().getRepairCostXpLevels();
+
+        // Check requirements first
+        if (moneyCost > 0) {
+            Economy economy = plugin.getEconomy();
+            if (economy == null) return true;
+            if (!economy.has(player, moneyCost)) {
+                plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getNotEnoughMoney());
+                return false;
+            }
+        }
+        if (xpCost > 0) {
+            if (player.getLevel() < xpCost) {
+                plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getNotEnoughXP());
+                return false;
+            }
+        }
+
+        // Deduct costs
+        if (moneyCost > 0) plugin.getEconomy().withdrawPlayer(player, moneyCost);
+        if (xpCost > 0) player.setLevel(player.getLevel() - xpCost);
+
+        return true;
+    }
+
+    private void updateDurabilityLore(ItemMeta meta) {
+        NamespacedKey maxDurabilityKey = new NamespacedKey(plugin, Constants.NBT.MAX_ARMOR_DURABILITY_TAG);
+
+        PersistentDataContainer container = meta.getPersistentDataContainer();
+        int max = container.getOrDefault(maxDurabilityKey, PersistentDataType.INTEGER, 1);
+
+        List<String> lore = meta.getLore();
+        if (lore == null) lore = new ArrayList<>();
+
+        String durabilityLine = String.format("§6Armor Plating: §a%d / %d", max, max);
+
+        boolean found = false;
+        for (int i = 0; i < lore.size(); i++) {
+            if (lore.get(i).contains("Armor Plating:")) {
+                lore.set(i, durabilityLine);
+                found = true;
+                break;
+            }
+        }
+        if (!found) lore.add(durabilityLine);
+
+        meta.setLore(lore);
+    }
+
+    @Override
+    public List<String> getSubcommandCompletions(CommandSender sender, String[] args) {
+        if (args.length == 2) {
+            if (sender instanceof Player player) {
+                if (!PermissionsHelper.hasRepairPermission(player))
+                    return List.of();
+            }
+
+            return List.of("repair");
+        }
+
+        return List.of();
+    }
+
+    private void sendArmorInfoMessage(Player player, int currentDurability, int maxDurability, String materialName, double damageAbsorbed, int timesShattered, String forgedBy, PersistentDataContainer container) {
+        String primaryColor = "§b";
+        String secondaryColor = "§3";
+        String textColor = "§7";
+        String valueColor = "§f";
         String arrow = "» ";
 
-        //  Build and send the message ---
-        player.sendMessage(primary + "§m----------------------------------------------------");
+        player.sendMessage(primaryColor + "§m----------------------------------------------------");
         player.sendMessage("");
-        player.sendMessage(primary + "§lArmored Elytra Info");
+        player.sendMessage(primaryColor + "§lArmored Elytra Info");
         player.sendMessage("");
 
-        // Display Armor Plating Durability
-        player.sendMessage("§3» Armor Plating");
+        // Build the "Armor Plating" line with an interactive button if needed
+        TextComponent platingTitle = new TextComponent(TextComponent.fromLegacyText(secondaryColor + arrow + textColor + "Armor Plating "));
+        if (currentDurability < maxDurability) {
+            double repairMoneyCost = plugin.getConfigHandlerInstance().getRepairCostMoney();
+            int repairXpCost = plugin.getConfigHandlerInstance().getRepairCostXpLevels();
+
+            TextComponent repairButton = new TextComponent("§b[Repair]");
+            repairButton.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/ee armor repair"));
+
+            BaseComponent[] hoverText = new TextComponent[]{
+                    new TextComponent(TextComponent.fromLegacyText(
+                            "§eClick to fully repair the Armor Plating.\n" +
+                                    "§eCost: §6$" + String.format("%.2f", repairMoneyCost) + " §eand §6" + repairXpCost + " §eLevels"
+                    ))
+            };
+            repairButton.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(hoverText)));
+            platingTitle.addExtra(repairButton);
+        }
+        player.spigot().sendMessage(platingTitle);
+
+        // Display Armor Plating Durability with the visual bar
         player.sendMessage(createDurabilityBar(currentDurability, maxDurability));
-        player.sendMessage("");
-        player.sendMessage(secondary + arrow + text + "Base Material: " + value + getCapitalizedName(materialName));
 
-        //  Display Stored Enchantments
+        player.sendMessage("");
+        player.sendMessage(secondaryColor + arrow + textColor + "Base Material: " + valueColor + getCapitalizedName(materialName));
+
         List<String> enchantmentLines = getEnchantmentLines(container);
         if (!enchantmentLines.isEmpty()) {
             player.sendMessage("");
-            player.sendMessage(secondary + "Stored Enchantments:");
+            player.sendMessage(secondaryColor + "Stored Enchantments:");
             for (String line : enchantmentLines) {
                 player.sendMessage(line);
             }
         }
 
-        //  Display Item History
         player.sendMessage("");
-        player.sendMessage(secondary + "Item History:");
-
+        player.sendMessage(secondaryColor + "§lItem History:");
         double damageInHearts = damageAbsorbed / 2.0;
-        player.sendMessage(String.format("%s" + arrow + "%sTotal Damage Absorbed: %s%.1f ❤", secondary, text, "§a", damageInHearts));
-        player.sendMessage(String.format("%s" + arrow + "%sTimes Plating Shattered: %s%d", secondary, text, "§c", timesShattered));
-        player.sendMessage(String.format("%s" + arrow + "%sForged By: %s%s", secondary, text, "§f", forgedBy));
+        player.sendMessage(String.format(" %s- %sTotal Damage Absorbed: %s%.1f ❤", "§f", textColor, "§a", damageInHearts));
+        player.sendMessage(String.format(" %s- %sTimes Plating Shattered: %s%d", "§f", textColor, "§c", timesShattered));
+        player.sendMessage(String.format(" %s- %sForged By: %s%s", "§f", textColor, "§b", forgedBy));
 
         player.sendMessage("");
-        player.sendMessage(primary + "§m----------------------------------------------------");
-
-        return true;
+        player.sendMessage(primaryColor + "§m----------------------------------------------------");
     }
 
     private String createDurabilityBar(int current, int max) {
@@ -137,7 +274,7 @@ public class ArmorCommand implements ISubCommand {
             barColor = "§4"; // Critically low health
         }
 
-        int totalSegments = 20; // The total width of the bar in characters
+        int totalSegments = 28; // The total width of the bar in characters
         int filledSegments = (int) (totalSegments * percentage);
 
         // Build the string for the bar itself

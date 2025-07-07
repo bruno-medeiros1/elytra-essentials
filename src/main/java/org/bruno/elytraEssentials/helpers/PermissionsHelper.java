@@ -100,6 +100,12 @@ public class PermissionsHelper {
                 player.hasPermission("elytraessentials.command.armor");
     }
 
+    public static boolean hasRepairPermission(Player player){
+        return player.hasPermission("elytraessentials.*") ||
+                player.hasPermission("elytraessentials.command.*") ||
+                player.hasPermission("elytraessentials.command.armor.repair");
+    }
+
     public static boolean hasImportDbPermission(Player player){
         return player.hasPermission("elytraessentials.*") ||
                 player.hasPermission("elytraessentials.command.*") ||

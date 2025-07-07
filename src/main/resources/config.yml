@@ -34,13 +34,19 @@ general:
 armored-elytra:
   enabled: true # [Default: true]
 
-  # You can set a cost for money, experience levels, or both.
+  # The cost to forge or revert an Armored Elytra.
   # Set an amount to 0 to disable that specific cost.
-  cost:
-    # The amount of money to charge for forging/reverting. Requires Vault.
+  forging-cost:
+    # The amount of money to charge for.
     money: 5000.0
-    # The amount of experience levels to charge for forging/reverting.
+    # The amount of experience levels to charge.
     xp-levels: 10
+
+  # The cost to fully repair the Armor Plating.
+  # Set an amount to 0 to disable that specific cost.
+  repair-cost:
+    money: 500.0
+    xp-levels: 5
 
 storage:
   # The type of storage to use.

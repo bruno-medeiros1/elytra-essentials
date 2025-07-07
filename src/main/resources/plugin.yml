@@ -58,6 +58,9 @@ permissions:
           elytraessentials.command.armor:
             default: true
             description: "Allows the use of /ee armor command"
+          elytraessentials.command.armor.repair:
+            default: true
+            description: "Allows the use of /ee armor repair command"
           elytraessentials.command.importdb:
             default: op
             description: "Allows the use of /ee importdb command"

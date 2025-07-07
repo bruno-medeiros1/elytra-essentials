@@ -52,6 +52,8 @@ public class ConfigHandler {
     private boolean isArmoredElytraEnabled;
     private double forgeCostMoney;
     private int forgeCostXpLevels;
+    private double repairCostMoney;
+    private int repairCostXpLevels;
 
     //  Combat Tag
     private boolean isCombatTagEnabled;
@@ -117,8 +119,10 @@ public class ConfigHandler {
         this.jumpStrength = this.fileConfiguration.getDouble("flight.boost.charged-jump.jump-strength", 1.5);
 
         this.isArmoredElytraEnabled = this.fileConfiguration.getBoolean("armored-elytra.enabled", true);
-        this.forgeCostMoney = this.fileConfiguration.getDouble("armored-elytra.cost.money", 5000);
-        this.forgeCostXpLevels = this.fileConfiguration.getInt("armored-elytra.cost.xp-levels", 10);
+        this.forgeCostMoney = this.fileConfiguration.getDouble("armored-elytra.forging-cost.money", 5000);
+        this.forgeCostXpLevels = this.fileConfiguration.getInt("armored-elytra.forging-cost.xp-levels", 10);
+        this.repairCostMoney = this.fileConfiguration.getDouble("armored-elytra.repair-cost.money", 500);
+        this.repairCostXpLevels = this.fileConfiguration.getInt("armored-elytra.repair-cost.xp-levels", 5);
 
         this.isCombatTagEnabled = this.fileConfiguration.getBoolean("flight.combat-tag.enabled", true);
         this.combatTagCooldown = this.fileConfiguration.getInt("flight.combat-tag.duration", 10);
@@ -171,6 +175,8 @@ public class ConfigHandler {
     public final boolean getIsArmoredElytraEnabled() { return this.isArmoredElytraEnabled; }
     public final double getForgeCostMoney() { return this.forgeCostMoney; }
     public final int getForgeCostXpLevels() { return this.forgeCostXpLevels; }
+    public final double getRepairCostMoney() { return this.repairCostMoney; }
+    public final int getRepairCostXpLevels() { return this.repairCostXpLevels; }
 
     public final boolean getIsCombatTagEnabled() { return this.isCombatTagEnabled; }
     public final int getCombatTagCooldown() { return this.combatTagCooldown; }
