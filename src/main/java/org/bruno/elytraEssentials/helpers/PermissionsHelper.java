@@ -123,16 +123,10 @@ public class PermissionsHelper {
 
     //</editor-fold>
 
-    //<editor-fold desc="EFFECTS">
-
     public static boolean hasElytraEffectsPermission(Player player) {
         return player.hasPermission("elytraessentials.*") ||
                 player.hasPermission("elytraessentials.effect.*");
     }
-
-    //</editor-fold>
-
-    //<editor-fold desc="BOOSTS">
 
     public static boolean hasElytraBoostPermission(Player player) {
         return player.hasPermission("elytraessentials.*") ||
@@ -149,5 +143,8 @@ public class PermissionsHelper {
                 player.hasPermission("elytraessentials.elytra.chargedjump");
     }
 
-    //</editor-fold>
+    public static boolean hasAutoDeployPermission(Player player){
+        return player.hasPermission("elytraessentials.*") ||
+                player.hasPermission("elytraessentials.elytra.autodeploy");
+    }
 }

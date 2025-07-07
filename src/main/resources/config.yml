@@ -31,6 +31,10 @@ general:
   # This will not prevent players from dying if they do a nosedive and hit the ground
   kinetic-energy-protection: false # [Default: false]
 
+  # Set to true to automatically equip and deploy an elytra when
+  # The minimum fall distance (in blocks) is verified by the plugin.
+  emergency-deploy: false # [Default: false]
+
 armored-elytra:
   enabled: true # [Default: true]
 

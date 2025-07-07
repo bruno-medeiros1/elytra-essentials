@@ -16,6 +16,7 @@ public class ConfigHandler {
     private boolean isElytraEquipDisabled;
     private boolean isElytraBreakProtectionEnabled;
     private boolean isKineticEnergyProtectionEnabled;
+    private boolean isEmergencyDeployEnabled;
 
     // Flight section
     private boolean isGlobalFlightDisabled;
@@ -72,6 +73,7 @@ public class ConfigHandler {
         this.isElytraEquipDisabled = this.fileConfiguration.getBoolean("general.disable-elytra-equipment", false);
         this.isElytraBreakProtectionEnabled = this.fileConfiguration.getBoolean("general.elytra-break-protection", false);
         this.isKineticEnergyProtectionEnabled = this.fileConfiguration.getBoolean("general.kinetic-energy-protection", false);
+        this.isEmergencyDeployEnabled = this.fileConfiguration.getBoolean("general.emergency-deploy", false);
 
         this.isGlobalFlightDisabled = this.fileConfiguration.getBoolean("flight.disable-global", false);
         this.disabledWorlds = this.fileConfiguration.getStringList("flight.disabled-worlds");
@@ -137,6 +139,7 @@ public class ConfigHandler {
     public final boolean getIsElytraEquipDisabled() { return this.isElytraEquipDisabled; }
     public final boolean getIsElytraBreakProtectionEnabled() { return this.isElytraBreakProtectionEnabled; }
     public final boolean getIsKineticEnergyProtectionEnabled() { return this.isKineticEnergyProtectionEnabled; }
+    public final boolean getIsEmergencyDeployEnabled() { return this.isEmergencyDeployEnabled; }
 
     public final boolean getIsGlobalFlightDisabled() {
         return this.isGlobalFlightDisabled;

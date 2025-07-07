@@ -48,6 +48,8 @@ public final class MessagesHandler {
     private String forgeSuccessful;
     private String revertSuccessful;
 
+    private String emergencyDeploySuccess;
+
     public MessagesHandler(FileConfiguration fileConfiguration) {
         this.fileConfiguration = fileConfiguration;
         loadMessages();
@@ -106,6 +108,9 @@ public final class MessagesHandler {
         //  Forge
         this.forgeSuccessful = fileConfiguration.getString("forge-successful", "&aYou have successfully forged an Armored Elytra!");
         this.revertSuccessful = fileConfiguration.getString("revert-successful", "&aYou have successfully reverted your Armored Elytra.");
+
+        //  Emergency Deploy
+        this.emergencyDeploySuccess = fileConfiguration.getString("emergency-deploy-success", "&eElytra Auto-Deployed!");
     }
 
     // General Messages
@@ -159,5 +164,8 @@ public final class MessagesHandler {
     //  Forge
     public String getForgeSuccessful() { return forgeSuccessful; }
     public String getRevertSuccessful() { return revertSuccessful; }
+
+    //  Emergency Deploy
+    public String getEmergencyDeploySuccess() { return emergencyDeploySuccess; }
 
 }

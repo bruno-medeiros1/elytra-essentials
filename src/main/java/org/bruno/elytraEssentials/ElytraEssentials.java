@@ -43,6 +43,7 @@ public final class ElytraEssentials extends JavaPlugin {
     private ShopGuiListener shopGuiListener;
     private ForgeGuiListener forgeGuiListener;
     private CombatTagListener combatTagListener;
+    private EmergencyDeployListener emergencyDeployListener;
 
     private MessagesHandler messagesHandler;
     private MessagesHelper messagesHelper;
@@ -144,6 +145,7 @@ public final class ElytraEssentials extends JavaPlugin {
         this.armoredElytraListener = new ArmoredElytraListener(this);
         this.armoredElytraDamageListener = new ArmoredElytraDamageListener(this);
         this.combatTagListener = new CombatTagListener(this);
+        this.emergencyDeployListener = new EmergencyDeployListener(this);
 
         this.effectsGuiListener = new EffectsGuiListener(this, new EffectsCommand(this), new ShopCommand(this));
         this.shopGuiListener = new ShopGuiListener(this, new EffectsCommand(this), new ShopCommand(this));
@@ -156,6 +158,7 @@ public final class ElytraEssentials extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(this.armoredElytraListener, this);
         Bukkit.getPluginManager().registerEvents(this.armoredElytraDamageListener, this);
         Bukkit.getPluginManager().registerEvents(this.combatTagListener, this);
+        Bukkit.getPluginManager().registerEvents(this.emergencyDeployListener, this);
 
         Bukkit.getPluginManager().registerEvents(this.effectsGuiListener, this);
         Bukkit.getPluginManager().registerEvents(this.shopGuiListener, this);

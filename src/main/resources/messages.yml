@@ -58,3 +58,6 @@ effect-gui-deselect: "&cRight Click: Clear Effect"
 # Forge Messages
 forge-successful: "&aYou have successfully forged an Armored Elytra!"
 revert-successful: "&aYou have successfully reverted your Armored Elytra."
+
+# Emergency Deploy Messages
+emergency-deploy-success: "&eElytra Auto-Deployed!"

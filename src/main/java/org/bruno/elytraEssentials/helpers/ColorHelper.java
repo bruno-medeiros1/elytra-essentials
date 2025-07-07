@@ -5,6 +5,8 @@ import org.bukkit.ChatColor;
 public class ColorHelper {
 
     //  TODO: Review this method
+    //  criar um método para poder evitar estes casos
+    //  ChatColor.translateAlternateColorCodes('&', plugin.getMessagesHandlerInstance().getEffectGuiOwned())
     public static String ParseColoredString(String input) {
         // Splitting the input string into an array, keeping the '&' delimiter in the result.
         // The regex splits the string while preserving the '&' by using lookbehind and lookahead.
