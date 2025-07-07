@@ -5,6 +5,10 @@ public final class Constants {
     //  Private constructor to prevent instantiation
     private Constants () {}
 
+    public static final class Inventory {
+        public static final int CHESTPLATE_SLOT = 38;
+    }
+
     public static final class GUI {
         //  Shop GUI Constants
         public static final int SHOP_INVENTORY_SIZE = 45;

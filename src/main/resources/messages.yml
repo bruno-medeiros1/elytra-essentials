@@ -23,8 +23,7 @@ reload-success: "&aPlugin successfully reloaded! All configuration files are up 
 # Restriction Messages
 elytra-usage-disabled: "&cElytra flight is currently disabled on this server."
 elytra-usage-world-disabled: "&cYou are not permitted to fly in this world."
-elytra-equip-disabled: "&cYou do not have permission to equip an elytra."
-elytra-equip-returned: "&6Equipping is disabled. Your elytra has been returned to your inventory."
+elytra-equip-disabled: "&cEquipping elytra is disabled in this server."
 elytra-equip-dropped: "&6Your inventory is full! The elytra was dropped on the ground instead."
 
 # Flight Time Messages

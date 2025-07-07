@@ -18,7 +18,6 @@ public final class MessagesHandler {
     private String elytraUsageDisabled;
     private String elytraUsageWorldDisabled;
     private String elytraEquipDisabled;
-    private String elytraEquipReturned;
     private String elytraEquipDropped;
 
     private String flightTimeRecovery;
@@ -71,8 +70,7 @@ public final class MessagesHandler {
         // Restriction Messages
         this.elytraUsageDisabled = fileConfiguration.getString("elytra-usage-disabled", "&cElytra flight is currently disabled on this server.");
         this.elytraUsageWorldDisabled = fileConfiguration.getString("elytra-usage-world-disabled", "&cYou are not permitted to fly in this world.");
-        this.elytraEquipDisabled = fileConfiguration.getString("elytra-equip-disabled", "&cYou do not have permission to equip an elytra.");
-        this.elytraEquipReturned = fileConfiguration.getString("elytra-equip-returned", "&6Equipping is disabled. Your elytra has been returned to your inventory.");
+        this.elytraEquipDisabled = fileConfiguration.getString("elytra-equip-disabled", "&cEquipping elytra is disabled in this server");
         this.elytraEquipDropped = fileConfiguration.getString("elytra-equip-dropped", "&6Your inventory is full! The elytra was dropped on the ground instead.");
 
         // Flight Time Messages
@@ -127,7 +125,6 @@ public final class MessagesHandler {
     public String getElytraUsageWorldDisabledMessage() { return this.elytraUsageWorldDisabled; }
     public String getElytraEquipDisabled() { return this.elytraEquipDisabled; }
     public String getElytraEquipDropped() { return this.elytraEquipDropped; }
-    public String getElytraEquipReturned() { return this.elytraEquipReturned; }
 
     // Flight Time Messages
     public String getElytraFlightTimeAdded() { return this.flightTimeAdded; }

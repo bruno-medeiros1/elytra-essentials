@@ -1,6 +1,5 @@
 package org.bruno.elytraEssentials.listeners;
 
-import com.github.jewishbanana.playerarmorchangeevent.PlayerArmorChangeEvent;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.utils.Constants;
 import org.bukkit.Material;
@@ -11,12 +10,16 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockDispenseArmorEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.InventoryAction;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemBreakEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -27,7 +30,6 @@ import java.util.Objects;
 
 //  Apply or remove the player's armor stat buffs.
 public class ArmoredElytraListener implements Listener {
-
     private final ElytraEssentials plugin;
 
     private final NamespacedKey armoredElytraKey;
@@ -44,12 +46,34 @@ public class ArmoredElytraListener implements Listener {
         this.durabilityKey = new NamespacedKey(plugin, Constants.NBT.ARMOR_DURABILITY_TAG);
     }
 
-    @EventHandler
-    public void onArmorChange(PlayerArmorChangeEvent e) {
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onInventoryClick(InventoryClickEvent e) {
         if (!plugin.getConfigHandlerInstance().getIsArmoredElytraEnabled())
             return;
 
-        if (e.getSlot() == EquipmentSlot.CHEST) {
+        if (!(e.getWhoClicked() instanceof Player player)) return;
+
+        // Direct click in the chestplate slot
+        if (e.getSlotType() == InventoryType.SlotType.ARMOR && e.getSlot() == Constants.Inventory.CHESTPLATE_SLOT) {
+            scheduleArmorCheck(player);
+        }
+
+        // Shift-clicking an item from the main inventory
+        if (e.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY && isArmoredElytra(e.getCurrentItem())  ) {
+            scheduleArmorCheck(player);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerInteract(PlayerInteractEvent e) {
+        if (!plugin.getConfigHandlerInstance().getIsArmoredElytraEnabled())
+            return;
+
+        if (e.getAction() != Action.RIGHT_CLICK_AIR && e.getAction() != Action.RIGHT_CLICK_BLOCK) {
+            return;
+        }
+
+        if (isArmoredElytra(e.getItem())) {
             scheduleArmorCheck(e.getPlayer());
         }
     }

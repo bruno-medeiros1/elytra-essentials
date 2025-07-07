@@ -5,7 +5,6 @@ package org.bruno.elytraEssentials;
  * @link https://github.com/bruno-medeiros1/elytra-essentials
 */
 
-import com.github.jewishbanana.playerarmorchangeevent.PlayerArmorListener;
 import net.milkbowl.vault.economy.Economy;
 import org.bruno.elytraEssentials.commands.EffectsCommand;
 import org.bruno.elytraEssentials.commands.ElytraEssentialsCommand;
@@ -161,8 +160,6 @@ public final class ElytraEssentials extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(this.effectsGuiListener, this);
         Bukkit.getPluginManager().registerEvents(this.shopGuiListener, this);
         Bukkit.getPluginManager().registerEvents(this.forgeGuiListener, this);
-
-        new PlayerArmorListener(this);
 
         //  Placeholder API Expansion classes
         registerPlaceholders();

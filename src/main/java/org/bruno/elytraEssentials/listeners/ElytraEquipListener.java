@@ -1,57 +1,125 @@
 package org.bruno.elytraEssentials.listeners;
 
-import com.github.jewishbanana.playerarmorchangeevent.PlayerArmorChangeEvent;
 import org.bruno.elytraEssentials.ElytraEssentials;
-import org.bruno.elytraEssentials.handlers.ConfigHandler;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
+import org.bruno.elytraEssentials.utils.Constants;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockDispenseArmorEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.InventoryAction;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerItemBreakEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
 
 public class ElytraEquipListener implements Listener {
-    private final ElytraEssentials elytraEssentials;
+    private final ElytraEssentials plugin;
 
-    public ElytraEquipListener(ElytraEssentials elytraEssentials) {
-        this.elytraEssentials = elytraEssentials;
+    public ElytraEquipListener(ElytraEssentials plugin) {
+
+        this.plugin = plugin;
     }
 
-    @EventHandler
-    public void onArmorChange(PlayerArmorChangeEvent e) {
-        Player player = e.getPlayer();
-        ConfigHandler configHandler = elytraEssentials.getConfigHandlerInstance();
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player)) return;
 
-        if (e.getNewItem().getType() == Material.ELYTRA && configHandler.getIsElytraEquipDisabled() && !PermissionsHelper.PlayerBypassElytraEquip(player)) {
-            e.setCancelled(true);
-            this.elytraEssentials.getMessagesHelper().sendPlayerMessage(player, this.elytraEssentials.getMessagesHandlerInstance().getElytraEquipDisabled());
+        if (isArmorChangeEvent(event)) {
+            scheduleArmorCheck(player);
         }
     }
 
     @EventHandler
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) {
+            return;
+        }
+
+        ItemStack item = event.getItem();
+        if (item != null && item.getType() == Material.ELYTRA) {
+            scheduleArmorCheck(event.getPlayer());
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onDispense(BlockDispenseArmorEvent event) {
+        if (event.getItem().getType() == Material.ELYTRA && event.getTargetEntity() instanceof Player player) {
+            scheduleArmorCheck(player);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onItemBreak(PlayerItemBreakEvent event) {
+        if (event.getBrokenItem().getType() == Material.ELYTRA) {
+            scheduleArmorCheck(event.getPlayer());
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPlayerDeath(PlayerDeathEvent event) {
+        // When a player dies, their armor is cleared.
+        scheduleArmorCheck(event.getEntity());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPlayerRespawn(PlayerRespawnEvent event) {
+        // Check again on respawn, in case they keep their inventory.
+        scheduleArmorCheck(event.getPlayer());
+    }
+
+    @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
-        ConfigHandler configHandler = elytraEssentials.getConfigHandlerInstance();
+        scheduleArmorCheck(event.getPlayer());
+    }
 
-        if (configHandler.getIsElytraEquipDisabled() && !PermissionsHelper.PlayerBypassElytraEquip(player)) {
-            ItemStack chestplate = player.getInventory().getChestplate();
+    private boolean isArmorChangeEvent(InventoryClickEvent event) {
+        // Direct click in the chestplate slot
+        if (event.getSlotType() == InventoryType.SlotType.ARMOR && event.getSlot() == Constants.Inventory.CHESTPLATE_SLOT) {
+            return true;
+        }
 
-            // Check if the chestplate is an Elytra
-            if (chestplate != null && chestplate.getType() == Material.ELYTRA) {
-                player.getInventory().setChestplate(null); // Remove Elytra from chestplate slot
-                HashMap<Integer, ItemStack> leftover = player.getInventory().addItem(chestplate);
+        // Shift-clicking an item from the main inventory
+        if (event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
+            return event.getCurrentItem() != null && event.getCurrentItem().getType() == Material.ELYTRA;
+        }
 
-                // If there are leftovers (no space in inventory), drop the Elytra on the ground
-                if (!leftover.isEmpty()) {
-                    player.getWorld().dropItemNaturally(player.getLocation(), chestplate);
-                    this.elytraEssentials.getMessagesHelper().sendPlayerMessage(player, elytraEssentials.getMessagesHandlerInstance().getElytraEquipDropped());
-                }
-                else{
-                    this.elytraEssentials.getMessagesHelper().sendPlayerMessage(player, elytraEssentials.getMessagesHandlerInstance().getElytraEquipReturned());
-                }
+        return false;
+    }
+
+    private void scheduleArmorCheck(Player player) {
+        // Schedule the check for the next server tick to ensure the inventory has updated.
+        plugin.getServer().getScheduler().runTask(plugin, () -> checkAndHandleElytraEquip(player));
+    }
+
+    private void checkAndHandleElytraEquip(Player player) {
+        if (!plugin.getConfigHandlerInstance().getIsElytraEquipDisabled()) {
+            return;
+        }
+        if (PermissionsHelper.PlayerBypassElytraEquip(player)) {
+            return;
+        }
+
+        ItemStack chestplate = player.getInventory().getChestplate();
+
+        if (chestplate != null && chestplate.getType() == Material.ELYTRA) {
+            plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getElytraEquipDisabled());
+
+            player.getInventory().setChestplate(null);
+            HashMap<Integer, ItemStack> leftovers = player.getInventory().addItem(chestplate);
+
+            if (!leftovers.isEmpty()) {
+                player.getWorld().dropItemNaturally(player.getLocation(), chestplate);
+                plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getElytraEquipDropped());
             }
         }
     }
