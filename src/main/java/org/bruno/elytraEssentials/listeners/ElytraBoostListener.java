@@ -185,6 +185,7 @@ public class ElytraBoostListener implements Listener {
                     double jumpStrength = plugin.getConfigHandlerInstance().getJumpStrength();
                     player.setVelocity(player.getVelocity().add(new Vector(0, jumpStrength, 0)));
 
+                    //  Schedule the glide to activate with a 1-tick delay.
                     new BukkitRunnable() {
                         @Override
                         public void run() {
@@ -192,7 +193,7 @@ public class ElytraBoostListener implements Listener {
                                 player.setGliding(true);
                             }
                         }
-                    }.runTask(plugin);
+                    }.runTaskLater(plugin, 1L);
 
                     player.getWorld().playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.2f, 1.0f);
 
