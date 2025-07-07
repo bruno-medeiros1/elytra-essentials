@@ -87,6 +87,9 @@ public class ReloadCommand implements ISubCommand {
         StatsHandler statsHandler = new StatsHandler(this.plugin);
         this.plugin.setStatsHandler(statsHandler);
 
+        AchievementsHandler achievementsHandler = new AchievementsHandler(this.plugin);
+        this.plugin.setAchievementsHandler(achievementsHandler);
+
         //  ElytraFlightListener
         this.plugin.getElytraFlightListener().AssignConfigVariables();
 

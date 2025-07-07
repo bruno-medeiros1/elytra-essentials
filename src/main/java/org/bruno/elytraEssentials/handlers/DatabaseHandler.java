@@ -19,6 +19,7 @@ public class DatabaseHandler {
     private final static String ELYTRA_FLIGHT_TIME_TABLE = "elytra_flight_time";
     private final static String OWNED_EFFECTS_TABLE = "owned_effects";
     private final static String PLAYER_STATS_TABLE = "player_stats";
+    private final static String PLAYER_ACHIEVEMENTS_TABLE = "player_achievements";
 
     private final ElytraEssentials plugin;
     private Connection connection;
@@ -438,10 +439,20 @@ public class DatabaseHandler {
                 );
                 """;
 
+            String createMySqlAchievementsTable = """
+            CREATE TABLE IF NOT EXISTS player_achievements (
+                player_uuid VARCHAR(36) NOT NULL,
+                achievement_id VARCHAR(255) NOT NULL,
+                unlocked_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (player_uuid, achievement_id)
+            );
+            """;
+
             try (Statement stmt = connection.createStatement()) {
                 stmt.executeUpdate(createTableQuery);
                 stmt.executeUpdate(createOwnedEffectsTableQuery);
                 stmt.executeUpdate(createPlayerStatsTableQuery);
+                stmt.executeUpdate(createMySqlAchievementsTable);
             }
 
         } else {
@@ -474,10 +485,20 @@ public class DatabaseHandler {
                 );
                 """;
 
+            String createSqliteAchievementsTable = """
+                CREATE TABLE IF NOT EXISTS player_achievements (
+                    player_uuid TEXT NOT NULL,
+                    achievement_id TEXT NOT NULL,
+                    unlocked_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (player_uuid, achievement_id)
+                );
+                """;
+
             try (Statement stmt = connection.createStatement()) {
                 stmt.executeUpdate(createFlightTimeTableQuery);
                 stmt.executeUpdate(createOwnedEffectsTableQuery);
                 stmt.executeUpdate(createPlayerStatsTableQuery);
+                stmt.executeUpdate(createSqliteAchievementsTable);
             }
         }
     }
@@ -589,4 +610,47 @@ public class DatabaseHandler {
 
     //</editor-fold>
 
+
+    //<editor-fold desc="ACHIEVEMENTS">
+
+    /**
+     * Checks if a player has already unlocked a specific achievement.
+     * @param playerUuid The UUID of the player.
+     * @param achievementId The unique ID of the achievement.
+     * @return true if the player has the achievement, false otherwise.
+     * @throws SQLException If a database error occurs.
+     */
+    public boolean hasAchievement(UUID playerUuid, String achievementId) throws SQLException {
+        String query = "SELECT 1 FROM " + PLAYER_ACHIEVEMENTS_TABLE + " WHERE player_uuid = ? AND achievement_id = ? LIMIT 1";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, playerUuid.toString());
+            stmt.setString(2, achievementId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next(); // Returns true if a row was found
+            }
+        }
+    }
+
+    /**
+     * Adds a completed achievement record for a player to the database.
+     * @param playerUuid The UUID of the player.
+     * @param achievementId The unique ID of the achievement.
+     * @throws SQLException If a database error occurs.
+     */
+    public void addAchievement(UUID playerUuid, String achievementId) throws SQLException {
+        String query;
+        if (storageType == StorageType.MYSQL) {
+            query = "INSERT IGNORE INTO " + PLAYER_ACHIEVEMENTS_TABLE + " (player_uuid, achievement_id) VALUES (?, ?)";
+        } else {
+            query = "INSERT OR IGNORE INTO " + PLAYER_ACHIEVEMENTS_TABLE + " (player_uuid, achievement_id) VALUES (?, ?)";
+        }
+
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, playerUuid.toString());
+            stmt.setString(2, achievementId);
+            stmt.executeUpdate();
+        }
+    }
+
+    //</editor-fold>
 }

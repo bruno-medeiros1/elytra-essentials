@@ -17,12 +17,15 @@ public class FileHelper {
     private FileConfiguration shopFileConfiguration = null;
     private File shopFile = null;
 
+    private File achievementsFile;
+    private FileConfiguration achievementsConfig;
 
     public FileHelper(ElytraEssentials plugin) {
         this.plugin = plugin;
 
         EnsureMessagesFileExists();
         EnsureShopFileExists();
+        ensureAchievementsFileExists();
     }
 
     public void InitializeMessagesFile() {
@@ -91,6 +94,15 @@ public class FileHelper {
         return shopFileConfiguration;
     }
 
+    public FileConfiguration getAchievementsFileConfiguration() {
+        if (this.achievementsConfig == null) {
+            // This is a failsafe in case the file wasn't loaded yet.
+            this.achievementsFile = new File(plugin.getDataFolder(), "achievements.yml");
+            this.achievementsConfig = YamlConfiguration.loadConfiguration(this.achievementsFile);
+        }
+        return this.achievementsConfig;
+    }
+
     private void EnsureMessagesFileExists() {
         if (messagesFile == null) {
             messagesFile = new File(plugin.getDataFolder(), "messages.yml");
@@ -106,6 +118,16 @@ public class FileHelper {
         }
         if (!shopFile.exists()) {
             plugin.saveResource("shop.yml", false);
+        }
+    }
+
+    private void ensureAchievementsFileExists() {
+        if (achievementsFile == null) {
+            achievementsFile = new File(plugin.getDataFolder(), "achievements.yml");
+        }
+        if (!achievementsFile.exists()) {
+            plugin.getLogger().info("File not found. Creating a new default achievements.yml.");
+            plugin.saveResource("achievements.yml", false);
         }
     }
 }

@@ -18,6 +18,7 @@ import org.bruno.elytraEssentials.listeners.*;
 import org.bruno.elytraEssentials.placeholders.ElytraEssentialsPlaceholders;
 import org.bruno.elytraEssentials.utils.ServerVersion;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -27,7 +28,6 @@ import org.bstats.bukkit.Metrics;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.UUID;
-
 
 public final class ElytraEssentials extends JavaPlugin {
     private final PluginDescriptionFile pluginDescriptionFile = this.getDescription();
@@ -50,6 +50,7 @@ public final class ElytraEssentials extends JavaPlugin {
     private FileHelper fileHelper;
     private RecoveryHandler recoveryHandler;
     private StatsHandler statsHandler;
+    private AchievementsHandler achievementsHandler;
 
     private ConfigHandler configHandler;
     private DatabaseHandler databaseHandler;
@@ -107,6 +108,9 @@ public final class ElytraEssentials extends JavaPlugin {
 
         obj = new StatsHandler(this);
         this.statsHandler = (StatsHandler) obj;
+
+        obj = new AchievementsHandler(this);
+        this.achievementsHandler = (AchievementsHandler) obj;
 
         obj = new MessagesHelper(this);
         this.messagesHelper = (MessagesHelper) obj;
@@ -279,6 +283,7 @@ public final class ElytraEssentials extends JavaPlugin {
         this.recoveryHandler = null;
         this.tpsHandler = null;
         this.statsHandler = null;
+        this.achievementsHandler = null;
     }
 
 
@@ -309,6 +314,9 @@ public final class ElytraEssentials extends JavaPlugin {
 
     public StatsHandler getStatsHandler() { return this.statsHandler; }
 
+    public AchievementsHandler getAchievementsHandler() { return this.achievementsHandler; }
+
+
     public Economy getEconomy() {
         return this.economy;
     }
@@ -316,6 +324,9 @@ public final class ElytraEssentials extends JavaPlugin {
     public ServerVersion getServerVersion() { return this.serverVersion; }
 
 
+    public FileConfiguration getAchievementsFileConfiguration() {
+        return this.fileHelper.getAchievementsFileConfiguration();
+    }
 
     public void setConfigHandler(ConfigHandler configHandler) {
         this.configHandler = configHandler;
@@ -335,6 +346,7 @@ public final class ElytraEssentials extends JavaPlugin {
 
     public void setStatsHandler (StatsHandler statsHandler) { this.statsHandler = statsHandler; }
 
+    public void setAchievementsHandler (AchievementsHandler achievementsHandler) { this.achievementsHandler = achievementsHandler; }
 
 
     private boolean setupEconomy() {
@@ -374,6 +386,7 @@ public final class ElytraEssentials extends JavaPlugin {
         this.getTpsHandler().cancel();
         this.getStatsHandler().cancel();
         this.getDatabaseHandler().cancelBackupTask();
+        this.getAchievementsHandler().cancel();
         this.getCombatTagListener().cancel();
     }
 
@@ -382,6 +395,7 @@ public final class ElytraEssentials extends JavaPlugin {
         this.getTpsHandler().start();
         this.getStatsHandler().start();
         this.getDatabaseHandler().startAutoBackupTask();
+        this.getAchievementsHandler().start();
         this.getCombatTagListener().start();
     }
 }

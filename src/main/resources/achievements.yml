@@ -1,0 +1,66 @@
+# ----------------------------------------------------
+#      ElytraEssentials - Achievements Configuration
+# ----------------------------------------------------
+#
+# This file allows you to create custom achievements for your players.
+#
+# Each achievement has a unique ID (e.g., "rookie_flyer").
+#
+# Parameters:
+#   name: The name of the achievement
+#   type: The statistic to track. Options:
+#         TOTAL_DISTANCE, LONGEST_FLIGHT, TOTAL_FLIGHT_TIME,
+#         BOOSTS_USED, SUPER_BOOSTS_USED, PLUGIN_SAVES
+#   value: The number the player needs to reach for this stat.
+#   broadcast: If true, the achievement message will be sent to the entire server, otherwise just the player
+#   message: The message sent to the player upon completion if broadcast is enabled. Use {player} for their name.
+#   commands: A list of commands to be executed by the console. Use {player} for their name.
+
+achievements:
+  rookie_flyer:
+    name: "Rookie Flyer"
+    type: TOTAL_DISTANCE
+    value: 100 # 10 km
+    broadcast: true
+    message: "&6&lAchievement! &e{player} has flown for over 10km!"
+    commands:
+      - "eco give {player} 1000"
+  #   - "lp user {player} meta setprefix &7[Rookie Flyer] "
+
+  sky_explorer:
+    name: "Sky Explorer"
+    type: TOTAL_DISTANCE
+    value: 100000 # 100 km
+    broadcast: true
+    message: "&6&lAchievement! &e{player} has explored the skies for 100km!"
+    commands:
+      - "eco give {player} 10000"
+
+  long_hauler:
+    name: "Long Hauler"
+    type: LONGEST_FLIGHT
+    value: 5000
+    broadcast: true
+    message: "&6&lAchievement! &e{player} completed a single flight of over 5,000 blocks!"
+    commands:
+      - "eco give {player} 2500"
+#      - "effect give {player} EMERALD_SPARK"
+
+  boost_enthusiast:
+    name: "Boost Enthusiast"
+    type: BOOSTS_USED
+    value: 500
+    broadcast: true
+    message: "&6&lAchievement! &e{player} has used their elytra boost 500 times!"
+    commands:
+      - "eco give {player} 1000"
+
+  survivor:
+    name: "Survivor"
+    type: PLUGIN_SAVES
+    value: 25
+    broadcast: true
+    message: "&6&lAchievement! &e{player} has been saved from certain doom by their elytra 25 times!"
+    commands:
+      - "eco give {player} 1000"
+#      - "lp user {player} permission set elytraessentials.effect.heart"
