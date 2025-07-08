@@ -29,7 +29,7 @@ public class AchievementsHandler {
     //  TODO: Review if we should create a global enum
     private enum StatType {
         TOTAL_DISTANCE, LONGEST_FLIGHT, TOTAL_FLIGHT_TIME,
-        BOOSTS_USED, SUPER_BOOSTS_USED, PLUGIN_SAVES, UNKNOWN
+        BOOSTS_USED, SUPER_BOOSTS_USED, SAVES, UNKNOWN
     }
 
     public AchievementsHandler(ElytraEssentials plugin) {
@@ -181,7 +181,7 @@ public class AchievementsHandler {
             case TOTAL_FLIGHT_TIME -> stats.getTotalTimeSeconds();
             case BOOSTS_USED -> stats.getBoostsUsed();
             case SUPER_BOOSTS_USED -> stats.getSuperBoostsUsed();
-            case PLUGIN_SAVES -> stats.getPluginSaves();
+            case SAVES -> stats.getPluginSaves();
             default -> 0.0;
         };
     }

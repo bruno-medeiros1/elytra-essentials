@@ -10,7 +10,7 @@
 #   name: The name of the achievement
 #   type: The statistic to track. Options:
 #         TOTAL_DISTANCE, LONGEST_FLIGHT, TOTAL_FLIGHT_TIME,
-#         BOOSTS_USED, SUPER_BOOSTS_USED, PLUGIN_SAVES
+#         BOOSTS_USED, SUPER_BOOSTS_USED, SAVES
 #   value: The number the player needs to reach for this stat.
 #   broadcast: If true, the achievement message will be sent to the entire server, otherwise just the player
 #   message: The message sent to the player upon completion if broadcast is enabled. Use {player} for their name.
@@ -20,7 +20,7 @@ achievements:
   rookie_flyer:
     name: "Rookie Flyer"
     type: TOTAL_DISTANCE
-    value: 100 # 10 km
+    value: 10000
     broadcast: true
     message: "&6&lAchievement! &e{player} has flown for over 10km!"
     commands:
@@ -30,7 +30,7 @@ achievements:
   sky_explorer:
     name: "Sky Explorer"
     type: TOTAL_DISTANCE
-    value: 100000 # 100 km
+    value: 100000
     broadcast: true
     message: "&6&lAchievement! &e{player} has explored the skies for 100km!"
     commands:
@@ -57,7 +57,7 @@ achievements:
 
   survivor:
     name: "Survivor"
-    type: PLUGIN_SAVES
+    type: SAVES
     value: 25
     broadcast: true
     message: "&6&lAchievement! &e{player} has been saved from certain doom by their elytra 25 times!"
