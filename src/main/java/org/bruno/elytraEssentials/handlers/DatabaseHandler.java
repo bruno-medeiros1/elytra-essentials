@@ -614,6 +614,29 @@ public class DatabaseHandler {
     //<editor-fold desc="ACHIEVEMENTS">
 
     /**
+     * Retrieves a set of all achievement IDs that a player has unlocked.
+     * @param playerUuid The UUID of the player.
+     * @return A Set of achievement ID strings.
+     * @throws SQLException If a database error occurs.
+     */
+    public Set<String> getUnlockedAchievementIds(UUID playerUuid) throws SQLException {
+        Set<String> unlockedIds = new HashSet<>();
+        String query = "SELECT achievement_id FROM " + PLAYER_ACHIEVEMENTS_TABLE + " WHERE player_uuid = ?";
+
+        if (storageType == StorageType.MYSQL || storageType == StorageType.SQLITE) {
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                stmt.setString(1, playerUuid.toString());
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        unlockedIds.add(rs.getString("achievement_id"));
+                    }
+                }
+            }
+        }
+        return unlockedIds;
+    }
+
+    /**
      * Checks if a player has already unlocked a specific achievement.
      * @param playerUuid The UUID of the player.
      * @param achievementId The unique ID of the achievement.

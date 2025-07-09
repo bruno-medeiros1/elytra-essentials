@@ -1,7 +1,7 @@
 main: org.bruno.elytraEssentials.ElytraEssentials
 author: CodingMaestro
 name: ElytraEssentials
-version: 1.7.0
+version: 1.8.0
 api-version: '1.18'
 load: STARTUP
 folia-supported: false
@@ -64,6 +64,9 @@ permissions:
           elytraessentials.command.importdb:
             default: op
             description: "Allows the use of /ee importdb command"
+          elytraessentials.command.achievements:
+            default: true
+            description: "Allows the use of /ee achievements command"
 
       elytraessentials.bypass.*:
         default: op
@@ -104,4 +107,4 @@ permissions:
         description: "Allows the player to use the elytra charged jump while holding the boost item"
       elytraessentials.elytra.autodeploy:
         default: op
-        description: "Allows to automatically equip and deploy an elytra for a falling player in order to save him"
+        description: "Allows for automatic equipping and deployment of an elytra for a falling player to save him."

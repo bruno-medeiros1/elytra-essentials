@@ -2,6 +2,7 @@ package org.bruno.elytraEssentials.handlers;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.utils.PlayerStats;
+import org.bruno.elytraEssentials.utils.StatType;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -67,6 +68,27 @@ public class StatsHandler {
     public PlayerStats getStats(Player player) {
         //  Return a default object if the player's stats aren't loaded yet
         return statsCache.getOrDefault(player.getUniqueId(), new PlayerStats(player.getUniqueId()));
+    }
+
+    /**
+     * Retrieves a specific statistic value for a player.
+     * @param player The player to get the stat for.
+     * @param type The type of statistic to retrieve.
+     * @return The value of the statistic as a double.
+     */
+    public double getStatValue(Player player, StatType type) {
+        PlayerStats stats = getStats(player);
+        if (stats == null) return 0.0;
+
+        return switch (type) {
+            case TOTAL_DISTANCE -> stats.getTotalDistance();
+            case LONGEST_FLIGHT -> stats.getLongestFlight();
+            case TOTAL_FLIGHT_TIME -> stats.getTotalTimeSeconds();
+            case BOOSTS_USED -> stats.getBoostsUsed();
+            case SUPER_BOOSTS_USED -> stats.getSuperBoostsUsed();
+            case SAVES -> stats.getPluginSaves();
+            default -> 0.0;
+        };
     }
 
     //  Gliding State ---

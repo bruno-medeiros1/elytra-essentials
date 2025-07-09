@@ -3,6 +3,7 @@ package org.bruno.elytraEssentials.handlers;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.utils.PlayerStats;
+import org.bruno.elytraEssentials.utils.StatType;
 import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Firework;
@@ -12,6 +13,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,14 +25,9 @@ public class AchievementsHandler {
     private BukkitTask checkTask;
 
     // A simple record to hold the data for a single achievement
-    private record Achievement(String id, String name, StatType type, double value, String message, List<String> commands,
-                               boolean broadcast) {}
-
-    //  TODO: Review if we should create a global enum
-    private enum StatType {
-        TOTAL_DISTANCE, LONGEST_FLIGHT, TOTAL_FLIGHT_TIME,
-        BOOSTS_USED, SUPER_BOOSTS_USED, SAVES, UNKNOWN
-    }
+    public record Achievement(String id, String name, StatType type, double value, String description,
+                              Material displayItem,
+                              String message, List<String> commands, List<String> rewards, boolean broadcast) {}
 
     public AchievementsHandler(ElytraEssentials plugin) {
         this.plugin = plugin;
@@ -41,7 +38,7 @@ public class AchievementsHandler {
      * Loads all achievement definitions from the achievements.yml file into memory.
      */
     public void loadAchievements() {
-        achievements.clear(); // Clear old achievements on reload
+        achievements.clear();
         ConfigurationSection achievementsSection = plugin.getAchievementsFileConfiguration().getConfigurationSection("achievements");
         if (achievementsSection == null) {
             plugin.getLogger().warning("No 'achievements' section found in achievements.yml.");
@@ -51,19 +48,23 @@ public class AchievementsHandler {
         for (String key : achievementsSection.getKeys(false)) {
             String path = "achievements." + key;
             try {
-                StatType type = StatType.valueOf(plugin.getAchievementsFileConfiguration().getString(path + ".type").toUpperCase());
-                String name = plugin.getAchievementsFileConfiguration().getString(path + ".name", "");
+                StatType type = StatType.valueOf(plugin.getAchievementsFileConfiguration().getString(path + ".type", "UNKNOWN").toUpperCase());
+                String name = plugin.getAchievementsFileConfiguration().getString(path + ".name", "Unnamed Achievement");
                 double value = plugin.getAchievementsFileConfiguration().getDouble(path + ".value");
+                String description = plugin.getAchievementsFileConfiguration().getString(path + ".description", "&7No description provided.");
+                Material displayItem = Material.matchMaterial(plugin.getAchievementsFileConfiguration().getString(path + ".display-item", "BARRIER"));
+
                 String message = plugin.getAchievementsFileConfiguration().getString(path + ".message", "");
                 List<String> commands = plugin.getAchievementsFileConfiguration().getStringList(path + ".commands");
+                List<String> rewards = plugin.getAchievementsFileConfiguration().getStringList(path + ".rewards");
                 boolean broadcast = plugin.getAchievementsFileConfiguration().getBoolean(path + ".broadcast", true);
 
-                achievements.put(key, new Achievement(key, name, type, value, message, commands, broadcast));
+                achievements.put(key, new Achievement(key, name, type, value, description, displayItem, message, commands, rewards, broadcast));
             } catch (Exception e) {
                 plugin.getLogger().warning("Failed to load achievement '" + key + "'. Please check its format in achievements.yml.");
+                e.printStackTrace();
             }
         }
-        plugin.getLogger().info("Loaded " + achievements.size() + " achievements.");
     }
 
     /**
@@ -184,5 +185,13 @@ public class AchievementsHandler {
             case SAVES -> stats.getPluginSaves();
             default -> 0.0;
         };
+    }
+
+    /**
+     * Gets a collection of all loaded achievements.
+     * @return A collection of Achievement records.
+     */
+    public Collection<Achievement> getAllAchievements() {
+        return achievements.values();
     }
 }

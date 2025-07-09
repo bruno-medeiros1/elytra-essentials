@@ -7,60 +7,209 @@
 # Each achievement has a unique ID (e.g., "rookie_flyer").
 #
 # Parameters:
-#   name: The name of the achievement
 #   type: The statistic to track. Options:
 #         TOTAL_DISTANCE, LONGEST_FLIGHT, TOTAL_FLIGHT_TIME,
 #         BOOSTS_USED, SUPER_BOOSTS_USED, SAVES
 #   value: The number the player needs to reach for this stat.
-#   broadcast: If true, the achievement message will be sent to the entire server, otherwise just the player
+#   name: The name of the achievement displayed in the GUI.
+#   description: The description shown in the item's lore.
+#   display-item: The material to show when the achievement is in progress.
 #   message: The message sent to the player upon completion if broadcast is enabled. Use {player} for their name.
+#   broadcast: If true, the achievement message will be sent to the entire server, otherwise just the player
+#   rewards: The rewards a player will receive upon completion of the achievement
 #   commands: A list of commands to be executed by the console. Use {player} for their name.
 
 achievements:
+  # --- Total Distance Flown ---
   rookie_flyer:
-    name: "Rookie Flyer"
     type: TOTAL_DISTANCE
     value: 10000
-    broadcast: true
+    name: "&aRookie Flyer"
+    description: "&7Fly a total of 10km."
+    display-item: "GRAY_DYE"
     message: "&6&lAchievement! &e{player} has flown for over 10km!"
+    broadcast: true
+    rewards:
+      - " &e» &a$1,000"
     commands:
       - "eco give {player} 1000"
-  #   - "lp user {player} meta setprefix &7[Rookie Flyer] "
-
   sky_explorer:
-    name: "Sky Explorer"
     type: TOTAL_DISTANCE
     value: 100000
-    broadcast: true
+    name: "&bSky Explorer"
+    description: "&7Explore the skies for 100km."
+    display-item: "GRAY_DYE"
     message: "&6&lAchievement! &e{player} has explored the skies for 100km!"
+    broadcast: true
+    rewards:
+      - " &e» &a$10,000"
     commands:
       - "eco give {player} 10000"
+  cosmic_voyager:
+    type: TOTAL_DISTANCE
+    value: 1000000
+    name: "&dCosmic Voyager"
+    description: "&7Travel a cosmic distance of 1,000km."
+    display-item: "GRAY_DYE"
+    message: "&6&lAchievement! &e{player} is a Cosmic Voyager, having flown 1,000km!"
+    broadcast: true
+    rewards:
+      - " &e» &a$50,000"
+      - " &e» &dA unique cosmetic effect"
+    commands:
+      - "eco give {player} 50000"
+      - "ee effect give {player} ENDERS_WAKE"
 
+  # --- Longest Single Flight ---
   long_hauler:
-    name: "Long Hauler"
     type: LONGEST_FLIGHT
     value: 5000
-    broadcast: true
+    name: "&aLong Hauler"
+    description: "&7Complete a single flight of over 5,000 blocks."
+    display-item: "GRAY_DYE"
     message: "&6&lAchievement! &e{player} completed a single flight of over 5,000 blocks!"
+    broadcast: true
+    rewards:
+      - " &e» &a$2,500"
     commands:
       - "eco give {player} 2500"
-#      - "effect give {player} EMERALD_SPARK"
+  marathon_flyer:
+    type: LONGEST_FLIGHT
+    value: 15000
+    name: "&bMarathon Flyer"
+    description: "&7Complete a single flight of over 15,000 blocks."
+    display-item: "GRAY_DYE"
+    message: "&6&lAchievement! &e{player} is a true Marathon Flyer!"
+    broadcast: true
+    rewards:
+      - " &e» &a$12,500"
+    commands:
+      - "eco give {player} 12500"
+  horizon_breaker:
+    type: LONGEST_FLIGHT
+    value: 30000
+    name: "&dHorizon Breaker"
+    description: "&7Fly over 30,000 blocks in a single journey."
+    display-item: "GRAY_DYE"
+    message: "&6&lAchievement! &e{player} has broken the horizon with a 30,000 block flight!"
+    broadcast: true
+    rewards:
+      - " &e» &a$30,000"
+      - " &e» &dA legendary cosmetic effect"
+    commands:
+      - "eco give {player} 30000"
+      - "ee effect give {player} TOTEM_BLESSING"
 
+  # --- Total Boosts Used ---
   boost_enthusiast:
-    name: "Boost Enthusiast"
     type: BOOSTS_USED
     value: 500
-    broadcast: true
+    name: "&aBoost Enthusiast"
+    description: "&7Use the elytra boost 500 times."
+    display-item: "GRAY_DYE"
     message: "&6&lAchievement! &e{player} has used their elytra boost 500 times!"
+    broadcast: true
+    rewards:
+      - " &e» &a$1,000"
     commands:
       - "eco give {player} 1000"
+  rocket_jockey:
+    type: BOOSTS_USED
+    value: 2500
+    name: "&bRocket Jockey"
+    description: "&7Use the elytra boost 2,500 times."
+    display-item: "GRAY_DYE"
+    message: "&6&lAchievement! &e{player} is a real Rocket Jockey!"
+    broadcast: true
+    rewards:
+      - " &e» &a$5,000"
+    commands:
+      - "eco give {player} 5000"
+  propulsion_master:
+    type: BOOSTS_USED
+    value: 10000
+    name: "&dPropulsion Master"
+    description: "&7Master the art of flight with 10,000 boosts."
+    display-item: "GRAY_DYE"
+    message: "&6&lAchievement! &e{player} has achieved the rank of Propulsion Master!"
+    broadcast: true
+    rewards:
+      - " &e» &a$20,000"
+    commands:
+      - "eco give {player} 20000"
 
+  # --- Saves ---
   survivor:
-    name: "Survivor"
     type: SAVES
     value: 25
+    name: "&aSurvivor"
+    description: "&7Be saved by the plugin's protection features 25 times."
+    display-item: "GRAY_DYE"
+    message: "&6&lAchievement! &e{player} has been saved from certain doom 25 times!"
     broadcast: true
-    message: "&6&lAchievement! &e{player} has been saved from certain doom by their elytra 25 times!"
+    rewards:
+      - " &e» &a$1,000"
     commands:
       - "eco give {player} 1000"
-#      - "lp user {player} permission set elytraessentials.effect.heart"
+  guardian_angel:
+    type: SAVES
+    value: 100
+    name: "&bGuardian Angel"
+    description: "&7Be saved by the plugin's protection features 100 times."
+    display-item: "GRAY_DYE"
+    message: "&6&lAchievement! &e{player}'s elytra is their Guardian Angel, saving them 100 times!"
+    broadcast: true
+    rewards:
+      - " &e» &a$7,500"
+    commands:
+      - "eco give {player} 7500"
+  unbreakable:
+    type: SAVES
+    value: 250
+    name: "&dUnbreakable"
+    description: "&7Be saved by the plugin's protection features 250 times."
+    display-item: "GRAY_DYE"
+    message: "&6&lAchievement! &e{player} seems Unbreakable, having been saved 250 times!"
+    broadcast: true
+    rewards:
+      - " &e» &a$15,000"
+    commands:
+      - "eco give {player} 15000"
+
+  # --- Total Flight Time ---
+  fledgling:
+    type: TOTAL_FLIGHT_TIME
+    value: 3600
+    name: "&aFledgling"
+    description: "&7Spend a total of 1 hour in the air."
+    display-item: "GRAY_DYE"
+    message: "&6&lAchievement! &e{player} has earned their wings, flying for over an hour!"
+    broadcast: true
+    rewards:
+      - " &e» &a$1,500"
+    commands:
+      - "eco give {player} 1500"
+  aviator:
+    type: TOTAL_FLIGHT_TIME
+    value: 36000
+    name: "&bAviator"
+    description: "&7Spend a total of 10 hours in the air."
+    display-item: "GRAY_DYE"
+    message: "&6&lAchievement! &e{player} is a true Aviator, with 10 hours of flight time!"
+    broadcast: true
+    rewards:
+      - " &e» &a$15,000"
+    commands:
+      - "eco give {player} 15000"
+  sky_legend:
+    type: TOTAL_FLIGHT_TIME
+    value: 180000
+    name: "&dSky Legend"
+    description: "&7Spend a total of 50 hours in the air."
+    display-item: "GRAY_DYE"
+    message: "&6&lAchievement! &e{player} has become a Sky Legend, with 50 hours of flight time!"
+    broadcast: true
+    rewards:
+      - " &e» &a$75,000"
+    commands:
+      - "eco give {player} 75000"

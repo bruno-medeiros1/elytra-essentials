@@ -1,5 +1,7 @@
 package org.bruno.elytraEssentials.utils;
 
+import java.util.List;
+
 public final class Constants {
 
     //  Private constructor to prevent instantiation
@@ -40,6 +42,25 @@ public final class Constants {
         public static final int FORGE_CANCEL_SLOT = 30;
         public static final int FORGE_CONFIRM_SLOT = 32;
 
+        //  Achievements GUI Constants
+        public static final int ACHIEVEMENTS_INVENTORY_SIZE = 54;
+        public static final String ACHIEVEMENTS_INVENTORY_NAME = "§8Achievements";
+        public static final int ACHIEVEMENTS_ITEMS_PER_PAGE = 21;
+
+        //  The specific slots where achievement items will be placed
+        //  TODO: Apply the same for the others
+        public static final List<Integer> ACHIEVEMENT_ITEM_SLOTS = List.of(
+                10, 11, 12, 13, 14, 15, 16,
+                19, 20, 21, 22, 23, 24, 25,
+                28, 29, 30, 31, 32, 33, 34
+        );
+
+        // New Control Row Layout
+        public static final int ACHIEVEMENTS_FILTER_SLOT = 45;
+        public static final int ACHIEVEMENTS_PREVIOUS_PAGE_SLOT = 48;
+        public static final int ACHIEVEMENTS_PAGE_INFO_SLOT = 49;
+        public static final int ACHIEVEMENTS_NEXT_PAGE_SLOT = 50;
+        public static final int ACHIEVEMENTS_CLOSE_SLOT = 53;
     }
 
     public static final class Permissions {

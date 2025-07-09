@@ -112,6 +112,12 @@ public class PermissionsHelper {
                 player.hasPermission("elytraessentials.command.importdb");
     }
 
+    public static boolean hasAchievementsPermission(Player player){
+        return player.hasPermission("elytraessentials.*") ||
+                player.hasPermission("elytraessentials.command.*") ||
+                player.hasPermission("elytraessentials.command.achievements");
+    }
+
     //</editor-fold>
 
     //<editor-fold desc="UPDATE">

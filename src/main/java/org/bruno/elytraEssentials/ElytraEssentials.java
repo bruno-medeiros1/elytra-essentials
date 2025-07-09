@@ -6,10 +6,7 @@ package org.bruno.elytraEssentials;
 */
 
 import net.milkbowl.vault.economy.Economy;
-import org.bruno.elytraEssentials.commands.EffectsCommand;
-import org.bruno.elytraEssentials.commands.ElytraEssentialsCommand;
-import org.bruno.elytraEssentials.commands.ForgeCommand;
-import org.bruno.elytraEssentials.commands.ShopCommand;
+import org.bruno.elytraEssentials.commands.*;
 import org.bruno.elytraEssentials.handlers.*;
 import org.bruno.elytraEssentials.helpers.FileHelper;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
@@ -42,6 +39,7 @@ public final class ElytraEssentials extends JavaPlugin {
     private EffectsGuiListener effectsGuiListener;
     private ShopGuiListener shopGuiListener;
     private ForgeGuiListener forgeGuiListener;
+    private AchievementsGuiListener achievementsGuiListener;
     private CombatTagListener combatTagListener;
     private EmergencyDeployListener emergencyDeployListener;
 
@@ -154,6 +152,7 @@ public final class ElytraEssentials extends JavaPlugin {
         this.effectsGuiListener = new EffectsGuiListener(this, new EffectsCommand(this), new ShopCommand(this));
         this.shopGuiListener = new ShopGuiListener(this, new EffectsCommand(this), new ShopCommand(this));
         this.forgeGuiListener = new ForgeGuiListener(this, new ForgeCommand(this));
+        this.achievementsGuiListener = new AchievementsGuiListener(this, new AchievementsCommand(this));
 
         Bukkit.getPluginManager().registerEvents(this.elytraFlightListener, this);
         Bukkit.getPluginManager().registerEvents(this.elytraBoostListener, this);
@@ -167,6 +166,7 @@ public final class ElytraEssentials extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(this.effectsGuiListener, this);
         Bukkit.getPluginManager().registerEvents(this.shopGuiListener, this);
         Bukkit.getPluginManager().registerEvents(this.forgeGuiListener, this);
+        Bukkit.getPluginManager().registerEvents(this.achievementsGuiListener, this);
 
         //  Placeholder API Expansion classes
         registerPlaceholders();
@@ -274,6 +274,7 @@ public final class ElytraEssentials extends JavaPlugin {
         this.effectsGuiListener = null;
         this.shopGuiListener = null;
         this.forgeGuiListener = null;
+        this.achievementsGuiListener = null;
         this.combatTagListener = null;
 
         this.messagesHandler = null;
@@ -299,8 +300,9 @@ public final class ElytraEssentials extends JavaPlugin {
 
     public ShopGuiListener getShopGuiListener() { return this.shopGuiListener; }
 
-    public CombatTagListener getCombatTagListener() { return this.combatTagListener; }
+    public AchievementsGuiListener getAchievementsGuiListener() { return this.achievementsGuiListener; }
 
+    public CombatTagListener getCombatTagListener() { return this.combatTagListener; }
 
     public DatabaseHandler getDatabaseHandler() {
         return this.databaseHandler;
