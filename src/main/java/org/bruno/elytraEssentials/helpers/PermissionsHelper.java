@@ -2,6 +2,7 @@ package org.bruno.elytraEssentials.helpers;
 
 import org.bukkit.entity.Player;
 
+// TODO: Modify to use CommandSender instead of player since it will benefit player and console
 public class PermissionsHelper {
 
     //<editor-fold desc="BYPASSES">
@@ -62,6 +63,24 @@ public class PermissionsHelper {
         return player.hasPermission("elytraessentials.*") ||
                 player.hasPermission("elytraessentials.command.*") ||
                 player.hasPermission("elytraessentials.command.effects.clear");
+    }
+
+    public static boolean hasGiveEffectPermission(Player player) {
+        return player.hasPermission("elytraessentials.*") ||
+                player.hasPermission("elytraessentials.admin.*") ||
+                player.hasPermission("elytraessentials.effects.give");
+    }
+
+    public static boolean hasRemoveEffectPermission(Player player) {
+        return player.hasPermission("elytraessentials.*") ||
+                player.hasPermission("elytraessentials.admin.*") ||
+                player.hasPermission("elytraessentials.effects.remove");
+    }
+
+    public static boolean hasListEffectsPermission(Player player) {
+        return player.hasPermission("elytraessentials.*") ||
+                player.hasPermission("elytraessentials.admin.*") ||
+                player.hasPermission("elytraessentials.effects.list");
     }
 
     public static boolean hasShopPermission(Player player) {

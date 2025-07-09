@@ -43,6 +43,15 @@ permissions:
           elytraessentials.command.effects.clear:
             default: true
             description: "Allows the use of /ee effects clear command"
+          elytraessentials.command.effects.give:
+            description: "Allows giving an effect to a player."
+            default: op
+          elytraessentials.command.effects.remove:
+            description: "Allows removing an effect from a player."
+            default: op
+          elytraessentials.command.effects.list:
+            description: "Allows listing the effects a player owns."
+            default: op
           elytraessentials.command.stats:
             default: true
             description: "Allows the use of /ee stats command"

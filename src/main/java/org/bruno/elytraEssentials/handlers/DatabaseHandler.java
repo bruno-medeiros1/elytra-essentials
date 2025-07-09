@@ -153,6 +153,23 @@ public class DatabaseHandler {
         }
     }
 
+    /**
+     * Removes a specific owned effect from a player.
+     * @param playerUuid The UUID of the player.
+     * @param effectKey The key of the effect to remove.
+     * @throws SQLException If a database error occurs.
+     */
+    public void removeOwnedEffect(UUID playerUuid, String effectKey) throws SQLException {
+        String query = "DELETE FROM " + OWNED_EFFECTS_TABLE + " WHERE player_uuid = ? AND effect_key = ?";
+
+        if (storageType == StorageType.MYSQL || storageType == StorageType.SQLITE) {
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                stmt.setString(1, playerUuid.toString());
+                stmt.setString(2, effectKey);
+                stmt.executeUpdate();
+            }
+        }
+    }
 
     public void UpdateOwnedEffect(UUID playerId, String effectKey, boolean isActive) throws SQLException {
         String query = "UPDATE " + OWNED_EFFECTS_TABLE + " SET is_active = ? WHERE player_uuid = ? AND effect_key = ?";
