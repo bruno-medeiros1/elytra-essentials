@@ -4,7 +4,9 @@ import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.helpers.ColorHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import java.util.logging.Level;
 
@@ -43,7 +45,13 @@ public class ReloadCommand implements ISubCommand {
             plugin.startAllPluginTasks();
 
             // Validate the flight time for online players.
+            plugin.getMessagesHelper().sendConsoleLog("info", "Reloading data for all online players...");
             plugin.getElytraFlightListener().reloadOnlinePlayerFlightTimes();
+
+            // Reload the main stats for all online players.
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                plugin.getStatsHandler().loadPlayerStats(player);
+            }
 
             sender.sendMessage(ColorHelper.parse(plugin.getMessagesHandlerInstance().getReloadSuccessMessage()));
         } catch (Exception e) {

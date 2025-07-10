@@ -5,10 +5,8 @@ import org.bruno.elytraEssentials.handlers.ConfigHandler;
 import org.bruno.elytraEssentials.helpers.ColorHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.helpers.TimeHelper;
-import org.bruno.elytraEssentials.utils.ElytraEffect;
 import org.bruno.elytraEssentials.utils.PlayerStats;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.boss.BarColor;
@@ -25,6 +23,8 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
 import java.sql.SQLException;
@@ -33,29 +33,32 @@ import java.util.logging.Level;
 
 public class ElytraFlightListener implements Listener
 {
-    // --- Constants ---
+    // Constants
     private static final int TICKS_IN_ONE_SECOND = 20;
     private static final double METERS_PER_SECOND_TO_KMH = 3.6;
     private static final double MAX_FLIGHT_SPEED = 200.0;
 
     private final ElytraEssentials plugin;
 
-    // --- Config Values ---
+    // Config Values
     private boolean isGlobalFlightDisabled;
     private boolean isSpeedLimitEnabled;
     private boolean isTimeLimitEnabled;
     private boolean isElytraBreakProtectionEnabled;
     private boolean isKineticEnergyProtectionEnabled;
     private double maxSpeed;
-    private List<String> disabledElytraWorlds;
+    private List disabledElytraWorlds;
     private HashMap<String, Double> perWorldSpeedLimits;
 
-    // --- Player State Tracking ---
+    // Player State Tracking
     private final HashMap<UUID, Integer> flightTimeData = new HashMap<>();
     private final HashMap<UUID, BossBar> flightBossBars = new HashMap<>();
     private final HashMap<UUID, Double> currentFlightDistances = new HashMap<>();
     private final Set<UUID> noFallDamagePlayers = new HashSet<>();
     private final HashMap<UUID, Integer> initialFlightTime = new HashMap<>();
+
+    // Task for the countdown
+    private BukkitTask flightTimeTask;
 
     public ElytraFlightListener(ElytraEssentials plugin) {
         this.plugin = plugin;
@@ -107,7 +110,16 @@ public class ElytraFlightListener implements Listener
             return;
         }
 
-        handleFlightTimeCountdown(player);
+        // Instant check for zero flight time
+        if (isTimeLimitEnabled && !PermissionsHelper.PlayerBypassTimeLimit(player)) {
+            if (flightTimeData.getOrDefault(player.getUniqueId(), 0) <= 0) {
+                player.setGliding(false);
+                noFallDamagePlayers.add(player.getUniqueId());
+                plugin.getMessagesHelper().sendActionBarMessage(player, plugin.getMessagesHandlerInstance().getElytraFlightTimeExpired());
+                return;
+            }
+        }
+
         handleSpeedometer(player);
         handleDurabilityProtection(player);
         handleDistanceTracking(player, event);
@@ -172,36 +184,39 @@ public class ElytraFlightListener implements Listener
         removeFlightBossBar(player);
     }
 
-    private void handleFlightTimeCountdown(Player player) {
-        if (!isTimeLimitEnabled || PermissionsHelper.PlayerBypassTimeLimit(player)) return;
+    private void handleFlightTimeCountdown() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (!player.isGliding() || PermissionsHelper.PlayerBypassTimeLimit(player)) {
+                continue;
+            }
 
-        BossBar bossBar = flightBossBars.get(player.getUniqueId());
-        if (bossBar == null) return; // No boss bar to update
+            UUID playerId = player.getUniqueId();
+            int currentFlightTime = flightTimeData.getOrDefault(playerId, 0);
 
-        int currentFlightTime = flightTimeData.getOrDefault(player.getUniqueId(), 0);
-        if (currentFlightTime <= 0) {
-            player.setGliding(false);
-            noFallDamagePlayers.add(player.getUniqueId());
-            plugin.getMessagesHelper().sendActionBarMessage(player, plugin.getMessagesHandlerInstance().getElytraFlightTimeExpired());
-            return;
+            if (currentFlightTime <= 0) {
+                player.setGliding(false);
+                noFallDamagePlayers.add(playerId);
+                plugin.getMessagesHelper().sendActionBarMessage(player, plugin.getMessagesHandlerInstance().getElytraFlightTimeExpired());
+                continue;
+            }
+
+            // Decrement time and update the cache
+            currentFlightTime--;
+            flightTimeData.put(playerId, currentFlightTime);
+
+            // Update the Boss Bar
+            BossBar bossBar = flightBossBars.get(playerId);
+            if (bossBar != null) {
+                int initialTime = initialFlightTime.getOrDefault(playerId, 1);
+                double progress = Math.max(0.0, (double) currentFlightTime / initialTime);
+                bossBar.setProgress(progress);
+                bossBar.setTitle(ColorHelper.parse(plugin.getMessagesHandlerInstance().getElytraTimeLimitMessage().replace("{0}", TimeHelper.formatFlightTime(currentFlightTime))));
+
+                if (progress > 0.5) bossBar.setColor(BarColor.GREEN);
+                else if (progress > 0.2) bossBar.setColor(BarColor.YELLOW);
+                else bossBar.setColor(BarColor.RED);
+            }
         }
-
-        // Decrement time once per second (approximated by checking every move)
-        // A BukkitRunnable would be more precise but this is simple and effective enough.
-        // This logic assumes onPlayerMove fires frequently enough.
-        // For perfect timing, a separate repeating task is needed.
-        // For this refactor, we keep the original logic.
-        // A simple check could be added here to only decrement once per second.
-
-        // Update Boss Bar
-        int initialTime = initialFlightTime.getOrDefault(player.getUniqueId(), 1);
-        double progress = Math.max(0.0, (double) currentFlightTime / initialTime);
-        bossBar.setProgress(progress);
-        bossBar.setTitle(ColorHelper.parse(plugin.getMessagesHandlerInstance().getElytraTimeLimitMessage().replace("{0}", TimeHelper.formatFlightTime(currentFlightTime))));
-
-        if (progress > 0.5) bossBar.setColor(BarColor.GREEN);
-        else if (progress > 0.2) bossBar.setColor(BarColor.YELLOW);
-        else bossBar.setColor(BarColor.RED);
     }
 
     private void handleSpeedometer(Player player) {
@@ -367,6 +382,27 @@ public class ElytraFlightListener implements Listener
     public void addFlightTime(UUID player, int secondsToAdd) {
         int currentTime = getCurrentFlightTime(player);
         flightTimeData.put(player, currentTime + secondsToAdd);
-        // We do not update the initialFlightTime here, so the boss bar progress remains correct.
+
+        // Also update the initial time to keep the Boss Bar progress ratio correct.
+        int currentInitial = initialFlightTime.getOrDefault(player, 0);
+        initialFlightTime.put(player, currentInitial + secondsToAdd);
+    }
+
+    public void start() {
+        if (flightTimeTask != null && !flightTimeTask.isCancelled()) return;
+        if (!isTimeLimitEnabled) return;
+
+        this.flightTimeTask = new BukkitRunnable() {
+            @Override
+            public void run() {
+                handleFlightTimeCountdown();
+            }
+        }.runTaskTimer(plugin, 20L, 20L); // Run every second
+    }
+
+    public void cancel() {
+        if (flightTimeTask != null) {
+            flightTimeTask.cancel();
+        }
     }
 }

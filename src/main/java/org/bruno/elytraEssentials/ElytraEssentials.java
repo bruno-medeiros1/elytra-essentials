@@ -270,18 +270,22 @@ public final class ElytraEssentials extends JavaPlugin {
         if (recoveryHandler != null) recoveryHandler.cancel();
         if (tpsHandler != null) tpsHandler.cancel();
         if (statsHandler != null) statsHandler.cancel();
-        if (databaseHandler != null) databaseHandler.cancelBackupTask();
         if (achievementsHandler != null) achievementsHandler.cancel();
         if (combatTagListener != null) combatTagListener.cancel();
+        if (elytraFlightListener != null) elytraFlightListener.cancel();
+
+        if (databaseHandler != null) databaseHandler.cancelBackupTask();
     }
 
     public void startAllPluginTasks(){
+        if (databaseHandler != null) databaseHandler.startAutoBackupTask();
+
         if (recoveryHandler != null) recoveryHandler.start();
         if (tpsHandler != null) tpsHandler.start();
         if (statsHandler != null) statsHandler.start();
-        if (databaseHandler != null) databaseHandler.startAutoBackupTask();
         if (achievementsHandler != null) achievementsHandler.start();
         if (combatTagListener != null) combatTagListener.start();
+        if (elytraFlightListener != null) elytraFlightListener.start();
     }
     //</editor-fold>
 

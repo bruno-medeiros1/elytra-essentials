@@ -17,6 +17,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 public class StatsCommand implements ISubCommand {
@@ -117,12 +118,19 @@ public class StatsCommand implements ISubCommand {
         int totalEffects = plugin.getEffectsHandler().getEffectsRegistry().size();
         String activeEffect = "None";
         try {
-            effectsOwned = plugin.getDatabaseHandler().GetOwnedEffectKeys(stats.getUuid()).size();
+            if (viewer instanceof Player player){
+                if (PermissionsHelper.hasAllEffectsPermission(player)){
+                    effectsOwned = totalEffects;
+                }else {
+                    effectsOwned = plugin.getDatabaseHandler().GetOwnedEffectKeys(stats.getUuid()).size();
+                }
+            }
+
             String storedEffect = plugin.getDatabaseHandler().getPlayerActiveEffect(stats.getUuid());
             if (storedEffect != null) activeEffect = storedEffect;
         } catch (SQLException e) {
-            viewer.sendMessage(ChatColor.RED + "Could not load effect data.");
-            e.printStackTrace();
+            viewer.sendMessage(ChatColor.RED + "Could not load effect data...");
+            plugin.getLogger().log(Level.SEVERE, "Could not load effect data: ", e);
         }
 
         // --- Formatting Constants ---
