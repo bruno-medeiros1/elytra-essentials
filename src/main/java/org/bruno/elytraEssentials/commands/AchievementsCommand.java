@@ -3,6 +3,7 @@ package org.bruno.elytraEssentials.commands;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.gui.AchievementsHolder;
 import org.bruno.elytraEssentials.handlers.AchievementsHandler;
+import org.bruno.elytraEssentials.helpers.ColorHelper;
 import org.bruno.elytraEssentials.helpers.GuiHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
@@ -22,6 +23,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.sql.SQLException;
 import java.util.*;
+import java.util.logging.Level;
 
 public class AchievementsCommand implements ISubCommand {
 
@@ -43,19 +45,17 @@ public class AchievementsCommand implements ISubCommand {
             return true;
         }
 
-        // When opened from a command, always default to page 0 and no filter.
-        OpenAchievementsGUI(player, 0, StatType.UNKNOWN);
-
+        openAchievementsGUI(player, 0, StatType.UNKNOWN);
         return true;
     }
 
-    public void OpenAchievementsGUI(Player player, int page, StatType filter) {
+    public void openAchievementsGUI(Player player, int page, StatType filter) {
         plugin.getAchievementsGuiListener().setPlayerState(player.getUniqueId(), page, filter);
 
         Inventory gui = Bukkit.createInventory(new AchievementsHolder(), Constants.GUI.ACHIEVEMENTS_INVENTORY_SIZE, Constants.GUI.ACHIEVEMENTS_INVENTORY_NAME);
 
         populateItems(gui, player, page, filter);
-        addControlButtons(gui, player, page, filter);
+        addControlButtons(gui, page, filter);
 
         player.playSound(player.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1.0f, 1.0f);
         player.openInventory(gui);
@@ -75,7 +75,7 @@ public class AchievementsCommand implements ISubCommand {
             unlockedAchievements = plugin.getDatabaseHandler().getUnlockedAchievementIds(player.getUniqueId());
         } catch (SQLException e) {
             player.sendMessage(ChatColor.RED + "Could not load your achievement data.");
-            e.printStackTrace();
+            plugin.getLogger().log(Level.SEVERE, "Failed to fetch achievements for player " + player.getName(), e);
             return;
         }
 
@@ -117,10 +117,10 @@ public class AchievementsCommand implements ISubCommand {
         ItemMeta meta = item.getItemMeta();
 
         if (meta != null) {
-            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', achievement.name()));
+            meta.setDisplayName(ColorHelper.parse(achievement.name()));
 
             List<String> lore = new ArrayList<>();
-            lore.add(ChatColor.translateAlternateColorCodes('&', achievement.description()));
+            lore.add(ColorHelper.parse(achievement.description()));
             lore.add("");
 
             if (isUnlocked) {
@@ -135,7 +135,7 @@ public class AchievementsCommand implements ISubCommand {
                 lore.add("");
                 lore.add("§6Rewards:");
                 for (String rewardLine : achievement.rewards()) {
-                    lore.add(ChatColor.translateAlternateColorCodes('&', rewardLine));
+                    lore.add(ColorHelper.parse(rewardLine));
                 }
             }
 
@@ -169,8 +169,7 @@ public class AchievementsCommand implements ISubCommand {
         return bar.toString();
     }
 
-    private void addControlButtons(Inventory gui, Player player, int page, StatType filter) {
-
+    private void addControlButtons(Inventory gui, int page, StatType filter) {
         // Calculate total pages based on the FILTERED list
         long totalItems = plugin.getAchievementsHandler().getAllAchievements().stream()
                 .filter(ach -> filter == StatType.UNKNOWN || ach.type() == filter)
@@ -184,50 +183,13 @@ public class AchievementsCommand implements ISubCommand {
                 StatType.LONGEST_FLIGHT, StatType.BOOSTS_USED, StatType.SAVES
         );
 
-        // Build the dynamic lore for the filter button
-        List<String> filterLore = new ArrayList<>();
-        filterLore.add("§7Click to cycle through categories.");
-        filterLore.add("");
-        for (StatType type : filterCycle) {
-            String name = (type == StatType.UNKNOWN) ? "All" : getCapitalizedName(type.name());
-            if (type == filter) {
-                filterLore.add("§e» " + name + " «");
-            } else {
-                filterLore.add("§7" + name);
-            }
-        }
+        // Use the GuiHelper method to create the filter button
+        gui.setItem(Constants.GUI.ACHIEVEMENTS_FILTER_SLOT, GuiHelper.createFilterButton(filter, filterCycle));
 
-        String filterName = (filter == StatType.UNKNOWN) ? "All" : getCapitalizedName(filter.name());
-        ItemStack filterItem = GuiHelper.createGuiItem(Material.HOPPER, "§eFilter: §6" + filterName, filterLore.toArray(new String[0]));
-        gui.setItem(Constants.GUI.ACHIEVEMENTS_FILTER_SLOT, filterItem);
-
-        //  Page Navigation
-        if (page > 0) {
-            gui.setItem(Constants.GUI.ACHIEVEMENTS_PREVIOUS_PAGE_SLOT, GuiHelper.createGuiItem(Material.RED_STAINED_GLASS_PANE, "§aPrevious Page", String.format("§7Click to go to page %d.", page)));
-        } else {
-            gui.setItem(Constants.GUI.ACHIEVEMENTS_PREVIOUS_PAGE_SLOT, GuiHelper.createGuiItem(Material.RED_STAINED_GLASS_PANE, "§cPrevious Page", "§7You are on the first page"));
-        }
-
-        // Page Info
-        ItemStack pageInfo = GuiHelper.createGuiItem(Material.COMPASS, String.format("§ePage %d / %d", page + 1, totalPages));
-        gui.setItem(Constants.GUI.ACHIEVEMENTS_PAGE_INFO_SLOT, pageInfo);
-
-        // Next Page Button
-        if (page < totalPages - 1) {
-            gui.setItem(Constants.GUI.ACHIEVEMENTS_NEXT_PAGE_SLOT, GuiHelper.createGuiItem(Material.GREEN_STAINED_GLASS_PANE, "§aNext Page", String.format("§7Click to go to page %d.", page + 2)));
-        } else {
-            gui.setItem(Constants.GUI.ACHIEVEMENTS_NEXT_PAGE_SLOT, GuiHelper.createGuiItem(Material.GREEN_STAINED_GLASS_PANE, "§cNext Page", "§7You are on the last page."));
-        }
-
-        gui.setItem(Constants.GUI.ACHIEVEMENTS_CLOSE_SLOT, GuiHelper.createGuiItem(Material.BARRIER, "§cCancel", "§7Click to close the menu."));
-    }
-
-    private String getCapitalizedName(String name) {
-        String[] words = name.toLowerCase().replace("_", " ").split(" ");
-        StringBuilder capitalized = new StringBuilder();
-        for (String word : words) {
-            capitalized.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1)).append(" ");
-        }
-        return capitalized.toString().trim();
+        // Use the GuiHelper methods for page navigation
+        gui.setItem(Constants.GUI.ACHIEVEMENTS_PREVIOUS_PAGE_SLOT, GuiHelper.createPreviousPageButton(page > 0));
+        gui.setItem(Constants.GUI.ACHIEVEMENTS_PAGE_INFO_SLOT, GuiHelper.createPageInfoItem(page + 1, totalPages));
+        gui.setItem(Constants.GUI.ACHIEVEMENTS_NEXT_PAGE_SLOT, GuiHelper.createNextPageButton(page < totalPages - 1));
+        gui.setItem(Constants.GUI.ACHIEVEMENTS_CLOSE_SLOT, GuiHelper.createCloseButton());
     }
 }

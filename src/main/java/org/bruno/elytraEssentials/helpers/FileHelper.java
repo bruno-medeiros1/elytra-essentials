@@ -1,133 +1,67 @@
 package org.bruno.elytraEssentials.helpers;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
-import org.bukkit.Bukkit;
+import org.bruno.elytraEssentials.utils.Constants;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.*;
 
-//  TODO: Improve class methods also implement logHelper for improved logging
-public class FileHelper {
+/**
+ * A helper class to manage all custom configuration files for the plugin.
+ */
+public final class FileHelper {
     private final ElytraEssentials plugin;
 
-    private FileConfiguration messagesFileConfiguration = null;
-    private File messagesFile = null;
-
-    private FileConfiguration shopFileConfiguration = null;
-    private File shopFile = null;
-
-    private File achievementsFile;
+    private FileConfiguration messagesConfig;
+    private FileConfiguration shopConfig;
     private FileConfiguration achievementsConfig;
 
     public FileHelper(ElytraEssentials plugin) {
         this.plugin = plugin;
-
-        EnsureMessagesFileExists();
-        EnsureShopFileExists();
-        ensureAchievementsFileExists();
     }
 
-    public void InitializeMessagesFile() {
-        if (messagesFile == null) {
-            messagesFile = new File(plugin.getDataFolder(), "messages.yml");
-        }
-
-        //TODO: Add try catch block here maybe
-        // Load the configuration file
-        messagesFileConfiguration= YamlConfiguration.loadConfiguration(messagesFile);
-
-        // Load default values from the plugin's resource if it exists
-        InputStream inputStream = plugin.getResource("messages.yml");
-        if (inputStream != null) {
-            try (Reader reader = new InputStreamReader(inputStream)) {
-                YamlConfiguration defaultConfig = YamlConfiguration.loadConfiguration(reader);
-                messagesFileConfiguration.setDefaults(defaultConfig);
-            } catch (IOException e) {
-                Bukkit.getLogger().severe("Failed to read messages.yml");
-                Bukkit.getLogger().severe("Error: " + e.getMessage());
-                Bukkit.getLogger().severe("Stack Trace:");
-                for (StackTraceElement element : e.getStackTrace()) {
-                    Bukkit.getLogger().severe("  at " + element.toString());
-                }
-            }
-        }
+    /**
+     * Initializes all custom configuration files.
+     * This method should be called once from the main onEnable() method.
+     */
+    public void initialize() {
+        plugin.getLogger().info("Loading custom configuration files...");
+        this.messagesConfig = setupCustomFile(Constants.Files.MESSAGES);
+        this.shopConfig = setupCustomFile(Constants.Files.SHOP);
+        this.achievementsConfig = setupCustomFile(Constants.Files.ACHIEVEMENTS);
+        plugin.getLogger().info("All custom configuration files loaded successfully.");
     }
 
-    public void InitializeShopFile() {
-        if (shopFile == null) {
-            shopFile = new File(plugin.getDataFolder(), "shop.yml");
+    /**
+     * A generic method to handle the setup of any custom .yml file.
+     * It ensures the file exists (creating it from defaults if necessary) and returns its configuration.
+     *
+     * @param fileName The name of the file (e.g., "messages.yml").
+     * @return The loaded FileConfiguration for that file.
+     */
+    private FileConfiguration setupCustomFile(String fileName) {
+        File file = new File(plugin.getDataFolder(), fileName);
+
+        // If the file doesn't exist, save the default from the JAR.
+        if (!file.exists()) {
+            plugin.getLogger().info("File not found: " + fileName + ". Creating from defaults.");
+            plugin.saveResource(fileName, false);
         }
 
-        //TODO: Add try catch block here maybe
-        // Load the configuration file
-        shopFileConfiguration = YamlConfiguration.loadConfiguration(shopFile);
-
-        // Load default values from the plugin's resource if it exists
-        InputStream inputStream = plugin.getResource("shop.yml");
-        if (inputStream != null) {
-            try (Reader reader = new InputStreamReader(inputStream)) {
-                YamlConfiguration defaultConfig = YamlConfiguration.loadConfiguration(reader);
-                shopFileConfiguration.setDefaults(defaultConfig);
-            } catch (IOException e) {
-                Bukkit.getLogger().severe("Failed to read shop.yml");
-                Bukkit.getLogger().severe("Error: " + e.getMessage());
-                Bukkit.getLogger().severe("Stack Trace:");
-                for (StackTraceElement element : e.getStackTrace()) {
-                    Bukkit.getLogger().severe("  at " + element.toString());
-                }
-            }
-        }
+        // Load and return the configuration.
+        return YamlConfiguration.loadConfiguration(file);
     }
 
-    public FileConfiguration GetMessagesFileConfiguration() {
-        if (messagesFileConfiguration == null) {
-            this.InitializeMessagesFile();
-        }
-        return messagesFileConfiguration;
+    public FileConfiguration getMessagesConfig() {
+        return this.messagesConfig;
     }
 
-    public FileConfiguration GetShopFileConfiguration() {
-        if (shopFileConfiguration == null) {
-            this.InitializeShopFile();
-        }
-        return shopFileConfiguration;
+    public FileConfiguration getShopConfig() {
+        return this.shopConfig;
     }
 
-    public FileConfiguration getAchievementsFileConfiguration() {
-        if (this.achievementsConfig == null) {
-            // This is a failsafe in case the file wasn't loaded yet.
-            this.achievementsFile = new File(plugin.getDataFolder(), "achievements.yml");
-            this.achievementsConfig = YamlConfiguration.loadConfiguration(this.achievementsFile);
-        }
+    public FileConfiguration getAchievementsConfig() {
         return this.achievementsConfig;
-    }
-
-    private void EnsureMessagesFileExists() {
-        if (messagesFile == null) {
-            messagesFile = new File(plugin.getDataFolder(), "messages.yml");
-        }
-        if (!messagesFile.exists()) {
-            plugin.saveResource("messages.yml", false);
-        }
-    }
-
-    private void EnsureShopFileExists() {
-        if (shopFile == null) {
-            shopFile = new File(plugin.getDataFolder(), "shop.yml");
-        }
-        if (!shopFile.exists()) {
-            plugin.saveResource("shop.yml", false);
-        }
-    }
-
-    private void ensureAchievementsFileExists() {
-        if (achievementsFile == null) {
-            achievementsFile = new File(plugin.getDataFolder(), "achievements.yml");
-        }
-        if (!achievementsFile.exists()) {
-            plugin.getLogger().info("File not found. Creating a new default achievements.yml.");
-            plugin.saveResource("achievements.yml", false);
-        }
     }
 }

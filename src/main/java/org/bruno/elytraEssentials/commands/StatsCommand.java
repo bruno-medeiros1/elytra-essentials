@@ -2,6 +2,7 @@ package org.bruno.elytraEssentials.commands;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.handlers.StatsHandler;
+import org.bruno.elytraEssentials.helpers.ColorHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.helpers.TimeHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
@@ -53,8 +54,8 @@ public class StatsCommand implements ISubCommand {
         }
         else if (args.length == 1) {
             if (sender instanceof Player player){
-                if (!PermissionsHelper.hasOthersStatsPermission(player)) {
-                    sender.sendMessage(plugin.getMessagesHandlerInstance().getNoPermissionMessage());
+                if (!PermissionsHelper.hasStatsOthersPermission(player)) {
+                    sender.sendMessage(ColorHelper.parse(plugin.getMessagesHandlerInstance().getNoPermissionMessage()));
                     return true;
                 }
             }
@@ -154,7 +155,7 @@ public class StatsCommand implements ISubCommand {
     public List<String> getSubcommandCompletions(CommandSender sender, String[] args) {
         if (args.length == 2) {
             if (sender instanceof Player player) {
-                if (!PermissionsHelper.hasOthersStatsPermission(player)) {
+                if (!PermissionsHelper.hasStatsOthersPermission(player)) {
                     return List.of();
                 }
             }

@@ -1,6 +1,7 @@
 package org.bruno.elytraEssentials.handlers;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
+import org.bruno.elytraEssentials.utils.Constants;
 import org.bruno.elytraEssentials.utils.PlayerStats;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -14,19 +15,15 @@ import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
+import java.util.logging.Level;
 
 public class DatabaseHandler {
-    private final static String ELYTRA_FLIGHT_TIME_TABLE = "elytra_flight_time";
-    private final static String OWNED_EFFECTS_TABLE = "owned_effects";
-    private final static String PLAYER_STATS_TABLE = "player_stats";
-    private final static String PLAYER_ACHIEVEMENTS_TABLE = "player_achievements";
-
     private final ElytraEssentials plugin;
     private Connection connection;
 
     private enum StorageType { SQLITE, MYSQL }
-
     private StorageType storageType;
+
     private String host;
     private int port;
     private String database;
@@ -34,20 +31,89 @@ public class DatabaseHandler {
     private String password;
 
     private BukkitTask backupTask = null;
-    private static final int MAX_BACKUPS = 24;
-    private static final long AUTO_BACKUPS_TIME = 20L * 60 * 60;
-
-    private static final String SQLITE_DATABASE_NAME = "elytraessentials.db";
 
     public DatabaseHandler(ElytraEssentials plugin){
         this.plugin = plugin;
-
         setDatabaseVariables();
     }
 
-
     public void Initialize() throws SQLException {
-        String typeFromConfig = plugin.getConfig().getString("database.type", "SQLITE").toUpperCase();
+        plugin.getMessagesHelper().sendConsoleLog("info", "Using " + storageType.name() + " for data storage.");
+
+        if (storageType == StorageType.MYSQL) {
+            connection = DriverManager.getConnection(
+                    "jdbc:mysql://" + this.host + ":" + this.port + "/" + this.database + "?useSSL=false",
+                    this.username, this.password
+            );
+        } else { // SQLITE
+            File databaseFolder = new File(plugin.getDataFolder(), Constants.Files.DB_FOLDER);
+            if (!databaseFolder.exists()) {
+                if (!databaseFolder.mkdirs()) {
+                    throw new SQLException("FATAL: Failed to create database folder. Please check file system permissions!");
+                }
+            }
+            File dbFile = new File(databaseFolder, Constants.Files.SQLITE_DB_NAME);
+            connection = DriverManager.getConnection("jdbc:sqlite:" + dbFile.getAbsolutePath());
+        }
+        plugin.getMessagesHelper().sendConsoleLog("info", "Database connection established.");
+        InitializeTables();
+    }
+
+    public boolean IsConnected() {
+        return connection != null;
+    }
+
+    public void Disconnect() {
+        if (IsConnected()) {
+            try {
+                connection.close();
+                plugin.getMessagesHelper().sendDebugMessage(storageType.name() + " database connection closed successfully!");
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Failed to close the database connection.", e);
+            }
+        }
+    }
+
+    private void InitializeTables() throws SQLException {
+        executeTableQuery(Constants.Database.Tables.ELYTRA_FLIGHT_TIME);
+        executeTableQuery(Constants.Database.Tables.OWNED_EFFECTS);
+        executeTableQuery(Constants.Database.Tables.PLAYER_STATS);
+        executeTableQuery(Constants.Database.Tables.PLAYER_ACHIEVEMENTS);
+        plugin.getMessagesHelper().sendConsoleLog("info", "Database tables verified and initialized successfully.");
+    }
+
+    private void executeTableQuery(String tableName) throws SQLException {
+        String query = getCreateTableQuery(tableName);
+        if (query == null) {
+            plugin.getLogger().warning("No schema found for table: " + tableName);
+            return;
+        }
+        try (Statement stmt = connection.createStatement()) {
+            stmt.executeUpdate(query);
+        }
+    }
+
+    private String getCreateTableQuery(String tableName) {
+        boolean isMysql = storageType == StorageType.MYSQL;
+        return switch (tableName) {
+            case Constants.Database.Tables.ELYTRA_FLIGHT_TIME -> isMysql ?
+                    "CREATE TABLE IF NOT EXISTS " + tableName + " (uuid VARCHAR(36) PRIMARY KEY, flight_time INT DEFAULT 0);" :
+                    "CREATE TABLE IF NOT EXISTS " + tableName + " (uuid TEXT PRIMARY KEY, flight_time INTEGER DEFAULT 0);";
+            case Constants.Database.Tables.OWNED_EFFECTS -> isMysql ?
+                    "CREATE TABLE IF NOT EXISTS " + tableName + " (id INT AUTO_INCREMENT PRIMARY KEY, player_uuid VARCHAR(36) NOT NULL, effect_key VARCHAR(255) NOT NULL, is_active BOOLEAN NOT NULL DEFAULT FALSE, owned_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP);" :
+                    "CREATE TABLE IF NOT EXISTS " + tableName + " (id INTEGER PRIMARY KEY AUTOINCREMENT, player_uuid TEXT NOT NULL, effect_key TEXT NOT NULL, is_active INTEGER NOT NULL DEFAULT 0, owned_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP);";
+            case Constants.Database.Tables.PLAYER_STATS -> isMysql ?
+                    "CREATE TABLE IF NOT EXISTS " + tableName + " (uuid VARCHAR(36) PRIMARY KEY, total_distance DOUBLE DEFAULT 0, total_time_seconds BIGINT DEFAULT 0, longest_flight DOUBLE DEFAULT 0, boosts_used INT DEFAULT 0, super_boosts_used INT DEFAULT 0, plugin_saves INT DEFAULT 0);" :
+                    "CREATE TABLE IF NOT EXISTS " + tableName + " (uuid TEXT PRIMARY KEY, total_distance REAL DEFAULT 0, total_time_seconds INTEGER DEFAULT 0, longest_flight REAL DEFAULT 0, boosts_used INTEGER DEFAULT 0, super_boosts_used INTEGER DEFAULT 0, plugin_saves INTEGER DEFAULT 0);";
+            case Constants.Database.Tables.PLAYER_ACHIEVEMENTS -> isMysql ?
+                    "CREATE TABLE IF NOT EXISTS " + tableName + " (player_uuid VARCHAR(36) NOT NULL, achievement_id VARCHAR(255) NOT NULL, unlocked_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (player_uuid, achievement_id));" :
+                    "CREATE TABLE IF NOT EXISTS " + tableName + " (player_uuid TEXT NOT NULL, achievement_id TEXT NOT NULL, unlocked_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (player_uuid, achievement_id));";
+            default -> null;
+        };
+    }
+
+    public void setDatabaseVariables() {
+        String typeFromConfig = plugin.getConfigHandlerInstance().getStorageType().toUpperCase();
         try {
             this.storageType = StorageType.valueOf(typeFromConfig);
         } catch (IllegalArgumentException e) {
@@ -55,48 +121,96 @@ public class DatabaseHandler {
             this.storageType = StorageType.SQLITE;
         }
 
-        if (storageType == StorageType.MYSQL) {
-            connection = DriverManager.getConnection(
-                    "jdbc:mysql://" + this.host + ":" + this.port + "/" + this.database + "?useSSL=false",
-                    this.username, this.password
-            );
-        } else {
-            File databaseFolder = new File(plugin.getDataFolder(), "database");
-            if (!databaseFolder.exists()) {
-                boolean wasCreated = databaseFolder.mkdirs();
-                if (!wasCreated) {
-                    throw new SQLException("FATAL: Failed to create database folder. Please check file system permissions!");
+        if (this.storageType == StorageType.MYSQL) {
+            this.host = plugin.getConfigHandlerInstance().getHost();
+            this.port = plugin.getConfigHandlerInstance().getPort();
+            this.database = plugin.getConfigHandlerInstance().getDatabase();
+            this.username = plugin.getConfigHandlerInstance().getUsername();
+            this.password = plugin.getConfigHandlerInstance().getPassword();
+        }
+    }
+
+    public String getStorageType() {
+        return (this.storageType != null) ? this.storageType.name() : "SQLITE";
+    }
+
+    //<editor-fold desc="BACKUPS">
+    public void startAutoBackupTask() {
+        if (storageType != StorageType.SQLITE) return;
+        if (this.backupTask != null && !this.backupTask.isCancelled()) return;
+
+        long interval = Constants.Database.Backups.BACKUP_INTERVAL_TICKS; // 1 hour
+        this.backupTask = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::backupSQLiteDatabase, interval, interval);
+    }
+
+    public void cancelBackupTask() {
+        if (this.backupTask != null) {
+            this.backupTask.cancel();
+            this.backupTask = null;
+        }
+    }
+
+    private void backupSQLiteDatabase() {
+        File databaseFolder = new File(plugin.getDataFolder(), Constants.Files.DB_FOLDER);
+        File sourceFile = new File(databaseFolder, Constants.Files.SQLITE_DB_NAME);
+
+        if (!sourceFile.exists()) {
+            plugin.getLogger().warning("SQLite database file not found. Skipping backup.");
+            return;
+        }
+
+        File backupFolder = new File(databaseFolder, Constants.Files.DB_BACKUP_FOLDER);
+        if (!backupFolder.exists()) {
+            if (!backupFolder.mkdirs()) {
+                plugin.getLogger().severe("Could not create backups folder! Please check file system permissions. Skipping backup.");
+                return;
+            }
+        }
+
+        File[] backupFiles = backupFolder.listFiles((dir, name) -> name.endsWith(".db"));
+        if (backupFiles != null && backupFiles.length >= Constants.Database.Backups.MAX_BACKUPS) {
+            Arrays.sort(backupFiles, Comparator.comparingLong(File::lastModified));
+            File oldestFile = backupFiles[0];
+            if (oldestFile.delete()) {
+                plugin.getMessagesHelper().sendDebugMessage("Deleted oldest backup file: " + oldestFile.getName());
+            } else {
+                plugin.getLogger().warning("Could not delete oldest backup file: " + oldestFile.getName());
+            }
+        }
+
+        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy_HH-mm-ss");
+        String formattedDate = formatter.format(new Date());
+        String backupFileName = "backup_" + formattedDate + ".db";
+        File destinationFile = new File(backupFolder, backupFileName);
+
+        try {
+            Files.copy(sourceFile.toPath(), destinationFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            plugin.getMessagesHelper().sendDebugMessage("Successfully created database backup: " + destinationFile.getName());
+        } catch (IOException e) {
+            plugin.getLogger().log(Level.SEVERE, "Could not create SQLite database backup! Check file permissions.", e);
+        }
+    }
+
+    public List<String> getBackupFileNames() {
+        if (storageType != StorageType.SQLITE) {
+            return Collections.emptyList();
+        }
+        List<String> fileNames = new ArrayList<>();
+        File backupFolder = new File(plugin.getDataFolder(), Constants.Files.DB_FOLDER + "/" + Constants.Files.DB_BACKUP_FOLDER);
+        if (backupFolder.exists() && backupFolder.isDirectory()) {
+            File[] files = backupFolder.listFiles((dir, name) -> name.toLowerCase().endsWith(".db"));
+            if (files != null) {
+                for (File file : files) {
+                    fileNames.add(file.getName());
                 }
             }
-
-            File dbFile = new File(databaseFolder, SQLITE_DATABASE_NAME);
-            connection = DriverManager.getConnection("jdbc:sqlite:" + dbFile.getAbsolutePath());
         }
-
-        InitializeTables(); // Create tables with the correct syntax
+        return fileNames;
     }
-
-
-    public boolean IsConnected() {
-        return connection != null;
-    }
-
-
-    public void Disconnect() {
-        if (IsConnected()) {
-            try {
-                connection.close();
-                plugin.getMessagesHelper().sendDebugMessage(storageType.name() + " database was closed successfully!");
-            } catch (SQLException e) {
-                Bukkit.getLogger().severe("Failed to close the connection to the database.");
-                Bukkit.getLogger().severe("Error: " + e.getMessage());
-            }
-        }
-    }
-
+    //</editor-fold>
 
     public int GetPlayerFlightTime(UUID uuid) throws SQLException {
-        String query = "SELECT flight_time FROM " + ELYTRA_FLIGHT_TIME_TABLE + " WHERE uuid = ?";
+        String query = "SELECT flight_time FROM " + Constants.Database.Tables.ELYTRA_FLIGHT_TIME + " WHERE uuid = ?";
 
         // Wrap in the conditional block for structural consistency.
         if (storageType == StorageType.MYSQL || storageType == StorageType.SQLITE) {
@@ -118,9 +232,9 @@ public class DatabaseHandler {
     public void SetPlayerFlightTime(UUID uuid, int time) throws SQLException {
         String query;
         if (storageType == StorageType.MYSQL) {
-            query = "INSERT INTO " + ELYTRA_FLIGHT_TIME_TABLE + " (uuid, flight_time) VALUES (?, ?) ON DUPLICATE KEY UPDATE flight_time = ?";
+            query = "INSERT INTO " + Constants.Database.Tables.ELYTRA_FLIGHT_TIME + " (uuid, flight_time) VALUES (?, ?) ON DUPLICATE KEY UPDATE flight_time = ?";
         } else {
-            query = "REPLACE INTO " + ELYTRA_FLIGHT_TIME_TABLE + " (uuid, flight_time) VALUES (?, ?)";
+            query = "REPLACE INTO " + Constants.Database.Tables.ELYTRA_FLIGHT_TIME + " (uuid, flight_time) VALUES (?, ?)";
         }
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
@@ -136,13 +250,12 @@ public class DatabaseHandler {
         }
     }
 
-
     public void AddOwnedEffect(UUID playerUuid, String effectKey) throws SQLException {
         String query;
         if (storageType == StorageType.MYSQL) {
-            query = "INSERT IGNORE INTO " + OWNED_EFFECTS_TABLE + " (player_uuid, effect_key, is_active) VALUES (?, ?, ?)";
+            query = "INSERT IGNORE INTO " + Constants.Database.Tables.OWNED_EFFECTS + " (player_uuid, effect_key, is_active) VALUES (?, ?, ?)";
         } else {
-            query = "INSERT OR IGNORE INTO " + OWNED_EFFECTS_TABLE + " (player_uuid, effect_key, is_active) VALUES (?, ?, ?)";
+            query = "INSERT OR IGNORE INTO " + Constants.Database.Tables.OWNED_EFFECTS + " (player_uuid, effect_key, is_active) VALUES (?, ?, ?)";
         }
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
@@ -160,7 +273,7 @@ public class DatabaseHandler {
      * @throws SQLException If a database error occurs.
      */
     public void removeOwnedEffect(UUID playerUuid, String effectKey) throws SQLException {
-        String query = "DELETE FROM " + OWNED_EFFECTS_TABLE + " WHERE player_uuid = ? AND effect_key = ?";
+        String query = "DELETE FROM " + Constants.Database.Tables.OWNED_EFFECTS + " WHERE player_uuid = ? AND effect_key = ?";
 
         if (storageType == StorageType.MYSQL || storageType == StorageType.SQLITE) {
             try (PreparedStatement stmt = connection.prepareStatement(query)) {
@@ -172,7 +285,7 @@ public class DatabaseHandler {
     }
 
     public void UpdateOwnedEffect(UUID playerId, String effectKey, boolean isActive) throws SQLException {
-        String query = "UPDATE " + OWNED_EFFECTS_TABLE + " SET is_active = ? WHERE player_uuid = ? AND effect_key = ?";
+        String query = "UPDATE " + Constants.Database.Tables.OWNED_EFFECTS + " SET is_active = ? WHERE player_uuid = ? AND effect_key = ?";
 
         if (storageType == StorageType.MYSQL || storageType == StorageType.SQLITE) {
             try (PreparedStatement stmt = connection.prepareStatement(query)) {
@@ -186,7 +299,7 @@ public class DatabaseHandler {
 
 
     public boolean GetIsActiveOwnedEffect(UUID playerId, String effectKey) throws SQLException {
-        String query = "SELECT is_active FROM " + OWNED_EFFECTS_TABLE + " WHERE player_uuid = ? AND effect_key = ?";
+        String query = "SELECT is_active FROM " + Constants.Database.Tables.OWNED_EFFECTS + " WHERE player_uuid = ? AND effect_key = ?";
 
         if (storageType == StorageType.MYSQL || storageType == StorageType.SQLITE) {
             try (PreparedStatement stmt = connection.prepareStatement(query)) {
@@ -208,14 +321,14 @@ public class DatabaseHandler {
 
     public List<String> GetOwnedEffectKeys(UUID playerId) throws SQLException {
         List<String> ownedEffects = new ArrayList<>();
-        String query = "SELECT effect_key FROM " + OWNED_EFFECTS_TABLE + " WHERE player_uuid = ?";
+        String query = "SELECT effect_key FROM " + Constants.Database.Tables.OWNED_EFFECTS + " WHERE player_uuid = ?";
 
         if (storageType == StorageType.MYSQL || storageType == StorageType.SQLITE) {
             try (PreparedStatement stmt = connection.prepareStatement(query)) {
                 stmt.setString(1, playerId.toString());
                 try (ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
-                        ownedEffects.add(rs.getString("effect_key"));
+                        ownedEffects.add(rs.getString(Constants.NBT.EFFECT_KEY));
                     }
                 }
             }
@@ -226,14 +339,14 @@ public class DatabaseHandler {
 
 
     public String getPlayerActiveEffect(UUID playerId) throws SQLException {
-        String query = "SELECT effect_key FROM " + OWNED_EFFECTS_TABLE + " WHERE player_uuid = ? AND is_active = 1";
+        String query = "SELECT effect_key FROM " + Constants.Database.Tables.OWNED_EFFECTS + " WHERE player_uuid = ? AND is_active = 1";
 
         if (storageType == StorageType.MYSQL || storageType == StorageType.SQLITE) {
             try (PreparedStatement stmt = connection.prepareStatement(query)) {
                 stmt.setString(1, playerId.toString());
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
-                        return rs.getString("effect_key");
+                        return rs.getString(Constants.NBT.EFFECT_KEY);
                     }
                 }
             }
@@ -253,7 +366,7 @@ public class DatabaseHandler {
      * @throws SQLException If a database error occurs.
      */
     public PlayerStats getPlayerStats(UUID uuid) throws SQLException {
-        String query = "SELECT * FROM " + PLAYER_STATS_TABLE + " WHERE uuid = ?";
+        String query = "SELECT * FROM " + Constants.Database.Tables.PLAYER_STATS + " WHERE uuid = ?";
 
         if (storageType == StorageType.MYSQL || storageType == StorageType.SQLITE) {
             try (PreparedStatement stmt = connection.prepareStatement(query)) {
@@ -287,7 +400,7 @@ public class DatabaseHandler {
      * @throws SQLException If a database error occurs.
      */
     public void resetPlayerStats(UUID uuid) throws SQLException {
-        String resetStatsQuery = "UPDATE " + PLAYER_STATS_TABLE + " SET " +
+        String resetStatsQuery = "UPDATE " + Constants.Database.Tables.PLAYER_STATS + " SET " +
                 "total_distance = 0, " +
                 "total_time_seconds = 0, " +
                 "longest_flight = 0, " +
@@ -296,7 +409,7 @@ public class DatabaseHandler {
                 "plugin_saves = 0 " +
                 "WHERE uuid = ?";
 
-        String resetFlightTimeQuery = "UPDATE " + ELYTRA_FLIGHT_TIME_TABLE + " SET " +
+        String resetFlightTimeQuery = "UPDATE " + Constants.Database.Tables.ELYTRA_FLIGHT_TIME + " SET " +
                 "flight_time = 0 " +
                 "WHERE uuid = ?";
 
@@ -331,7 +444,7 @@ public class DatabaseHandler {
         Map<UUID, Double> topStats = new LinkedHashMap<>();
 
         // This query selects the top players, ordering them by the specified column.
-        String query = "SELECT uuid, " + statColumn + " FROM " + PLAYER_STATS_TABLE + " ORDER BY " + statColumn + " DESC LIMIT ?";
+        String query = "SELECT uuid, " + statColumn + " FROM " + Constants.Database.Tables.PLAYER_STATS + " ORDER BY " + statColumn + " DESC LIMIT ?";
 
         if (storageType == StorageType.MYSQL || storageType == StorageType.SQLITE) {
             try (PreparedStatement stmt = connection.prepareStatement(query)) {
@@ -358,11 +471,11 @@ public class DatabaseHandler {
     public void savePlayerStats(PlayerStats stats) throws SQLException {
         String query;
         if (storageType == StorageType.MYSQL) {
-            query = "INSERT INTO " + PLAYER_STATS_TABLE + " (uuid, total_distance, total_time_seconds, longest_flight, boosts_used, super_boosts_used, plugin_saves) " +
+            query = "INSERT INTO " + Constants.Database.Tables.PLAYER_STATS + " (uuid, total_distance, total_time_seconds, longest_flight, boosts_used, super_boosts_used, plugin_saves) " +
                     "VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE " +
                     "total_distance = ?, total_time_seconds = ?, longest_flight = ?, boosts_used = ?, super_boosts_used = ?, plugin_saves = ?";
         } else {
-            query = "REPLACE INTO " + PLAYER_STATS_TABLE + " (uuid, total_distance, total_time_seconds, longest_flight, boosts_used, super_boosts_used, plugin_saves) " +
+            query = "REPLACE INTO " + Constants.Database.Tables.PLAYER_STATS + " (uuid, total_distance, total_time_seconds, longest_flight, boosts_used, super_boosts_used, plugin_saves) " +
                     "VALUES (?, ?, ?, ?, ?, ?, ?)";
         }
 
@@ -390,243 +503,19 @@ public class DatabaseHandler {
         }
     }
 
-
-    public final void save() throws SQLException {
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            PlayerStats stats = this.plugin.getStatsHandler().getStats(player);
-            if (stats != null)
-                this.plugin.getDatabaseHandler().savePlayerStats(stats);
-        }
-
-        if (!this.plugin.getConfigHandlerInstance().getIsTimeLimitEnabled())
-            return;
-
-        this.plugin.getElytraFlightListener().validateFlightTimeOnReload();
-    }
-
-
-    public void setDatabaseVariables() {
-        String typeFromConfig = plugin.getConfigHandlerInstance().getStorageType().toUpperCase();
+    public void saveAllData() {
         try {
-            this.storageType = StorageType.valueOf(typeFromConfig);
-        } catch (IllegalArgumentException e) {
-            plugin.getLogger().warning("Invalid storage type '" + typeFromConfig + "' in config.yml. Defaulting to SQLITE.");
-            this.storageType = StorageType.SQLITE;
-        }
-
-        // If using MySQL, load all the credentials
-        if (this.storageType == StorageType.MYSQL) {
-            this.host = plugin.getConfigHandlerInstance().getHost();
-            this.port = plugin.getConfigHandlerInstance().getPort();
-            this.database = plugin.getConfigHandlerInstance().getDatabase();
-            this.username = plugin.getConfigHandlerInstance().getUsername();
-            this.password = plugin.getConfigHandlerInstance().getPassword();
-        }
-    }
-
-
-    private void InitializeTables() throws SQLException {
-        if (storageType == StorageType.MYSQL) {
-            String createTableQuery = """
-                CREATE TABLE IF NOT EXISTS elytra_flight_time (
-                    uuid VARCHAR(36) PRIMARY KEY,
-                    flight_time INT DEFAULT 0
-                );
-                """;
-
-            String createOwnedEffectsTableQuery = """
-                CREATE TABLE IF NOT EXISTS owned_effects (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    player_uuid VARCHAR(36) NOT NULL,
-                    effect_key VARCHAR(255) NOT NULL,
-                    is_active BOOLEAN NOT NULL DEFAULT FALSE,
-                    owned_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
-                """;
-
-            String createPlayerStatsTableQuery = """
-                CREATE TABLE IF NOT EXISTS player_stats (
-                    uuid VARCHAR(36) PRIMARY KEY,
-                    total_distance DOUBLE DEFAULT 0,
-                    total_time_seconds BIGINT DEFAULT 0,
-                    longest_flight DOUBLE DEFAULT 0,
-                    boosts_used INT DEFAULT 0,
-                    super_boosts_used INT DEFAULT 0,
-                    plugin_saves INT DEFAULT 0
-                );
-                """;
-
-            String createMySqlAchievementsTable = """
-            CREATE TABLE IF NOT EXISTS player_achievements (
-                player_uuid VARCHAR(36) NOT NULL,
-                achievement_id VARCHAR(255) NOT NULL,
-                unlocked_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                PRIMARY KEY (player_uuid, achievement_id)
-            );
-            """;
-
-            try (Statement stmt = connection.createStatement()) {
-                stmt.executeUpdate(createTableQuery);
-                stmt.executeUpdate(createOwnedEffectsTableQuery);
-                stmt.executeUpdate(createPlayerStatsTableQuery);
-                stmt.executeUpdate(createMySqlAchievementsTable);
+            if (plugin.getStatsHandler() != null) {
+                plugin.getStatsHandler().saveAllOnlinePlayers();
             }
-
-        } else {
-            String createFlightTimeTableQuery = """
-                CREATE TABLE IF NOT EXISTS elytra_flight_time (
-                    uuid TEXT PRIMARY KEY,
-                    flight_time INTEGER DEFAULT 0
-                );
-                """;
-
-            String createOwnedEffectsTableQuery = """
-                CREATE TABLE IF NOT EXISTS owned_effects (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    player_uuid TEXT NOT NULL,
-                    effect_key TEXT NOT NULL,
-                    is_active INTEGER NOT NULL DEFAULT 0,
-                    owned_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
-                """;
-
-            String createPlayerStatsTableQuery = """
-                CREATE TABLE IF NOT EXISTS player_stats (
-                    uuid TEXT PRIMARY KEY,
-                    total_distance REAL DEFAULT 0,
-                    total_time_seconds INTEGER DEFAULT 0,
-                    longest_flight REAL DEFAULT 0,
-                    boosts_used INTEGER DEFAULT 0,
-                    super_boosts_used INTEGER DEFAULT 0,
-                    plugin_saves INTEGER DEFAULT 0
-                );
-                """;
-
-            String createSqliteAchievementsTable = """
-                CREATE TABLE IF NOT EXISTS player_achievements (
-                    player_uuid TEXT NOT NULL,
-                    achievement_id TEXT NOT NULL,
-                    unlocked_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    PRIMARY KEY (player_uuid, achievement_id)
-                );
-                """;
-
-            try (Statement stmt = connection.createStatement()) {
-                stmt.executeUpdate(createFlightTimeTableQuery);
-                stmt.executeUpdate(createOwnedEffectsTableQuery);
-                stmt.executeUpdate(createPlayerStatsTableQuery);
-                stmt.executeUpdate(createSqliteAchievementsTable);
+            if (plugin.getElytraFlightListener() != null) {
+                plugin.getElytraFlightListener().saveAllFlightTimes();
             }
+            plugin.getMessagesHelper().sendConsoleLog("info", "All player data saved successfully.");
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.SEVERE, "A critical error occurred while saving player data.", e);
         }
     }
-
-
-    //<editor-fold desc="BACKUPS">
-
-    public void startAutoBackupTask() {
-        if (storageType != StorageType.SQLITE) {
-            return;
-        }
-
-        if (this.backupTask != null && !this.backupTask.isCancelled()) {
-            return;
-        }
-
-        //  1 hour
-        long interval = AUTO_BACKUPS_TIME;
-        this.backupTask = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::backupSQLiteDatabase, interval, interval);
-    }
-
-
-    public void cancelBackupTask() {
-        if (this.backupTask != null) {
-            this.backupTask.cancel();
-            this.backupTask = null;
-        }
-    }
-
-    /**
-     * Copies the current SQLite database file to a timestamped backup file.
-     * This method is run asynchronously to prevent server lag.
-     */
-    private void backupSQLiteDatabase() {
-        File databaseFolder = new File(plugin.getDataFolder(), "database");
-        File sourceFile = new File(databaseFolder, SQLITE_DATABASE_NAME);
-
-        if (!sourceFile.exists()) {
-            plugin.getLogger().warning("SQLite database file not found. Skipping backup.");
-            return;
-        }
-
-        File backupFolder = new File(databaseFolder, "backups");
-        if (!backupFolder.exists()) {
-            boolean wasCreated = backupFolder.mkdirs();
-            if (!wasCreated) {
-                plugin.getLogger().severe("Could not create backups folder! Please check file system permissions. Skipping backup.");
-                return;
-            }
-        }
-
-        File[] backupFiles = backupFolder.listFiles((dir, name) -> name.endsWith(".db"));
-        if (backupFiles != null && backupFiles.length >= MAX_BACKUPS) {
-            // Sort files by last modified date (oldest first)
-            Arrays.sort(backupFiles, Comparator.comparingLong(File::lastModified));
-
-            // Delete the oldest backup file
-            File oldestFile = backupFiles[0];
-            if (oldestFile.delete()) {
-                plugin.getMessagesHelper().sendDebugMessage("Deleted oldest backup file: " + oldestFile.getName());
-            } else {
-                plugin.getLogger().warning("Could not delete oldest backup file: " + oldestFile.getName());
-            }
-        }
-
-        // --- Existing backup creation logic ---
-        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy_HH-mm-ss");
-        String formattedDate = formatter.format(new Date());
-
-        String backupFileName = "backup_" + formattedDate + ".db";
-        File destinationFile = new File(backupFolder, backupFileName);
-
-        try {
-            Files.copy(sourceFile.toPath(), destinationFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            plugin.getMessagesHelper().sendDebugMessage("Successfully created database backup: " + destinationFile.getName());
-        } catch (IOException e) {
-            plugin.getLogger().severe("FATAL: Could not create SQLite database backup! Check file permissions.");
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Retrieves a list of all available SQLite backup file names.
-     * @return A list of backup file names, or an empty list if none are found.
-     */
-    public List<String> getBackupFileNames() {
-        // This check ensures the method only runs if SQLite is being used.
-        if (storageType != StorageType.SQLITE) {
-            return Collections.emptyList();
-        }
-
-        List<String> fileNames = new ArrayList<>();
-        File backupFolder = new File(plugin.getDataFolder(), "database/backups");
-
-        // Check if the backup folder exists and is a directory
-        if (backupFolder.exists() && backupFolder.isDirectory()) {
-            // List only files that end with .db
-            File[] files = backupFolder.listFiles((dir, name) -> name.toLowerCase().endsWith(".db"));
-
-            if (files != null) {
-                for (File file : files) {
-                    fileNames.add(file.getName());
-                }
-            }
-        }
-        return fileNames;
-    }
-
-
-    //</editor-fold>
-
 
     //<editor-fold desc="ACHIEVEMENTS">
 
@@ -638,7 +527,7 @@ public class DatabaseHandler {
      */
     public Set<String> getUnlockedAchievementIds(UUID playerUuid) throws SQLException {
         Set<String> unlockedIds = new HashSet<>();
-        String query = "SELECT achievement_id FROM " + PLAYER_ACHIEVEMENTS_TABLE + " WHERE player_uuid = ?";
+        String query = "SELECT achievement_id FROM " + Constants.Database.Tables.PLAYER_ACHIEVEMENTS + " WHERE player_uuid = ?";
 
         if (storageType == StorageType.MYSQL || storageType == StorageType.SQLITE) {
             try (PreparedStatement stmt = connection.prepareStatement(query)) {
@@ -661,7 +550,7 @@ public class DatabaseHandler {
      * @throws SQLException If a database error occurs.
      */
     public boolean hasAchievement(UUID playerUuid, String achievementId) throws SQLException {
-        String query = "SELECT 1 FROM " + PLAYER_ACHIEVEMENTS_TABLE + " WHERE player_uuid = ? AND achievement_id = ? LIMIT 1";
+        String query = "SELECT 1 FROM " + Constants.Database.Tables.PLAYER_ACHIEVEMENTS + " WHERE player_uuid = ? AND achievement_id = ? LIMIT 1";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, playerUuid.toString());
             stmt.setString(2, achievementId);
@@ -680,9 +569,9 @@ public class DatabaseHandler {
     public void addAchievement(UUID playerUuid, String achievementId) throws SQLException {
         String query;
         if (storageType == StorageType.MYSQL) {
-            query = "INSERT IGNORE INTO " + PLAYER_ACHIEVEMENTS_TABLE + " (player_uuid, achievement_id) VALUES (?, ?)";
+            query = "INSERT IGNORE INTO " + Constants.Database.Tables.PLAYER_ACHIEVEMENTS + " (player_uuid, achievement_id) VALUES (?, ?)";
         } else {
-            query = "INSERT OR IGNORE INTO " + PLAYER_ACHIEVEMENTS_TABLE + " (player_uuid, achievement_id) VALUES (?, ?)";
+            query = "INSERT OR IGNORE INTO " + Constants.Database.Tables.PLAYER_ACHIEVEMENTS + " (player_uuid, achievement_id) VALUES (?, ?)";
         }
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {

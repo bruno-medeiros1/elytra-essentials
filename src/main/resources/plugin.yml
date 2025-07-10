@@ -7,42 +7,41 @@ load: STARTUP
 folia-supported: false
 description: A powerful plugin to manage Elytra flight and equipment features.
 website: https://www.spigotmc.org/resources/elytraessentials.126002/
-depend: [Vault, PlaceholderAPI]
+softdepend: [Vault, PlaceholderAPI]
 commands:
   elytraessentials:
     description: Main command for ElytraEssentials.
     usage: /ee <subcommand>
     aliases: [ ee ]
-    permission: elytraessentials.command.use
 
 permissions:
   elytraessentials.*:
-    default: op
     description: "Grants access to all ElytraEssentials plugin features and commands."
+    default: op
     children:
-
       elytraessentials.command.*:
-        default: op
         description: "Allows the use of all ElytraEssentials commands."
+        default: op
         children:
-          elytraessentials.command.use:
+          # Command Permissions
+          elytraessentials.command.help:
             default: true
-            description: "Allows the use of the /ee base command and subcommands."
+            description: "Allows the use of the /ee help command."
           elytraessentials.command.reload:
             default: op
-            description: "Allows reloading the plugin configuration with /ee reload."
+            description: "Allows reloading the plugin configuration."
           elytraessentials.command.flighttime:
             default: op
-            description: "Allows managing flight time in a player with /ee ft commands"
+            description: "Allows managing player flight time."
           elytraessentials.command.shop:
             default: true
-            description: "Allows the use of /ee shop command"
+            description: "Allows opening the effects shop GUI."
           elytraessentials.command.effects:
             default: true
-            description: "Allows the use of /ee effects command"
+            description: "Allows opening the owned effects GUI."
           elytraessentials.command.effects.clear:
             default: true
-            description: "Allows the use of /ee effects clear command"
+            description: "Allows clearing an active elytra effect."
           elytraessentials.command.effects.give:
             description: "Allows giving an effect to a player."
             default: op
@@ -50,70 +49,148 @@ permissions:
             description: "Allows removing an effect from a player."
             default: op
           elytraessentials.command.effects.list:
-            description: "Allows listing the effects a player owns."
+            description: "Allows listing a player's owned effects."
             default: op
           elytraessentials.command.stats:
             default: true
-            description: "Allows the use of /ee stats command"
+            description: "Allows viewing personal flight statistics."
           elytraessentials.command.stats.others:
             default: op
-            description: "Allows the use of /ee stats <player> command"
+            description: "Allows viewing another player's statistics."
           elytraessentials.command.top:
             default: true
-            description: "Allows the use of /ee top command"
+            description: "Allows viewing leaderboards."
           elytraessentials.command.forge:
             default: op
-            description: "Allows the use of /ee forge command"
+            description: "Allows using the Armored Elytra forge."
           elytraessentials.command.armor:
             default: true
-            description: "Allows the use of /ee armor command"
+            description: "Allows viewing Armored Elytra stats."
           elytraessentials.command.armor.repair:
             default: true
-            description: "Allows the use of /ee armor repair command"
+            description: "Allows repairing a worn Armored Elytra."
           elytraessentials.command.importdb:
             default: op
-            description: "Allows the use of /ee importdb command"
+            description: "Allows restoring a database backup."
           elytraessentials.command.achievements:
             default: true
-            description: "Allows the use of /ee achievements command"
+            description: "Allows opening the achievements GUI."
 
       elytraessentials.bypass.*:
+        description: "Allows bypassing all plugin restrictions and limits."
         default: op
-        description: "Allows bypassing all ElytraEssentials plugin restrictions and limits."
         children:
+          # Bypass Permissions
           elytraessentials.bypass.speedlimit:
             default: op
-            description: "Bypasses the Elytra flight speed limits."
+            description: "Bypasses flight speed limits."
           elytraessentials.bypass.timelimit:
             default: op
-            description: "Bypasses the Elytra flight time limits."
+            description: "Bypasses flight time limits."
           elytraessentials.bypass.equipment:
             default: op
-            description: "Bypasses restrictions on equipping elytra."
+            description: "Bypasses restrictions on equipping elytras."
           elytraessentials.bypass.boostcooldown:
             default: op
-            description: "Bypasses restrictions on boost while flying with elytra."
+            description: "Bypasses the cooldown for elytra boosts."
           elytraessentials.bypass.combattag:
             default: op
-            description: "Player will not be grounded by damage while flying."
-
-      elytraessentials.update.notify:
-        default: op
-        description: "Allows the player to receive update notifications."
+            description: "Prevents the combat tag from disabling flight."
 
       elytraessentials.effect.*:
         default: op
         description: "Gives you access to all elytra effects"
+        children:
+          # Individual Effect Permissions
+          elytraessentials.effect.fire:
+            description: "Grants access to the Fire Trail effect."
+            default: false
+          elytraessentials.effect.water:
+            description: "Grants access to the Water Trail effect."
+            default: false
+          elytraessentials.effect.ice:
+            description: "Grants access to the Ice Shards effect."
+            default: false
+          elytraessentials.effect.void:
+            description: "Grants access to the Inky Void effect."
+            default: false
+          elytraessentials.effect.heart:
+            description: "Grants access to the Heart Trail effect."
+            default: false
+          elytraessentials.effect.arcane:
+            description: "Grants access to the Arcane Trail effect."
+            default: false
+          elytraessentials.effect.emerald:
+            description: "Grants access to the Emerald Spark effect."
+            default: false
+          elytraessentials.effect.witch:
+            description: "Grants access to the Witch's Brew effect."
+            default: false
+          elytraessentials.effect.soulfire:
+            description: "Grants access to the Soul Fire effect."
+            default: false
+          elytraessentials.effect.note:
+            description: "Grants access to the Musical Flight effect."
+            default: false
+          elytraessentials.effect.cloud:
+            description: "Grants access to the Cloud Surfer effect."
+            default: false
+          elytraessentials.effect.slime:
+            description: "Grants access to the Slime Trail effect."
+            default: false
+          elytraessentials.effect.crit:
+            description: "Grants access to the Critical Aura effect."
+            default: false
+          elytraessentials.effect.portal:
+            description: "Grants access to the Ender's Wake effect."
+            default: false
+          elytraessentials.effect.spore:
+            description: "Grants access to the Spore Bloom effect."
+            default: false
+          elytraessentials.effect.bubble:
+            description: "Grants access to the Bubble Stream effect."
+            default: false
+          elytraessentials.effect.dragon:
+            description: "Grants access to the Dragon Breath effect."
+            default: false
+          elytraessentials.effect.wax:
+            description: "Grants access to the Waxed Wings effect."
+            default: false
+          elytraessentials.effect.explosion:
+            description: "Grants access to the Explosive Trail effect."
+            default: false
+          elytraessentials.effect.smoke:
+            description: "Grants access to the Smoke Screen effect."
+            default: false
+          elytraessentials.effect.totem:
+            description: "Grants access to the Totem's Blessing effect."
+            default: false
+          elytraessentials.effect.lavadrip:
+            description: "Grants access to the Lava Drip effect."
+            default: false
+          elytraessentials.effect.cherry:
+            description: "Grants access to the Cherry Blossom effect (available for version >= 1.20)."
+            default: false
+          elytraessentials.effect.dolphin:
+            description: "Grants access to the Dolphin's Grace effect."
+            default: false
+          elytraessentials.effect.damage:
+            description: "Grants access to the Damage Flash effect."
+            default: false
 
+      # Feature Permissions
+      elytraessentials.update.notify:
+        default: op
+        description: "Receives update notifications on join."
       elytraessentials.elytra.boost:
         default: op
-        description: "Allows the player to use the basic elytra boost with right click"
+        description: "Allows using the basic elytra boost."
       elytraessentials.elytra.superboost:
         default: op
-        description: "Allows the player to use the elytra super boost with right click + shift click"
+        description: "Allows using the elytra super boost."
       elytraessentials.elytra.chargedjump:
         default: op
-        description: "Allows the player to use the elytra charged jump while holding the boost item"
+        description: "Allows using the charged jump takeoff."
       elytraessentials.elytra.autodeploy:
         default: op
-        description: "Allows for automatic equipping and deployment of an elytra for a falling player to save him."
+        description: "Enables the emergency elytra auto-deploy feature."

@@ -74,16 +74,15 @@ public class AchievementsGuiListener implements Listener {
 
         switch (clickedSlot) {
             case Constants.GUI.ACHIEVEMENTS_PREVIOUS_PAGE_SLOT:
-                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.8f, 1.0f);
-
                 if (currentState.page > 0) {
-                    achievementsCommand.OpenAchievementsGUI(player, currentState.page - 1, currentState.filter);
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.8f, 1.0f);
+
+                    playerStates.put(player.getUniqueId(), new PlayerGuiState(currentState.page - 1, currentState.filter));
+
+                    plugin.openAchievementsGUI(player, currentState.page - 1, currentState.filter);
                 }
                 break;
             case Constants.GUI.ACHIEVEMENTS_NEXT_PAGE_SLOT:
-                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.8f, 1.0f);
-
-                // Re-calculate total pages based on the current filter to see if a next page exists
                 long totalItems = plugin.getAchievementsHandler().getAllAchievements().stream()
                         .filter(ach -> currentState.filter == StatType.UNKNOWN || ach.type() == currentState.filter)
                         .count();
@@ -91,9 +90,12 @@ public class AchievementsGuiListener implements Listener {
                 if (totalPages == 0) totalPages = 1;
 
                 if (currentState.page < totalPages - 1) {
-                    achievementsCommand.OpenAchievementsGUI(player, currentState.page + 1, currentState.filter);
-                }
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.8f, 1.0f);
 
+                    playerStates.put(player.getUniqueId(), new PlayerGuiState(currentState.page + 1, currentState.filter));
+
+                    plugin.openAchievementsGUI(player, currentState.page + 1, currentState.filter);
+                }
                 break;
             case Constants.GUI.ACHIEVEMENTS_CLOSE_SLOT:
                 player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.8f, 0.8f);
@@ -103,13 +105,13 @@ public class AchievementsGuiListener implements Listener {
                 player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, 1.0f);
 
                 int currentIndex = filterCycle.indexOf(currentState.filter);
-
-                // Get the next index, wrapping around to the beginning if necessary
                 int nextIndex = (currentIndex + 1) % filterCycle.size();
                 StatType newFilter = filterCycle.get(nextIndex);
 
+                playerStates.put(player.getUniqueId(), new PlayerGuiState(0, newFilter));
+
                 // Open page 0 of the new filter
-                achievementsCommand.OpenAchievementsGUI(player, 0, newFilter);
+                plugin.openAchievementsGUI(player, 0, newFilter);
                 break;
         }
     }

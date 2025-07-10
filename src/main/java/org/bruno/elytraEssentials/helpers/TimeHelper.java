@@ -1,6 +1,8 @@
 package org.bruno.elytraEssentials.helpers;
 
-public class TimeHelper {
+public final class TimeHelper {
+
+    private TimeHelper() {}
 
     /**
      * Dynamically formats the flight time based on its value.

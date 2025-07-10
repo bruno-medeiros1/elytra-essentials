@@ -187,13 +187,11 @@ public class TopCommand implements ISubCommand {
             return List.of();
         }
 
-
         if (args.length == 2) {
             if (sender instanceof Player player) {
                 if (!PermissionsHelper.hasTopPermission(player))
                     return List.of();
             }
-
 
             // A list of all possible leaderboard categories
             List<String> allCategories = List.of("distance", "time", "longest");

@@ -58,7 +58,7 @@ public final class MessagesHandler {
 
     public void loadMessages(){
         // General Messages
-        this.prefix = fileConfiguration.getString("prefix", "&6&lElytraEssentials &e»");
+        this.prefix = fileConfiguration.getString("prefix", "&#FFD700ElytraEssentials &e» ");
         this.noPermission = fileConfiguration.getString("no-permission", "&cYou do not have permission to perform this action.");
         this.playerNotFound = fileConfiguration.getString("player-not-found", "&cPlayer '{0}' could not be found.");
         this.featureNotEnabled = fileConfiguration.getString("feature-not-enabled", "&cThis feature is not enabled.");

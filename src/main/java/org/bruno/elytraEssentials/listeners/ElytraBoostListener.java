@@ -33,8 +33,8 @@ public class ElytraBoostListener implements Listener {
     private final ElytraEssentials plugin;
     private final HashMap<UUID, Long> cooldowns = new HashMap<>();
 
-    private final HashMap<UUID, Long> boostMessageExpirations = new HashMap<>();
     private final HashMap<UUID, Long> superBoostMessageExpirations = new HashMap<>();
+    private final HashMap<UUID, Long> boostMessageExpirations = new HashMap<>();
 
     private final HashMap<UUID, BukkitTask> chargingTasks = new HashMap<>();
     private final HashMap<UUID, BossBar> chargeBossBars = new HashMap<>();
@@ -71,9 +71,12 @@ public class ElytraBoostListener implements Listener {
 
     @EventHandler
     public void onPlayerToggleSneak(PlayerToggleSneakEvent event) {
+        Player player = event.getPlayer();
+
         // Cancel the charge if a player stops sneaking
-        if (!event.isSneaking() && chargingTasks.containsKey(event.getPlayer().getUniqueId())) {
-            cancelCharge(event.getPlayer());
+        if (!event.isSneaking() && chargingTasks.containsKey(player.getUniqueId())) {
+            player.playSound(player.getLocation(), Sound.BLOCK_FIRE_EXTINGUISH, 0.7f, 1.2f);
+            cancelCharge(player);
         }
     }
 
@@ -261,11 +264,42 @@ public class ElytraBoostListener implements Listener {
         return false;
     }
 
-    public HashMap<UUID, Long> getBoostMessageExpirations(){
-        return this.boostMessageExpirations;
+    /**
+     * Checks if a player's normal boost message should be active.
+     * @param uuid The player's UUID.
+     * @return true if the boost is active, false otherwise.
+     */
+    public boolean isBoostActive(UUID uuid) {
+        Long expiryTime = boostMessageExpirations.get(uuid);
+        if (expiryTime == null) {
+            return false;
+        }
+
+        // Check if the current time has passed the expiry time
+        if (System.currentTimeMillis() > expiryTime) {
+            boostMessageExpirations.remove(uuid); // Clean up expired entry
+            return false;
+        }
+
+        return true;
     }
 
-    public HashMap<UUID, Long> getSuperBoostMessageExpirations(){
-        return this.superBoostMessageExpirations;
+    /**
+     * Checks if a player's super boost message should be active.
+     * @param uuid The player's UUID.
+     * @return true if the super boost is active, false otherwise.
+     */
+    public boolean isSuperBoostActive(UUID uuid) {
+        Long expiryTime = superBoostMessageExpirations.get(uuid);
+        if (expiryTime == null) {
+            return false;
+        }
+
+        if (System.currentTimeMillis() > expiryTime) {
+            superBoostMessageExpirations.remove(uuid); // Clean up expired entry
+            return false;
+        }
+
+        return true;
     }
 }

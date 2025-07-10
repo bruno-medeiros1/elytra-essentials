@@ -1,6 +1,5 @@
 package org.bruno.elytraEssentials.commands;
 
-import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -15,6 +14,7 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class HelpCommand implements ISubCommand {
 
@@ -101,6 +101,22 @@ public class HelpCommand implements ISubCommand {
         sendWebsiteLink(sender);
         sendNavigationFooter(sender, page, totalPages);
         return true;
+    }
+
+    @Override
+    public List<String> getSubcommandCompletions(CommandSender sender, String[] args) {
+        if (args.length == 2) {
+            // Calculate how many pages are available for this specific sender
+            long allowedCount = allCommands.stream().filter(entry -> sender.hasPermission(entry.permission())).count();
+            int totalPages = (int) Math.ceil((double) allowedCount / COMMANDS_PER_PAGE);
+
+            // Generate a list of page numbers as strings
+            return IntStream.rangeClosed(1, totalPages)
+                    .mapToObj(String::valueOf)
+                    .filter(s -> s.startsWith(args[1]))
+                    .collect(Collectors.toList());
+        }
+        return List.of();
     }
 
     private void sendHeader(CommandSender sender) {

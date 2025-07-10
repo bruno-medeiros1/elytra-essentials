@@ -1,6 +1,7 @@
 package org.bruno.elytraEssentials.commands;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
+import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -8,6 +9,7 @@ import org.bukkit.command.CommandSender;
 
 import java.sql.SQLException;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import org.bukkit.ChatColor;
@@ -21,28 +23,27 @@ public class ElytraEssentialsCommand implements CommandExecutor, TabCompleter {
 
     public ElytraEssentialsCommand(ElytraEssentials plugin) {
         this.plugin = plugin;
-        subCommands.put("help", new HelpCommand(plugin));
-        subCommands.put("reload", new ReloadCommand(plugin));
-        subCommands.put("ft", new FlightTimeCommand(plugin));
-        subCommands.put("shop", new ShopCommand(plugin));
-        subCommands.put("effects", new EffectsCommand(plugin));
-        subCommands.put("stats", new StatsCommand(plugin));
-        subCommands.put("top", new TopCommand(plugin));
-        subCommands.put("forge", new ForgeCommand(plugin));
-        subCommands.put("armor", new ArmorCommand(plugin));
-        subCommands.put("importdb", new ImportDbCommand(plugin));
-        subCommands.put("achievements", new AchievementsCommand(plugin));
+    }
+
+    public void registerSubCommand(String name, ISubCommand command) {
+        subCommands.put(name, command);
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length == 0) {
-            sender.sendMessage(ChatColor.RED + "Usage: /ee <subcommand>");
+            try {
+                subCommands.get("help").Execute(sender, new String[0]);
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "A database error occurred while executing command /ee help'" + "' for " + sender.getName(), e);
+                sender.sendMessage(ChatColor.RED + "An unexpected database error occurred. Please contact an administrator.");
+                return true;
+            }
             return true;
         }
 
-        String subCommand = args[0].toLowerCase();
-        ISubCommand commandHandler = subCommands.get(subCommand);
+        String subCommandName = args[0].toLowerCase();
+        ISubCommand commandHandler = subCommands.get(subCommandName);
 
         if (commandHandler == null) {
             sender.sendMessage(ChatColor.RED + "Unknown subcommand. Use /ee help for available commands.");
@@ -50,44 +51,55 @@ public class ElytraEssentialsCommand implements CommandExecutor, TabCompleter {
         }
 
         try {
-            return commandHandler.Execute(sender, Arrays.copyOfRange(args, 1, args.length));
+            // Pass only the arguments relevant to the subcommand
+            String[] subCommandArgs = Arrays.copyOfRange(args, 1, args.length);
+            return commandHandler.Execute(sender, subCommandArgs);
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            plugin.getLogger().log(Level.SEVERE, "A database error occurred while executing command '" + subCommandName + "' for " + sender.getName(), e);
+            sender.sendMessage(ChatColor.RED + "An unexpected database error occurred. Please contact an administrator.");
+            return true;
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.SEVERE, "An unexpected error occurred while executing command '" + subCommandName + "' for " + sender.getName(), e);
+            sender.sendMessage(ChatColor.RED + "An unexpected error occurred. Please contact an administrator.");
+            return true;
         }
     }
 
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length == 1) {
-            // Player is typing the FIRST argument (the subcommand name)
-            // e.g., /ee <HERE>
-
-            // We'll return a list of all subcommand names they have permission to use.
+            // Player is typing the subcommand name
             List<String> completions = new ArrayList<>();
-            for (String subCommandName : subCommands.keySet()) {
-                // TODO: Add a permission check here!
-                // For example: if (sender.hasPermission("elytraessentials.command." + subCommandName)) { ... }
-                completions.add(subCommandName);
-            }
+
+            // Use a helper method to check permissions for each subcommand
+            if (PermissionsHelper.hasHelpPermission(sender)) completions.add("help");
+            if (PermissionsHelper.hasReloadPermission(sender)) completions.add("reload");
+            if (PermissionsHelper.hasFlightTimeCommandPermission(sender)) completions.add("ft");
+            if (PermissionsHelper.hasShopPermission(sender)) completions.add("shop");
+            if (PermissionsHelper.hasEffectsPermission(sender)) completions.add("effects");
+            if (PermissionsHelper.hasStatsPermission(sender)) completions.add("stats");
+            if (PermissionsHelper.hasTopPermission(sender)) completions.add("top");
+            if (PermissionsHelper.hasForgePermission(sender)) completions.add("forge");
+            if (PermissionsHelper.hasArmorPermission(sender)) completions.add("armor");
+            if (PermissionsHelper.hasImportDbPermission(sender)) completions.add("importdb");
+            if (PermissionsHelper.hasAchievementsPermission(sender)) completions.add("achievements");
+
             // Return suggestions that start with what the player has already typed
             return completions.stream()
                     .filter(s -> s.toLowerCase().startsWith(args[0].toLowerCase()))
                     .collect(Collectors.toList());
 
         } else if (args.length > 1) {
-            // Player is typing the SECOND (or third, etc.) argument
-            // e.g., /ee top <HERE>
-            
+            // Player is typing arguments for a subcommand
             String subCommandName = args[0].toLowerCase();
             ISubCommand subCommand = subCommands.get(subCommandName);
 
             if (subCommand != null) {
-                // We found the subcommand, now we ask it for the suggestions.
+                // Pass only the relevant arguments to the subcommand's completer
                 return subCommand.getSubcommandCompletions(sender, args);
             }
         }
 
-        // Return an empty list if no suggestions are found
-        return List.of();
+        return List.of(); // Return an empty list if no suggestions are found
     }
 }

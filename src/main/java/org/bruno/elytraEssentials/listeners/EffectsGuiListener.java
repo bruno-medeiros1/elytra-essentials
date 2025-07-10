@@ -1,8 +1,6 @@
 package org.bruno.elytraEssentials.listeners;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
-import org.bruno.elytraEssentials.commands.EffectsCommand;
-import org.bruno.elytraEssentials.commands.ShopCommand;
 import org.bruno.elytraEssentials.utils.Constants;
 import org.bruno.elytraEssentials.gui.EffectsHolder;
 import org.bukkit.Material;
@@ -19,19 +17,16 @@ import org.bukkit.persistence.PersistentDataType;
 public class EffectsGuiListener implements Listener {
 
     private final ElytraEssentials plugin;
-    private final EffectsCommand effectsCommand;
-    private final ShopCommand shopCommand;
 
-    public EffectsGuiListener(ElytraEssentials plugin, EffectsCommand effectsCommand, ShopCommand shopCommand) {
+    public EffectsGuiListener(ElytraEssentials plugin) {
         this.plugin = plugin;
-        this.effectsCommand = effectsCommand;
-        this.shopCommand = shopCommand;
     }
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        if (event.getInventory().getHolder() == null || !(event.getInventory().getHolder() instanceof EffectsHolder))
+        if (event.getInventory().getHolder() == null || !(event.getInventory().getHolder() instanceof EffectsHolder)) {
             return;
+        }
 
         event.setCancelled(true);
         if (!(event.getWhoClicked() instanceof Player player)) return;
@@ -44,7 +39,8 @@ public class EffectsGuiListener implements Listener {
             case Constants.GUI.EFFECTS_SHOP_SLOT:
                 player.closeInventory();
                 player.playSound(player.getLocation(), Sound.BLOCK_CHEST_OPEN, 0.8f, 0.8f);
-                shopCommand.OpenShop(player, 0);
+
+                plugin.openShopGUI(player, 0);
                 return;
 
             case Constants.GUI.EFFECTS_CLOSE_SLOT:
@@ -56,24 +52,27 @@ public class EffectsGuiListener implements Listener {
         ItemMeta meta = clickedItem.getItemMeta();
         if (meta == null) return;
 
+        // This key should ideally be stored in your Constants class
         String effectKey = meta.getPersistentDataContainer().get(
-                new NamespacedKey(plugin, "effect_key"),
+                new NamespacedKey(plugin, Constants.NBT.EFFECT_KEY),
                 PersistentDataType.STRING
         );
-        if (effectKey == null) return; // It's a filler pane or control button without a key.
+        if (effectKey == null) return;
 
         if (event.isLeftClick()) {
             // Player wants to SELECT a new effect.
             boolean selectionSuccess = plugin.getEffectsHandler().handleSelection(player, effectKey);
-            if (selectionSuccess)
-                effectsCommand.OpenOwnedEffects(player); // Refresh GUI to show new active effect
-
+            if (selectionSuccess) {
+                // Tell the main plugin to refresh the GUI
+                plugin.openEffectsGUI(player);
+            }
         } else if (event.isRightClick()) {
             // Player wants to DESELECT their active effect.
             boolean deselectionSuccess = plugin.getEffectsHandler().handleDeselection(player, effectKey);
-            if (deselectionSuccess)
-                effectsCommand.OpenOwnedEffects(player); // Refresh GUI to show it's no longer active
-
+            if (deselectionSuccess) {
+                // Tell the main plugin to refresh the GUI
+                plugin.openEffectsGUI(player);
+            }
         }
     }
 }

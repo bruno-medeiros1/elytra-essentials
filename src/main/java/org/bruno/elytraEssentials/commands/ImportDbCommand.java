@@ -1,22 +1,24 @@
 package org.bruno.elytraEssentials.commands;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
+import org.bruno.elytraEssentials.helpers.ColorHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
+import org.bruno.elytraEssentials.utils.Constants;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 public class ImportDbCommand implements ISubCommand {
@@ -29,101 +31,108 @@ public class ImportDbCommand implements ISubCommand {
 
     @Override
     public boolean Execute(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player || sender instanceof ConsoleCommandSender)) {
-            sender.sendMessage("§cThis command can only be run by players or the console.");
+        if (!PermissionsHelper.hasImportDbPermission(sender)) {
+            sender.sendMessage(ColorHelper.parse(plugin.getMessagesHandlerInstance().getNoPermissionMessage()));
             return true;
         }
 
-        if (sender instanceof Player player) {
-            if (!PermissionsHelper.hasImportDbPermission(player)) {
-                plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getNoPermissionMessage());
-                return true;
-            }
-        }
-
-        plugin.getLogger().info("Execute called: " + args.length);
-
-        // Check if using SQLite
-        if (!plugin.getConfigHandlerInstance().getStorageType().equalsIgnoreCase("SQLITE")) {
+        if (!plugin.getDatabaseHandler().getStorageType().equalsIgnoreCase("SQLITE")) {
             sender.sendMessage(ChatColor.RED + "This command can only be used with the SQLite storage type.");
             return true;
         }
 
-        // Argument Validation
-        if (args.length < 1 ) {
+        if (args.length < 1) {
             sender.sendMessage(ChatColor.RED + "Usage: /ee importdb <backup_filename>");
             sender.sendMessage(ChatColor.YELLOW + "Use tab-complete to see available backup files.");
             return true;
         }
 
         String backupFileName = args[0];
-        File backupFile = new File(plugin.getDataFolder(), "database/backups/" + backupFileName);
+        File backupFile = new File(plugin.getDataFolder(), Constants.Files.DB_FOLDER + "/" + Constants.Files.DB_BACKUP_FOLDER + "/" + backupFileName);
 
         if (!backupFile.exists()) {
             sender.sendMessage(ChatColor.RED + "Error: Backup file '" + backupFileName + "' not found.");
             return true;
         }
 
-        // Confirmation Check
         if (args.length < 2 || !args[1].equalsIgnoreCase("--confirm")) {
             sender.sendMessage("");
             sender.sendMessage(ChatColor.RED + "§lWARNING: §r§cThis is a destructive operation!");
-            sender.sendMessage(ChatColor.YELLOW + "This will overwrite all player's data with the selected backup.");
+            sender.sendMessage(ChatColor.YELLOW + "This will overwrite all current player data with the selected backup.");
             sender.sendMessage(ChatColor.YELLOW + "All online players will be kicked from the server.");
-            sender.sendMessage(ChatColor.GREEN + "To proceed, run the command again with '--confirm' at the end.");
-            sender.sendMessage(ChatColor.GOLD + "§lThis action cannot be undone!");
+            sender.sendMessage(ChatColor.GOLD + "To proceed, run the command again with '--confirm' at the end.");
+            sender.sendMessage(ChatColor.WHITE + "/ee importdb " + backupFileName + " --confirm");
             sender.sendMessage("");
             return true;
         }
 
-        // --- Start the Import Process ---
-        plugin.getMessagesHelper().sendConsoleMessage("&e###########################################");
-        plugin.getMessagesHelper().sendConsoleMessage("&aStarting database import from backup: " + backupFileName);
+        // Start the Import Process
+        plugin.getMessagesHelper().sendConsoleLog("warning", "Starting database import from backup: " + backupFileName);
+        sender.sendMessage(ChatColor.YELLOW + "Starting import process... Kicking all players.");
 
-        // 1. Kick all players
-        plugin.getMessagesHelper().sendConsoleMessage("&aStarting import process... Kicking all players.");
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.kickPlayer("Server is restoring a data backup. Please reconnect in a moment.");
         }
 
-        // 2. Shutdown plugin services
+        plugin.getMessagesHelper().sendConsoleLog("info", "All players kicked. Shutting down plugin services...");
         plugin.getDatabaseHandler().Disconnect();
         plugin.cancelAllPluginTasks();
 
-        // 3. Perform the file swap
-        try {
-            File databaseFolder = new File(plugin.getDataFolder(), "database");
-            File liveDbFile = new File(databaseFolder, "elytraessentials.db");
+        File databaseFolder = new File(plugin.getDataFolder(), Constants.Files.DB_FOLDER);
+        File liveDbFile = new File(databaseFolder, Constants.Files.SQLITE_DB_NAME);
+        File tempDbFile = new File(databaseFolder, "import_temp.db");
 
-            // Rename the current live DB as a final failsafe
-            if (liveDbFile.exists()) {
-                String timestamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
-                File preImportBackup = new File(databaseFolder, "pre_import_backup_" + timestamp + ".db");
-                Files.move(liveDbFile.toPath(), preImportBackup.toPath());
-                plugin.getMessagesHelper().sendConsoleMessage("&aCreating a backup for the current live database: " + preImportBackup.getName());
-                plugin.getMessagesHelper().sendConsoleMessage("&aThe above is a failsafe backup in case the import fails");
+        try {
+            // 1. STAGING: Copy the backup to a temporary file.
+            Files.copy(backupFile.toPath(), tempDbFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+            // 2. VERIFICATION: Try to connect to the temporary database to ensure it's valid.
+            try (Connection testConnection = DriverManager.getConnection("jdbc:sqlite:" + tempDbFile.getAbsolutePath())) {
+                if (!testConnection.isValid(2)) {
+                    throw new SQLException("Import verification failed: Backup file is corrupted or invalid.");
+                }
+                plugin.getMessagesHelper().sendConsoleLog("info", "Backup file verified successfully.");
+            } catch (SQLException e) {
+                sender.sendMessage(ChatColor.RED + "Import failed! The selected backup file appears to be corrupted. No changes were made.");
+                plugin.getLogger().log(Level.SEVERE, "Could not verify the integrity of the backup file '" + backupFileName + "'. Aborting import.", e);
+
+                if (!tempDbFile.delete()) {
+                    plugin.getLogger().warning("Could not delete temporary database file: " + tempDbFile.getName());
+                }
+
+                plugin.getDatabaseHandler().Initialize(); // Reconnect to the original database
+                plugin.startAllPluginTasks();
+                return true;
             }
 
-            // Copy the backup file to become the new live database
-            Files.copy(backupFile.toPath(), liveDbFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            plugin.getMessagesHelper().sendConsoleMessage("&aSuccessfully restored backup file to live database.");
-        } catch (IOException e) {
+            // 3. COMMIT: If verification passed, perform the final swap.
+            if (liveDbFile.exists()) {
+                if (!liveDbFile.delete()) {
+                    throw new IOException("Could not delete the old live database file. Aborting...");
+                }
+            }
+            if (!tempDbFile.renameTo(liveDbFile)) {
+                throw new IOException("Could not rename temporary database file to the live database file. Aborting...");
+            }
+            plugin.getMessagesHelper().sendConsoleLog("info", "Successfully restored backup file to live database.");
+
+        } catch (IOException | SQLException e) {
             sender.sendMessage(ChatColor.RED + "A critical file error occurred. Check the console for details.");
-            e.printStackTrace();
+            plugin.getLogger().log(Level.SEVERE, "Failed to perform database file swap during import.", e);
             return true;
         }
 
-        // 4. Re-initialize the plugin's services
         try {
+            plugin.getMessagesHelper().sendConsoleLog("info", "Re-initializing plugin services...");
             plugin.getDatabaseHandler().Initialize();
-            plugin.startAllPluginTasks(); // Assumes you create this helper
-            plugin.getMessagesHelper().sendConsoleMessage("&aDatabase import successful! Players can now reconnect.");
+            plugin.startAllPluginTasks();
+            sender.sendMessage(ChatColor.GREEN + "Database import successful! Players can now reconnect.");
+            plugin.getMessagesHelper().sendConsoleLog("info", "Database import complete.");
         } catch (SQLException e) {
             sender.sendMessage(ChatColor.RED + "Import failed during re-initialization. The server may need a restart. Check console.");
-            e.printStackTrace();
+            plugin.getLogger().log(Level.SEVERE, "Failed to re-initialize services after database import.", e);
         }
 
-        plugin.getMessagesHelper().sendConsoleMessage("&e###########################################");
         return true;
     }
 

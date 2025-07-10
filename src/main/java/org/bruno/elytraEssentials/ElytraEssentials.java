@@ -8,138 +8,161 @@ package org.bruno.elytraEssentials;
 import net.milkbowl.vault.economy.Economy;
 import org.bruno.elytraEssentials.commands.*;
 import org.bruno.elytraEssentials.handlers.*;
+import org.bruno.elytraEssentials.helpers.ArmoredElytraHelper;
 import org.bruno.elytraEssentials.helpers.FileHelper;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.VersionHelper;
 import org.bruno.elytraEssentials.listeners.*;
 import org.bruno.elytraEssentials.placeholders.ElytraEssentialsPlaceholders;
+import org.bruno.elytraEssentials.utils.Constants;
 import org.bruno.elytraEssentials.utils.ServerVersion;
+import org.bruno.elytraEssentials.utils.StatType;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
-import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bstats.bukkit.Metrics;
 
 import java.sql.SQLException;
-import java.util.Map;
-import java.util.UUID;
+import java.util.logging.Level;
 
 public final class ElytraEssentials extends JavaPlugin {
-    private final PluginDescriptionFile pluginDescriptionFile = this.getDescription();
-    private final String pluginVersion = this.pluginDescriptionFile.getVersion();
+    // Handlers
+    private ConfigHandler configHandler;
+    private DatabaseHandler databaseHandler;
+    private EffectsHandler effectsHandler;
+    private TpsHandler tpsHandler;
+    private RecoveryHandler recoveryHandler;
+    private StatsHandler statsHandler;
+    private AchievementsHandler achievementsHandler;
 
+    // Helpers
+    private MessagesHandler messagesHandler;
+    private MessagesHelper messagesHelper;
+    private FileHelper fileHelper;
+    private ArmoredElytraHelper armoredElytraHelper;
+
+    // Listeners
     private ElytraFlightListener elytraFlightListener;
     private ElytraBoostListener elytraBoostListener;
     private ElytraEquipListener elytraEquipListener;
     private ElytraUpdaterListener elytraUpdaterListener;
     private ArmoredElytraListener armoredElytraListener;
     private ArmoredElytraDamageListener armoredElytraDamageListener;
-    private EffectsGuiListener effectsGuiListener;
+    private CombatTagListener combatTagListener;
     private ShopGuiListener shopGuiListener;
+    private EffectsGuiListener effectsGuiListener;
     private ForgeGuiListener forgeGuiListener;
     private AchievementsGuiListener achievementsGuiListener;
-    private CombatTagListener combatTagListener;
-    private EmergencyDeployListener emergencyDeployListener;
 
-    private MessagesHandler messagesHandler;
-    private MessagesHelper messagesHelper;
-    private FileHelper fileHelper;
-    private RecoveryHandler recoveryHandler;
-    private StatsHandler statsHandler;
-    private AchievementsHandler achievementsHandler;
+    // Commands
+    private ElytraEssentialsCommand mainCommand;
+    private HelpCommand helpCommand;
+    private ReloadCommand reloadCommand;
+    private FlightTimeCommand flightTimeCommand;
+    private ShopCommand shopCommand;
+    private EffectsCommand effectsCommand;
+    private StatsCommand statsCommand;
+    private TopCommand topCommand;
+    private ForgeCommand forgeCommand;
+    private AchievementsCommand achievementsCommand;
+    private ArmorCommand armorCommand;
+    private ImportDbCommand importDbCommand;
 
-    private ConfigHandler configHandler;
-    private DatabaseHandler databaseHandler;
-    private EffectsHandler effectsHandler;
-    private TpsHandler tpsHandler;
-
-    private boolean databaseConnectionSuccessful = false;
-
+    // Integrations & Info
+    private static Economy economy = null;
+    private ElytraEssentialsPlaceholders elytraStatsExpansion;
+    private ServerVersion serverVersion;
     public boolean isNewerVersionAvailable = false;
     public String latestVersion;
 
-    private static Economy economy  = null;
-    private ElytraEssentialsPlaceholders elytraStatsExpansion;
 
-    private ServerVersion serverVersion;
-
+    @Override
     public void onLoad() {
         this.serverVersion = ServerVersion.getCurrent();
-
-        this.getConfig().options().copyDefaults();
-        this.saveDefaultConfig();
-
-        Object obj = new ConfigHandler(this.getConfig());
-        this.configHandler = (ConfigHandler) obj;
-
-        obj = new DatabaseHandler(this);
-        this.databaseHandler = (DatabaseHandler) obj;
-        try {
-            databaseHandler.Initialize();
-            databaseConnectionSuccessful = true;
-        } catch (SQLException e) {
-            getLogger().severe("Failed to connect to the database during plugin loading. Plugin will not be enabled.");
-            getLogger().severe("Error: " + e.getMessage());
-            getLogger().severe("Stack Trace:");
-            for (StackTraceElement element : e.getStackTrace()) {
-                getLogger().severe("  at " + element.toString());
-            }
-            databaseConnectionSuccessful = false;
-        }
-
-        obj = new FileHelper(this);
-        this.fileHelper = (FileHelper) obj;
-
-        obj = new EffectsHandler(this, this.fileHelper.GetShopFileConfiguration());
-        this.effectsHandler = (EffectsHandler) obj;
-
-        obj = new RecoveryHandler(this);
-        this.recoveryHandler = (RecoveryHandler) obj;
-
-        obj = new TpsHandler(this);
-        this.tpsHandler = (TpsHandler) obj;
-
-        obj = new MessagesHandler(this.fileHelper.GetMessagesFileConfiguration());
-        this.messagesHandler = (MessagesHandler) obj;
-
-        obj = new StatsHandler(this);
-        this.statsHandler = (StatsHandler) obj;
-
-        obj = new AchievementsHandler(this);
-        this.achievementsHandler = (AchievementsHandler) obj;
-
-        obj = new MessagesHelper(this);
-        this.messagesHelper = (MessagesHelper) obj;
-
-        this.messagesHelper.setDebugMode(this.configHandler.getIsDebugModeEnabled());
+        saveDefaultConfig();
     }
 
     @Override
     public void onEnable() {
-        if (!databaseConnectionSuccessful) {
-            getLogger().severe(String.format("[%s] - Database connection was not established. Disabling plugin...", getDescription().getName()));
-            getServer().getPluginManager().disablePlugin(this);
-            return;
+        if (!setupHandlers()) return;
+        if (!setupDatabase()) return;
+        if (!setupEconomy()) return;
+
+        setupCommands();
+        setupListeners();
+        registerPlaceholders();
+        startAllPluginTasks();
+
+        new Metrics(this, Constants.Integrations.BSTATS_ID);
+        checkForUpdates();
+
+        messagesHelper.sendConsoleMessage("&aPlugin v" + getDescription().getVersion() + " has been enabled successfully!");
+    }
+
+    @Override
+    public void onDisable() {
+        cancelAllPluginTasks();
+        if (databaseHandler != null) {
+            databaseHandler.saveAllData();
+            databaseHandler.Disconnect();
         }
+        unregisterPlaceholders();
+        HandlerList.unregisterAll(this);
+        getLogger().info("ElytraEssentials has been disabled.");
+    }
 
-        if (!setupEconomy() ) {
-            getLogger().severe(String.format("[%s] - Disabled due to no Vault dependency found!", getDescription().getName()));
+
+    //<editor-fold desc="Setup Methods">
+    public boolean setupHandlers() {
+        try {
+            this.configHandler = new ConfigHandler(this.getConfig());
+            this.fileHelper = new FileHelper(this);
+            this.fileHelper.initialize(); // Creates and loads custom YMLs
+
+            this.messagesHandler = new MessagesHandler(this.fileHelper.getMessagesConfig());
+            this.messagesHelper = new MessagesHelper(this);
+            this.messagesHelper.setDebugMode(this.configHandler.getIsDebugModeEnabled());
+            this.armoredElytraHelper = new ArmoredElytraHelper(this);
+
+            this.effectsHandler = new EffectsHandler(this, this.fileHelper.getShopConfig());
+            this.tpsHandler = new TpsHandler(this);
+            this.recoveryHandler = new RecoveryHandler(this);
+            this.statsHandler = new StatsHandler(this);
+            this.achievementsHandler = new AchievementsHandler(this);
+            this.combatTagListener = new CombatTagListener(this);
+
+            this.shopCommand = new ShopCommand(this);
+            this.effectsCommand = new EffectsCommand(this);
+            this.forgeCommand = new ForgeCommand(this);
+            this.achievementsCommand = new AchievementsCommand(this);
+
+            return true;
+        } catch (Exception e) {
+            getLogger().log(Level.SEVERE, "Failed to initialize core handlers. Disabling plugin.", e);
             getServer().getPluginManager().disablePlugin(this);
-            return;
+            return false;
         }
+    }
 
-        this.messagesHelper.sendConsoleMessage("&e###########################################");
-        this.messagesHelper.sendConsoleMessage("&aDetected Version: &d" + Bukkit.getVersion());
-        this.messagesHelper.sendConsoleMessage("&aLoading settings for Version: &d" + Bukkit.getVersion());
+    public boolean setupDatabase() {
+        this.databaseHandler = new DatabaseHandler(this);
+        try {
+            databaseHandler.Initialize();
+            return true;
+        } catch (SQLException e) {
+            getLogger().log(Level.SEVERE, "Failed to connect to the database. Disabling plugin.", e);
+            getServer().getPluginManager().disablePlugin(this);
+            return false;
+        }
+    }
 
-        this.messagesHelper.sendConsoleMessage("&aRegistering commands...");
-        ElytraEssentialsCommand mainCommand = new ElytraEssentialsCommand(this);
-        getCommand("ee").setExecutor(mainCommand);
-        getCommand("ee").setTabCompleter(mainCommand);
+    private void setupListeners() {
+        messagesHelper.sendConsoleLog("info", "Registering event listeners...");
 
-        this.messagesHelper.sendConsoleMessage("&aRegistering event listeners...");
+        // Initialize all listeners and store their instances
         this.elytraFlightListener = new ElytraFlightListener(this);
         this.elytraBoostListener = new ElytraBoostListener(this);
         this.elytraEquipListener = new ElytraEquipListener(this);
@@ -147,257 +170,158 @@ public final class ElytraEssentials extends JavaPlugin {
         this.armoredElytraListener = new ArmoredElytraListener(this);
         this.armoredElytraDamageListener = new ArmoredElytraDamageListener(this);
         this.combatTagListener = new CombatTagListener(this);
-        this.emergencyDeployListener = new EmergencyDeployListener(this);
+        this.shopGuiListener = new ShopGuiListener(this);
+        this.effectsGuiListener = new EffectsGuiListener(this);
+        this.forgeGuiListener = new ForgeGuiListener(this);
+        this.achievementsGuiListener = new AchievementsGuiListener(this, achievementsCommand);
 
-        this.effectsGuiListener = new EffectsGuiListener(this, new EffectsCommand(this), new ShopCommand(this));
-        this.shopGuiListener = new ShopGuiListener(this, new EffectsCommand(this), new ShopCommand(this));
-        this.forgeGuiListener = new ForgeGuiListener(this, new ForgeCommand(this));
-        this.achievementsGuiListener = new AchievementsGuiListener(this, new AchievementsCommand(this));
-
-        Bukkit.getPluginManager().registerEvents(this.elytraFlightListener, this);
-        Bukkit.getPluginManager().registerEvents(this.elytraBoostListener, this);
-        Bukkit.getPluginManager().registerEvents(this.elytraEquipListener, this);
-        Bukkit.getPluginManager().registerEvents(this.elytraUpdaterListener, this);
-        Bukkit.getPluginManager().registerEvents(this.armoredElytraListener, this);
-        Bukkit.getPluginManager().registerEvents(this.armoredElytraDamageListener, this);
-        Bukkit.getPluginManager().registerEvents(this.combatTagListener, this);
-        Bukkit.getPluginManager().registerEvents(this.emergencyDeployListener, this);
-
-        Bukkit.getPluginManager().registerEvents(this.effectsGuiListener, this);
-        Bukkit.getPluginManager().registerEvents(this.shopGuiListener, this);
-        Bukkit.getPluginManager().registerEvents(this.forgeGuiListener, this);
-        Bukkit.getPluginManager().registerEvents(this.achievementsGuiListener, this);
-
-        //  Placeholder API Expansion classes
-        registerPlaceholders();
-
-        boolean checkForUpdatesEnabled = this.configHandler.getIsCheckForUpdatesEnabled();
-        if (checkForUpdatesEnabled) {
-            new UpdaterHandler(this, 126002).getVersion(latestVersion -> {
-                String currentVersion = this.getDescription().getVersion();
-                if (VersionHelper.isNewerVersion(currentVersion, latestVersion)) {
-                    this.messagesHelper.sendConsoleMessage("§av" + latestVersion + " §eis available at &ahttps://www.spigotmc.org/resources/126002/");
-                    this.messagesHelper.sendConsoleMessage("&ePlease update as you are currently using &cv" + currentVersion);
-                    this.isNewerVersionAvailable = true;
-                    this.latestVersion = latestVersion;
-                }
-            });
-        }
-
-        //  bStats
-        new Metrics(this, 26164);
-
-        this.messagesHelper.sendConsoleMessage("&aPlugin by: &bCodingMaestro");
-        this.messagesHelper.sendConsoleMessage("&aVersion: &b" + this.pluginVersion);
-        this.messagesHelper.sendConsoleMessage("&aHas been loaded successfully!");
-        this.messagesHelper.sendConsoleMessage("&e###########################################");
-        this.messagesHelper.sendDebugMessage("&eDeveloper debug mode enabled!");
-        this.messagesHelper.sendDebugMessage("&eThis will fill the console");
-        this.messagesHelper.sendDebugMessage("&eWith additional ElytraEssentials information!");
-        this.messagesHelper.sendDebugMessage("&eThis setting is not intended for ");
-        this.messagesHelper.sendDebugMessage("&econtinous use!");
-
-        startAllPluginTasks();
+        // Register all listeners instances
+        Bukkit.getPluginManager().registerEvents(elytraFlightListener, this);
+        Bukkit.getPluginManager().registerEvents(elytraBoostListener, this);
+        Bukkit.getPluginManager().registerEvents(elytraEquipListener, this);
+        Bukkit.getPluginManager().registerEvents(elytraUpdaterListener, this);
+        Bukkit.getPluginManager().registerEvents(armoredElytraListener, this);
+        Bukkit.getPluginManager().registerEvents(armoredElytraDamageListener, this);
+        Bukkit.getPluginManager().registerEvents(combatTagListener, this);
+        Bukkit.getPluginManager().registerEvents(shopGuiListener, this);
+        Bukkit.getPluginManager().registerEvents(effectsGuiListener, this);
+        Bukkit.getPluginManager().registerEvents(forgeGuiListener, this);
+        Bukkit.getPluginManager().registerEvents(achievementsGuiListener, this);
     }
 
-    @Override
-    public void onDisable() {
+    private void setupCommands() {
+        messagesHelper.sendConsoleLog("info", "Registering commands...");
 
-        //  Disable tasks
-        cancelAllPluginTasks();
+        this.helpCommand = new HelpCommand(this);
+        this.reloadCommand = new ReloadCommand(this);
+        this.flightTimeCommand = new FlightTimeCommand(this);
+        this.shopCommand = new ShopCommand(this);
+        this.effectsCommand = new EffectsCommand(this);
+        this.statsCommand = new StatsCommand(this);
+        this.topCommand = new TopCommand(this);
+        this.forgeCommand = new ForgeCommand(this);
+        this.armorCommand = new ArmorCommand(this);
+        this.importDbCommand = new ImportDbCommand(this);
+        this.achievementsCommand = new AchievementsCommand(this);
 
-        StackTraceElement[] stackTraceElementArray = Thread.currentThread().getStackTrace();
-        boolean isReloading;
-        block7: {
-            for (int i = 0; i < stackTraceElementArray.length; ++i) {
-                StackTraceElement stackTraceElement = stackTraceElementArray[i];
-                String className = stackTraceElement.getClassName();
-                if (!className.startsWith("org.bukkit.craftbukkit.") ||
-                        !className.endsWith(".CraftServer") ||
-                        !stackTraceElement.getMethodName().equals("reload"))
-                {
-                    continue;
-                }
-                isReloading = true;
-                break block7;
-            }
-            isReloading = false;
-        }
-        if (isReloading) {
-            this.messagesHelper.sendConsoleLog("error", "&4\u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550");
-            this.messagesHelper.sendConsoleLog("error", "&4\u2551                             WARNING                                    \u2551");
-            this.messagesHelper.sendConsoleLog("error", "&4\u2551      RELOADING THE SERVER WHILE ELYTRAESSENTIALS IS ENABLED MIGHT      \u2551");
-            this.messagesHelper.sendConsoleLog("error", "&4\u2551                    LEAD TO UNEXPECTED ERRORS!                          \u2551");
-            this.messagesHelper.sendConsoleLog("error", "&4\u2551                                                                        \u2551");
-            this.messagesHelper.sendConsoleLog("error", "&4\u2551   Please to fully restart your server if you encounter issues!         \u2551");
-            this.messagesHelper.sendConsoleLog("error", "&4\u255a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550");
-        }
-        this.messagesHelper.sendConsoleMessage("-------------------------------------------");
-        this.messagesHelper.sendConsoleMessage("&aPlugin by CodingMaestro");
+        this.mainCommand = new ElytraEssentialsCommand(this);
+        mainCommand.registerSubCommand("help", helpCommand);
+        mainCommand.registerSubCommand("reload", reloadCommand);
+        mainCommand.registerSubCommand("ft", flightTimeCommand);
+        mainCommand.registerSubCommand("shop", shopCommand);
+        mainCommand.registerSubCommand("effects", effectsCommand);
+        mainCommand.registerSubCommand("stats", statsCommand);
+        mainCommand.registerSubCommand("top", topCommand);
+        mainCommand.registerSubCommand("forge", forgeCommand);
+        mainCommand.registerSubCommand("armor", armorCommand);
+        mainCommand.registerSubCommand("importdb", importDbCommand);
+        mainCommand.registerSubCommand("achievements", achievementsCommand);
 
-        if (databaseConnectionSuccessful){
-            this.messagesHelper.sendConsoleMessage("&aClosing database connection...");
-
-            if (elytraFlightListener != null){
-                Map<UUID, Integer> flightTimes = elytraFlightListener.GetAllActiveFlights();
-                if (flightTimes != null ) {
-                    for (Map.Entry<UUID,Integer> entry : flightTimes.entrySet()) {
-                        try {
-                            databaseHandler.SetPlayerFlightTime(entry.getKey(), entry.getValue());
-                        } catch (SQLException e) {
-                            this.messagesHelper.sendDebugMessage("Something went wrong while trying to set flight time");
-                            throw new RuntimeException(e);
-                        }
-                    }
-                }
-            }
-
-            databaseHandler.Disconnect();
-        }
-
-        HandlerList.unregisterAll(this);
-
-        unregisterPlaceholders();
-
-        this.messagesHelper.sendConsoleMessage("&aAll event listeners unregistered successfully!");
-        this.messagesHelper.sendConsoleMessage("&aPlugin Version &d&l" + pluginVersion);
-        this.messagesHelper.sendConsoleMessage("&aPlugin shutdown successfully!");
-        this.messagesHelper.sendConsoleMessage("&aGoodbye");
-        this.messagesHelper.sendConsoleMessage("-------------------------------------------");
-
-        this.elytraFlightListener = null;
-        this.elytraBoostListener = null;
-        this.elytraEquipListener = null;
-        this.elytraUpdaterListener = null;
-        this.armoredElytraListener = null;
-        this.armoredElytraDamageListener = null;
-        this.effectsGuiListener = null;
-        this.shopGuiListener = null;
-        this.forgeGuiListener = null;
-        this.achievementsGuiListener = null;
-        this.combatTagListener = null;
-
-        this.messagesHandler = null;
-        this.messagesHelper = null;
-        this.configHandler = null;
-        this.effectsHandler = null;
-        this.recoveryHandler = null;
-        this.tpsHandler = null;
-        this.statsHandler = null;
-        this.achievementsHandler = null;
+        getCommand("ee").setExecutor(mainCommand);
+        getCommand("ee").setTabCompleter(mainCommand);
     }
-
-
-    public MessagesHelper getMessagesHelper() { return this.messagesHelper; }
-
-    public MessagesHandler getMessagesHandlerInstance() { return this.messagesHandler; }
-
-    public ConfigHandler getConfigHandlerInstance() { return this.configHandler; }
-
-    public ElytraFlightListener getElytraFlightListener() { return this.elytraFlightListener; }
-
-    public ElytraBoostListener getElytraBoostListener() { return this.elytraBoostListener; }
-
-    public ShopGuiListener getShopGuiListener() { return this.shopGuiListener; }
-
-    public AchievementsGuiListener getAchievementsGuiListener() { return this.achievementsGuiListener; }
-
-    public CombatTagListener getCombatTagListener() { return this.combatTagListener; }
-
-    public DatabaseHandler getDatabaseHandler() {
-        return this.databaseHandler;
-    }
-
-    public EffectsHandler getEffectsHandler() { return this.effectsHandler; }
-
-    public RecoveryHandler getRecoveryHandler() { return this.recoveryHandler; }
-
-    public TpsHandler getTpsHandler() { return this.tpsHandler; }
-
-    public StatsHandler getStatsHandler() { return this.statsHandler; }
-
-    public AchievementsHandler getAchievementsHandler() { return this.achievementsHandler; }
-
-
-    public Economy getEconomy() {
-        return this.economy;
-    }
-
-    public ServerVersion getServerVersion() { return this.serverVersion; }
-
-
-    public FileConfiguration getAchievementsFileConfiguration() {
-        return this.fileHelper.getAchievementsFileConfiguration();
-    }
-
-    public void setConfigHandler(ConfigHandler configHandler) {
-        this.configHandler = configHandler;
-    }
-
-    public void setMessagesHandler(MessagesHandler messagesHandler) {
-        this.messagesHandler = messagesHandler;
-    }
-
-    public void setEffectsHandler(EffectsHandler effectsHandler) { this.effectsHandler = effectsHandler; }
-
-    public void setRecoveryHandler(RecoveryHandler recoveryHandler) { this.recoveryHandler = recoveryHandler; }
-
-    public void SetMessagesHelper(MessagesHelper messagesHelper) { this.messagesHelper = messagesHelper; }
-
-    public void setFileHelper (FileHelper fileHelper) { this.fileHelper = fileHelper; }
-
-    public void setStatsHandler (StatsHandler statsHandler) { this.statsHandler = statsHandler; }
-
-    public void setAchievementsHandler (AchievementsHandler achievementsHandler) { this.achievementsHandler = achievementsHandler; }
-
 
     private boolean setupEconomy() {
         if (getServer().getPluginManager().getPlugin("Vault") == null) {
-            return false;
+            getLogger().warning("Vault not found! Economy features will be disabled.");
+            return true; // Don't disable the whole plugin, just the feature
         }
         RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
         if (rsp == null) {
-            return false;
+            getLogger().warning("No Vault economy provider found. Economy features will be disabled.");
+            return true;
         }
         economy = rsp.getProvider();
+        messagesHelper.sendConsoleLog("info", "Successfully hooked into Vault.");
         return true;
     }
 
-    public void registerPlaceholders() {
+    private void registerPlaceholders() {
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
             this.elytraStatsExpansion = new ElytraEssentialsPlaceholders(this);
             this.elytraStatsExpansion.register();
-            this.messagesHelper.sendConsoleMessage("&aSuccessfully hooked into PlaceholderAPI");
+            messagesHelper.sendConsoleLog("info", "Successfully hooked into PlaceholderAPI.");
         } else {
             getLogger().warning("PlaceholderAPI not found! Placeholders will not work.");
         }
     }
 
-    public void unregisterPlaceholders() {
+    private void unregisterPlaceholders() {
         if (this.elytraStatsExpansion != null) {
             this.elytraStatsExpansion.unregister();
-            this.messagesHelper.sendConsoleMessage("&aSuccessfully unhooked from PlaceholderAPI.");
         }
     }
 
+    private void checkForUpdates() {
+        if (configHandler.getIsCheckForUpdatesEnabled()) {
+            new UpdaterHandler(this, Constants.Integrations.SPIGOT_RESOURCE_ID).getVersion(latestVersion -> {
+                if (VersionHelper.isNewerVersion(getDescription().getVersion(), latestVersion)) {
+                    messagesHelper.sendConsoleLog("warning", "A new version (" + latestVersion + ") is available!");
+                    this.isNewerVersionAvailable = true;
+                    this.latestVersion = latestVersion;
+                }
+            });
+        }
+    }
+    //</editor-fold>
 
-    //  HELPERS
-
+    //<editor-fold desc="Task Management">
     public void cancelAllPluginTasks(){
-        this.getRecoveryHandler().cancel();
-        this.getTpsHandler().cancel();
-        this.getStatsHandler().cancel();
-        this.getDatabaseHandler().cancelBackupTask();
-        this.getAchievementsHandler().cancel();
-        this.getCombatTagListener().cancel();
+        if (recoveryHandler != null) recoveryHandler.cancel();
+        if (tpsHandler != null) tpsHandler.cancel();
+        if (statsHandler != null) statsHandler.cancel();
+        if (databaseHandler != null) databaseHandler.cancelBackupTask();
+        if (achievementsHandler != null) achievementsHandler.cancel();
+        if (combatTagListener != null) combatTagListener.cancel();
     }
 
     public void startAllPluginTasks(){
-        this.getRecoveryHandler().start();
-        this.getTpsHandler().start();
-        this.getStatsHandler().start();
-        this.getDatabaseHandler().startAutoBackupTask();
-        this.getAchievementsHandler().start();
-        this.getCombatTagListener().start();
+        if (recoveryHandler != null) recoveryHandler.start();
+        if (tpsHandler != null) tpsHandler.start();
+        if (statsHandler != null) statsHandler.start();
+        if (databaseHandler != null) databaseHandler.startAutoBackupTask();
+        if (achievementsHandler != null) achievementsHandler.start();
+        if (combatTagListener != null) combatTagListener.start();
     }
+    //</editor-fold>
+
+    //<editor-fold desc="GUI Openers">
+    public void openShopGUI(Player player, int page) {
+        if (shopCommand != null) {
+            shopCommand.openShop(player, page);
+        }
+    }
+
+    public void openEffectsGUI(Player player) {
+        if (effectsCommand != null) {
+            effectsCommand.openOwnedEffects(player);
+        }
+    }
+
+    public void openAchievementsGUI(Player player, int page, StatType filter){
+        if (achievementsCommand != null) {
+            achievementsCommand.openAchievementsGUI(player, page, filter);
+        }
+    }
+    //</editor-fold>
+
+    //<editor-fold desc="Getters">
+    public MessagesHelper getMessagesHelper() { return this.messagesHelper; }
+    public MessagesHandler getMessagesHandlerInstance() { return this.messagesHandler; }
+    public ConfigHandler getConfigHandlerInstance() { return this.configHandler; }
+    public ShopGuiListener getShopGuiListener() { return this.shopGuiListener; }
+    public AchievementsGuiListener getAchievementsGuiListener() { return this.achievementsGuiListener; }
+    public DatabaseHandler getDatabaseHandler() { return this.databaseHandler; }
+    public EffectsHandler getEffectsHandler() { return this.effectsHandler; }
+    public TpsHandler getTpsHandler() { return this.tpsHandler; }
+    public StatsHandler getStatsHandler() { return this.statsHandler; }
+    public AchievementsHandler getAchievementsHandler() { return this.achievementsHandler; }
+    public Economy getEconomy() { return economy; }
+    public ServerVersion getServerVersion() { return this.serverVersion; }
+    public FileConfiguration getAchievementsFileConfiguration() { return this.fileHelper.getAchievementsConfig(); }
+    public ArmoredElytraHelper getArmoredElytraHelper() { return this.armoredElytraHelper; }
+    public ElytraBoostListener getElytraBoostListener() { return this.elytraBoostListener; }
+    public ElytraFlightListener getElytraFlightListener() { return this.elytraFlightListener; }
+    public String getLatestVersion() { return this.latestVersion; }
+    //</editor-fold>
 }

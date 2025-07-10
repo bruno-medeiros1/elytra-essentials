@@ -1,175 +1,187 @@
 package org.bruno.elytraEssentials.helpers;
 
+import org.bruno.elytraEssentials.utils.Constants;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-// TODO: Modify to use CommandSender instead of player since it will benefit player and console
-public class PermissionsHelper {
+/**
+ * A utility class for handling all plugin permission checks.
+ */
+public final class PermissionsHelper {
 
-    //<editor-fold desc="BYPASSES">
+    private PermissionsHelper() {}
+
+    //<editor-fold desc="BYPASS PERMISSIONS (Player-Specific)">
 
     public static boolean PlayerBypassTimeLimit(Player player) {
-        return player.hasPermission("elytraessentials.*") ||
-                player.hasPermission("elytraessentials.bypass.*") ||
-                    player.hasPermission("elytraessentials.bypass.timelimit");
+        return player.hasPermission(Constants.Permissions.ALL) ||
+                player.hasPermission(Constants.Permissions.ALL_BYPASS) ||
+                player.hasPermission(Constants.Permissions.BYPASS_TIME_LIMIT);
     }
 
     public static boolean PlayerBypassSpeedLimit(Player player) {
-        return player.hasPermission("elytraessentials.*") ||
-                player.hasPermission("elytraessentials.bypass.*") ||
-                    player.hasPermission("elytraessentials.bypass.speedlimit");
+        return player.hasPermission(Constants.Permissions.ALL) ||
+                player.hasPermission(Constants.Permissions.ALL_BYPASS) ||
+                player.hasPermission(Constants.Permissions.BYPASS_SPEED_LIMIT);
     }
 
     public static boolean PlayerBypassBoostCooldown(Player player) {
-        return player.hasPermission("elytraessentials.*") ||
-                player.hasPermission("elytraessentials.bypass.*") ||
-                    player.hasPermission("elytraessentials.bypass.boostcooldown");
+        return player.hasPermission(Constants.Permissions.ALL) ||
+                player.hasPermission(Constants.Permissions.ALL_BYPASS) ||
+                player.hasPermission(Constants.Permissions.BYPASS_BOOST_COOLDOWN);
     }
 
     public static boolean PlayerBypassElytraEquip(Player player) {
-        return player.hasPermission("elytraessentials.*") ||
-                player.hasPermission("elytraessentials.bypass.*") ||
-                player.hasPermission("elytraessentials.bypass.equipment");
+        return player.hasPermission(Constants.Permissions.ALL) ||
+                player.hasPermission(Constants.Permissions.ALL_BYPASS) ||
+                player.hasPermission(Constants.Permissions.BYPASS_EQUIPMENT);
     }
 
     public static boolean PlayerBypassCombatTag(Player player){
-        return player.hasPermission("elytraessentials.*") ||
-                player.hasPermission("elytraessentials.bypass.*") ||
-                player.hasPermission("elytraessentials.bypass.combattag");
+        return player.hasPermission(Constants.Permissions.ALL) ||
+                player.hasPermission(Constants.Permissions.ALL_BYPASS) ||
+                player.hasPermission(Constants.Permissions.BYPASS_COMBAT_TAG);
     }
 
     //</editor-fold>
 
-    //<editor-fold desc="COMMANDS">
+    //<editor-fold desc="COMMAND PERMISSIONS (Sender-Agnostic)">
 
-    public static boolean hasReloadPermission(Player player) {
-        return player.hasPermission("elytraessentials.*") ||
-                player.hasPermission("elytraessentials.command.*") ||
-                player.hasPermission("elytraessentials.command.reload");
+    public static boolean hasHelpPermission(CommandSender sender) {
+        return sender.hasPermission(Constants.Permissions.ALL) ||
+                sender.hasPermission(Constants.Permissions.ALL_COMMANDS) ||
+                sender.hasPermission(Constants.Permissions.CMD_HELP);
     }
 
-    public static boolean hasFlightTimeCommandPermission(Player player){
-        return player.hasPermission("elytraessentials.*") ||
-                player.hasPermission("elytraessentials.command.*") ||
-                player.hasPermission("elytraessentials.command.flighttime");
+    public static boolean hasReloadPermission(CommandSender sender) {
+        return sender.hasPermission(Constants.Permissions.ALL) ||
+                sender.hasPermission(Constants.Permissions.ALL_COMMANDS) ||
+                sender.hasPermission(Constants.Permissions.CMD_RELOAD);
     }
 
-    public static boolean hasEffectsPermission(Player player) {
-        return player.hasPermission("elytraessentials.*") ||
-                player.hasPermission("elytraessentials.command.*") ||
-                player.hasPermission("elytraessentials.command.effects");
+    public static boolean hasFlightTimeCommandPermission(CommandSender sender){
+        return sender.hasPermission(Constants.Permissions.ALL) ||
+                sender.hasPermission(Constants.Permissions.ALL_COMMANDS) ||
+                sender.hasPermission(Constants.Permissions.CMD_FLIGHT_TIME);
     }
 
-    public static boolean hasClearEffectsCommandPermission(Player player){
-        return player.hasPermission("elytraessentials.*") ||
-                player.hasPermission("elytraessentials.command.*") ||
-                player.hasPermission("elytraessentials.command.effects.clear");
+    public static boolean hasEffectsPermission(CommandSender sender) {
+        return sender.hasPermission(Constants.Permissions.ALL) ||
+                sender.hasPermission(Constants.Permissions.ALL_COMMANDS) ||
+                sender.hasPermission(Constants.Permissions.CMD_EFFECTS);
     }
 
-    public static boolean hasGiveEffectPermission(Player player) {
-        return player.hasPermission("elytraessentials.*") ||
-                player.hasPermission("elytraessentials.admin.*") ||
-                player.hasPermission("elytraessentials.effects.give");
+    public static boolean hasClearEffectsCommandPermission(CommandSender sender){
+        return sender.hasPermission(Constants.Permissions.ALL) ||
+                sender.hasPermission(Constants.Permissions.ALL_COMMANDS) ||
+                sender.hasPermission(Constants.Permissions.CMD_EFFECTS_CLEAR);
     }
 
-    public static boolean hasRemoveEffectPermission(Player player) {
-        return player.hasPermission("elytraessentials.*") ||
-                player.hasPermission("elytraessentials.admin.*") ||
-                player.hasPermission("elytraessentials.effects.remove");
+    public static boolean hasGiveEffectPermission(CommandSender sender) {
+        return sender.hasPermission(Constants.Permissions.ALL) ||
+                sender.hasPermission(Constants.Permissions.ALL_COMMANDS) ||
+                sender.hasPermission(Constants.Permissions.CMD_EFFECTS_GIVE);
     }
 
-    public static boolean hasListEffectsPermission(Player player) {
-        return player.hasPermission("elytraessentials.*") ||
-                player.hasPermission("elytraessentials.admin.*") ||
-                player.hasPermission("elytraessentials.effects.list");
+    public static boolean hasRemoveEffectPermission(CommandSender sender) {
+        return sender.hasPermission(Constants.Permissions.ALL) ||
+                sender.hasPermission(Constants.Permissions.ALL_COMMANDS) ||
+                sender.hasPermission(Constants.Permissions.CMD_EFFECTS_REMOVE);
     }
 
-    public static boolean hasShopPermission(Player player) {
-        return player.hasPermission("elytraessentials.*") ||
-                player.hasPermission("elytraessentials.command.*") ||
-                player.hasPermission("elytraessentials.command.shop");
+    public static boolean hasListEffectsPermission(CommandSender sender) {
+        return sender.hasPermission(Constants.Permissions.ALL) ||
+                sender.hasPermission(Constants.Permissions.ALL_COMMANDS) ||
+                sender.hasPermission(Constants.Permissions.CMD_EFFECTS_LIST);
     }
 
-    public static boolean hasStatsPermission(Player player) {
-        return player.hasPermission("elytraessentials.*") ||
-                player.hasPermission("elytraessentials.command.*") ||
-                player.hasPermission("elytraessentials.command.stats");
+    public static boolean hasShopPermission(CommandSender sender) {
+        return sender.hasPermission(Constants.Permissions.ALL) ||
+                sender.hasPermission(Constants.Permissions.ALL_COMMANDS) ||
+                sender.hasPermission(Constants.Permissions.CMD_SHOP);
     }
 
-    public static boolean hasOthersStatsPermission(Player player){
-        return player.hasPermission("elytraessentials.*") ||
-                player.hasPermission("elytraessentials.command.*") ||
-                player.hasPermission("elytraessentials.command.stats.others");
+    public static boolean hasStatsPermission(CommandSender sender) {
+        return sender.hasPermission(Constants.Permissions.ALL) ||
+                sender.hasPermission(Constants.Permissions.ALL_COMMANDS) ||
+                sender.hasPermission(Constants.Permissions.CMD_STATS);
     }
 
-    public static boolean hasTopPermission(Player player) {
-        return player.hasPermission("elytraessentials.*") ||
-                player.hasPermission("elytraessentials.command.*") ||
-                player.hasPermission("elytraessentials.command.top");
+    public static boolean hasStatsOthersPermission(CommandSender sender){
+        return sender.hasPermission(Constants.Permissions.ALL) ||
+                sender.hasPermission(Constants.Permissions.ALL_COMMANDS) ||
+                sender.hasPermission(Constants.Permissions.CMD_STATS_OTHERS);
     }
 
-    public static boolean hasForgePermission(Player player){
-        return player.hasPermission("elytraessentials.*") ||
-                player.hasPermission("elytraessentials.command.*") ||
-                player.hasPermission("elytraessentials.command.forge");
+    public static boolean hasTopPermission(CommandSender sender) {
+        return sender.hasPermission(Constants.Permissions.ALL) ||
+                sender.hasPermission(Constants.Permissions.ALL_COMMANDS) ||
+                sender.hasPermission(Constants.Permissions.CMD_TOP);
     }
 
-    public static boolean hasArmorPermission(Player player) {
-        return player.hasPermission("elytraessentials.*") ||
-                player.hasPermission("elytraessentials.command.*") ||
-                player.hasPermission("elytraessentials.command.armor");
+    public static boolean hasForgePermission(CommandSender sender){
+        return sender.hasPermission(Constants.Permissions.ALL) ||
+                sender.hasPermission(Constants.Permissions.ALL_COMMANDS) ||
+                sender.hasPermission(Constants.Permissions.CMD_FORGE);
     }
 
-    public static boolean hasRepairPermission(Player player){
-        return player.hasPermission("elytraessentials.*") ||
-                player.hasPermission("elytraessentials.command.*") ||
-                player.hasPermission("elytraessentials.command.armor.repair");
+    public static boolean hasArmorPermission(CommandSender sender) {
+        return sender.hasPermission(Constants.Permissions.ALL) ||
+                sender.hasPermission(Constants.Permissions.ALL_COMMANDS) ||
+                sender.hasPermission(Constants.Permissions.CMD_ARMOR);
     }
 
-    public static boolean hasImportDbPermission(Player player){
-        return player.hasPermission("elytraessentials.*") ||
-                player.hasPermission("elytraessentials.command.*") ||
-                player.hasPermission("elytraessentials.command.importdb");
+    public static boolean hasRepairPermission(CommandSender sender){
+        return sender.hasPermission(Constants.Permissions.ALL) ||
+                sender.hasPermission(Constants.Permissions.ALL_COMMANDS) ||
+                sender.hasPermission(Constants.Permissions.CMD_REPAIR);
     }
 
-    public static boolean hasAchievementsPermission(Player player){
-        return player.hasPermission("elytraessentials.*") ||
-                player.hasPermission("elytraessentials.command.*") ||
-                player.hasPermission("elytraessentials.command.achievements");
+    public static boolean hasImportDbPermission(CommandSender sender){
+        return sender.hasPermission(Constants.Permissions.ALL) ||
+                sender.hasPermission(Constants.Permissions.ALL_COMMANDS) ||
+                sender.hasPermission(Constants.Permissions.CMD_IMPORT_DB);
+    }
+
+    public static boolean hasAchievementsPermission(CommandSender sender){
+        return sender.hasPermission(Constants.Permissions.ALL) ||
+                sender.hasPermission(Constants.Permissions.ALL_COMMANDS) ||
+                sender.hasPermission(Constants.Permissions.CMD_ACHIEVEMENTS);
     }
 
     //</editor-fold>
 
-    //<editor-fold desc="UPDATE">
+    //<editor-fold desc="FEATURE PERMISSIONS (Player-Specific)">
 
     public static boolean hasUpdateNotifyPermission(Player player){
-        return player.hasPermission("elytraessentials.*") ||
-                player.hasPermission("elytraessentials.update.notify");
+        return player.hasPermission(Constants.Permissions.ALL) ||
+                player.hasPermission(Constants.Permissions.NOTIFY_UPDATE);
     }
 
-    //</editor-fold>
-
-    public static boolean hasElytraEffectsPermission(Player player) {
-        return player.hasPermission("elytraessentials.*") ||
-                player.hasPermission("elytraessentials.effect.*");
+    public static boolean hasAllEffectsPermission(Player player) {
+        return player.hasPermission(Constants.Permissions.ALL) ||
+                player.hasPermission(Constants.Permissions.ALL_EFFECTS);
     }
 
     public static boolean hasElytraBoostPermission(Player player) {
-        return player.hasPermission("elytraessentials.*") ||
-                player.hasPermission("elytraessentials.elytra.boost");
+        return player.hasPermission(Constants.Permissions.ALL) ||
+                player.hasPermission(Constants.Permissions.BOOST);
     }
 
     public static boolean hasElytraSuperBoostPermission(Player player) {
-        return player.hasPermission("elytraessentials.*") ||
-                player.hasPermission("elytraessentials.elytra.superboost");
+        return player.hasPermission(Constants.Permissions.ALL) ||
+                player.hasPermission(Constants.Permissions.SUPER_BOOST);
     }
 
     public static boolean hasChargedJumpPermission(Player player){
-        return player.hasPermission("elytraessentials.*") ||
-                player.hasPermission("elytraessentials.elytra.chargedjump");
+        return player.hasPermission(Constants.Permissions.ALL) ||
+                player.hasPermission(Constants.Permissions.CHARGED_JUMP);
     }
 
     public static boolean hasAutoDeployPermission(Player player){
-        return player.hasPermission("elytraessentials.*") ||
-                player.hasPermission("elytraessentials.elytra.autodeploy");
+        return player.hasPermission(Constants.Permissions.ALL) ||
+                player.hasPermission(Constants.Permissions.AUTO_DEPLOY);
     }
+
+    //</editor-fold>
 }

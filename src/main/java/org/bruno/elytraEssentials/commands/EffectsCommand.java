@@ -1,6 +1,7 @@
 package org.bruno.elytraEssentials.commands;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
+import org.bruno.elytraEssentials.helpers.ColorHelper;
 import org.bruno.elytraEssentials.utils.Constants;
 import org.bruno.elytraEssentials.gui.EffectsHolder;
 import org.bruno.elytraEssentials.helpers.GuiHelper;
@@ -30,7 +31,6 @@ public class EffectsCommand implements ISubCommand {
     @Override
     public boolean Execute(CommandSender sender, String[] args) {
         if (args.length == 0) {
-            // Logic for /ee effects (opens GUI)
             if (!(sender instanceof Player player)) {
                 sender.sendMessage(ChatColor.RED + "This command can only be run by a player.");
                 return true;
@@ -39,7 +39,7 @@ public class EffectsCommand implements ISubCommand {
                 plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getNoPermissionMessage());
                 return true;
             }
-            OpenOwnedEffects(player);
+            openOwnedEffects(player);
             return true;
         }
 
@@ -84,8 +84,8 @@ public class EffectsCommand implements ISubCommand {
     }
 
     private void handleGive(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("elytraessentials.effects.give")) {
-            sender.sendMessage(plugin.getMessagesHandlerInstance().getNoPermissionMessage());
+        if (!PermissionsHelper.hasGiveEffectPermission(sender)) {
+            sender.sendMessage(ColorHelper.parse(plugin.getMessagesHandlerInstance().getNoPermissionMessage()));
             return;
         }
         if (args.length < 3) {
@@ -105,23 +105,50 @@ public class EffectsCommand implements ISubCommand {
             return;
         }
 
-        if (target.isOnline() && PermissionsHelper.hasElytraEffectsPermission(target.getPlayer())) {
+        if (target.isOnline() && PermissionsHelper.hasAllEffectsPermission(target.getPlayer())) {
             sender.sendMessage(ChatColor.YELLOW + target.getName() + " has access to all effects via permissions.");
             return;
         }
 
-        try {
-            plugin.getDatabaseHandler().AddOwnedEffect(target.getUniqueId(), effectKey);
-            sender.sendMessage(ChatColor.GREEN + "Successfully gave the " + effectKey + " effect to " + target.getName() + ".");
-        } catch (SQLException e) {
-            sender.sendMessage(ChatColor.RED + "A database error occurred.");
-            e.printStackTrace();
-        }
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                try {
+                    List<String> ownedKeys = plugin.getDatabaseHandler().GetOwnedEffectKeys(target.getUniqueId());
+                    if (ownedKeys.contains(effectKey)) {
+                        new BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                sender.sendMessage(ChatColor.RED + target.getName() + " already owns this effect.");
+                            }
+                        }.runTask(plugin);
+                        return;
+                    }
+
+                    plugin.getDatabaseHandler().AddOwnedEffect(target.getUniqueId(), effectKey);
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            sender.sendMessage(ChatColor.GREEN + "Successfully gave the " + effectKey + " effect to " + target.getName() + ".");
+                        }
+                    }.runTask(plugin);
+
+                } catch (SQLException e) {
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            sender.sendMessage(ChatColor.RED + "A database error occurred.");
+                        }
+                    }.runTask(plugin);
+                    plugin.getLogger().log(java.util.logging.Level.SEVERE, "Failed to give effect to " + target.getName(), e);
+                }
+            }
+        }.runTaskAsynchronously(plugin);
     }
 
     private void handleRemove(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("elytraessentials.effects.remove")) {
-            sender.sendMessage(plugin.getMessagesHandlerInstance().getNoPermissionMessage());
+        if (!PermissionsHelper.hasRemoveEffectPermission(sender)) {
+            sender.sendMessage(ColorHelper.parse(plugin.getMessagesHandlerInstance().getNoPermissionMessage()));
             return;
         }
         if (args.length < 3) {
@@ -137,23 +164,50 @@ public class EffectsCommand implements ISubCommand {
 
         String effectKey = args[2].toUpperCase();
 
-        if (target.isOnline() && PermissionsHelper.hasElytraEffectsPermission(target.getPlayer())) {
-            sender.sendMessage(ChatColor.YELLOW + target.getName() + " has access to all effects via permissions.");
+        if (target.isOnline() && PermissionsHelper.hasAllEffectsPermission(target.getPlayer())) {
+            sender.sendMessage(ChatColor.YELLOW + "Cannot remove effects from a player who has wildcard permissions.");
             return;
         }
 
-        try {
-            plugin.getDatabaseHandler().removeOwnedEffect(target.getUniqueId(), effectKey);
-            sender.sendMessage(ChatColor.GREEN + "Successfully removed the " + effectKey + " effect from " + target.getName() + ".");
-        } catch (SQLException e) {
-            sender.sendMessage(ChatColor.RED + "A database error occurred.");
-            e.printStackTrace();
-        }
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                try {
+                    List<String> ownedKeys = plugin.getDatabaseHandler().GetOwnedEffectKeys(target.getUniqueId());
+                    if (!ownedKeys.contains(effectKey)) {
+                        new BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                sender.sendMessage(ChatColor.RED + target.getName() + " does not own this effect.");
+                            }
+                        }.runTask(plugin);
+                        return;
+                    }
+
+                    plugin.getDatabaseHandler().removeOwnedEffect(target.getUniqueId(), effectKey);
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            sender.sendMessage(ChatColor.GREEN + "Successfully removed the " + effectKey + " effect from " + target.getName() + ".");
+                        }
+                    }.runTask(plugin);
+
+                } catch (SQLException e) {
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            sender.sendMessage(ChatColor.RED + "A database error occurred.");
+                        }
+                    }.runTask(plugin);
+                    plugin.getLogger().log(java.util.logging.Level.SEVERE, "Failed to remove effect from " + target.getName(), e);
+                }
+            }
+        }.runTaskAsynchronously(plugin);
     }
 
     private void handleList(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("elytraessentials.effects.list")) {
-            sender.sendMessage(plugin.getMessagesHandlerInstance().getNoPermissionMessage());
+        if (!PermissionsHelper.hasListEffectsPermission(sender)) {
+            sender.sendMessage(ColorHelper.parse(plugin.getMessagesHandlerInstance().getNoPermissionMessage()));
             return;
         }
         if (args.length < 2) {
@@ -189,33 +243,29 @@ public class EffectsCommand implements ISubCommand {
                     }.runTask(plugin);
                 } catch (SQLException e) {
                     sender.sendMessage(ChatColor.RED + "A database error occurred.");
-                    e.printStackTrace();
+                    plugin.getLogger().log(java.util.logging.Level.SEVERE, "Failed to list effects for " + target.getName(), e);
                 }
             }
         }.runTaskAsynchronously(plugin);
     }
 
-    public void OpenOwnedEffects(Player player) {
+    public void openOwnedEffects(Player player) {
         Inventory ownedEffects = Bukkit.createInventory(new EffectsHolder(), Constants.GUI.EFFECTS_INVENTORY_SIZE, Constants.GUI.EFFECTS_INVENTORY_NAME);
 
         try {
             List<String> keysToDisplay;
-
-            if (PermissionsHelper.hasElytraEffectsPermission(player)) {
+            if (PermissionsHelper.hasAllEffectsPermission(player)) {
                 keysToDisplay = new ArrayList<>(plugin.getEffectsHandler().getEffectsRegistry().keySet());
             } else {
                 keysToDisplay = plugin.getDatabaseHandler().GetOwnedEffectKeys(player.getUniqueId());
             }
 
-            // Add the static control buttons to the bottom row
             addControlButtons(ownedEffects);
 
-            // Now, check if the final list of keys to display is empty.
             if (keysToDisplay.isEmpty()) {
                 ItemStack item = plugin.getEffectsHandler().createEmptyItemStack();
-                ownedEffects.setItem(13, item); // Center slot
+                ownedEffects.setItem(13, item);
             } else {
-                // If there are keys to display, populate the GUI with them.
                 populateOwnedItems(ownedEffects, player, keysToDisplay);
             }
 
@@ -223,40 +273,35 @@ public class EffectsCommand implements ISubCommand {
 
         } catch (SQLException e) {
             player.sendMessage(ChatColor.RED + "An error occurred while fetching your effects.");
-            e.printStackTrace();
+            plugin.getLogger().log(java.util.logging.Level.SEVERE, "Failed to open owned effects GUI for " + player.getName(), e);
         }
     }
 
-    //  Fills the GUI with the player's owned effects, up to the display limit.
-    private void populateOwnedItems(Inventory inv, Player player, List<String> playerOwnedKeys) throws SQLException {
+    private void populateOwnedItems(Inventory inv, Player player, List<String> playerOwnedKeys) {
         Map<String, ElytraEffect> allEffects = plugin.getEffectsHandler().getEffectsRegistry();
+        String activeEffectKey = plugin.getEffectsHandler().getActiveEffect(player.getUniqueId());
 
         for (int i = 0; i < playerOwnedKeys.size(); i++) {
-            if (i >= Constants.GUI.EFFECTS_ITEM_DISPLAY_LIMIT)
-                break;
+            if (i >= Constants.GUI.EFFECTS_ITEM_DISPLAY_LIMIT) break;
 
             String effectKey = playerOwnedKeys.get(i);
-            ElytraEffect elytraEffect = allEffects.get(effectKey);
+            ElytraEffect templateEffect = allEffects.get(effectKey);
 
-            if (elytraEffect != null) {
-                if (!PermissionsHelper.hasElytraEffectsPermission(player)) {
-                    boolean isActive = plugin.getDatabaseHandler().GetIsActiveOwnedEffect(player.getUniqueId(), effectKey);
-                    elytraEffect.setIsActive(isActive);
-                }
-
-                ItemStack item = plugin.getEffectsHandler().createOwnedItem(effectKey, elytraEffect);
+            if (templateEffect != null) {
+                ElytraEffect playerSpecificEffect = new ElytraEffect(templateEffect);
+                playerSpecificEffect.setIsActive(effectKey.equals(activeEffectKey));
+                ItemStack item = plugin.getEffectsHandler().createOwnedItem(effectKey, playerSpecificEffect);
                 inv.setItem(i, item);
             }
         }
     }
 
-    //  Creates and places the static control buttons at the bottom of the GUI.
     private void addControlButtons(Inventory inv) {
         inv.setItem(Constants.GUI.EFFECTS_SHOP_SLOT, GuiHelper.createGuiItem(Material.CHEST, "§aShop", "§7Click here to buy more effects."));
-        inv.setItem(Constants.GUI.EFFECTS_PREVIOUS_PAGE_SLOT, GuiHelper.createGuiItem(Material.RED_STAINED_GLASS_PANE, "§cPrevious Page", "§7You are on the first page."));
-        inv.setItem(Constants.GUI.EFFECTS_PAGE_INFO_SLOT, GuiHelper.createGuiItem(Material.COMPASS, "§ePage 1/1"));
-        inv.setItem(Constants.GUI.EFFECTS_NEXT_PAGE_SLOT, GuiHelper.createGuiItem(Material.GREEN_STAINED_GLASS_PANE, "§aNext Page", "§7You are on the last page."));
-        inv.setItem(Constants.GUI.EFFECTS_CLOSE_SLOT, GuiHelper.createGuiItem(Material.BARRIER, "§cClose Menu", "§7Click to exit."));
+        inv.setItem(Constants.GUI.EFFECTS_PREVIOUS_PAGE_SLOT, GuiHelper.createPreviousPageButton(false));
+        inv.setItem(Constants.GUI.EFFECTS_PAGE_INFO_SLOT, GuiHelper.createPageInfoItem(1, 1));
+        inv.setItem(Constants.GUI.EFFECTS_NEXT_PAGE_SLOT, GuiHelper.createNextPageButton(false));
+        inv.setItem(Constants.GUI.EFFECTS_CLOSE_SLOT, GuiHelper.createCloseButton());
     }
 
     @Override

@@ -1,33 +1,41 @@
 package org.bruno.elytraEssentials.helpers;
 
-import org.bukkit.ChatColor;
+import net.md_5.bungee.api.ChatColor;
+import org.bukkit.Bukkit;
 
-public class ColorHelper {
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-    //  TODO: Review this method
-    //  criar um método para poder evitar estes casos
-    //  ChatColor.translateAlternateColorCodes('&', plugin.getMessagesHandlerInstance().getEffectGuiOwned())
-    public static String ParseColoredString(String input) {
-        // Splitting the input string into an array, keeping the '&' delimiter in the result.
-        // The regex splits the string while preserving the '&' by using lookbehind and lookahead.
-        String[] stringArray = input.split(String.format("((?<=%1$s)|(?=%1$s))", "&"));
+/**
+ * A utility class for handling chat color codes, including legacy and hex colors.
+ */
+public final class ColorHelper {
+    private static final Pattern HEX_PATTERN = Pattern.compile("&#([A-Fa-f0-9]{6})");
 
-        StringBuilder stringBuilder = new StringBuilder();
-        for (int i = 0; i < stringArray.length; ++i) {
-            if (stringArray[i].equalsIgnoreCase("&")) {
-                if (stringArray[++i].charAt(0) == '#') {
-                    stringBuilder.append(net.md_5.bungee.api.ChatColor.of(stringArray[i].substring(0, 7)))
-                            .append(stringArray[i].substring(7));
-                    continue;
-                }
-                stringBuilder.append(ChatColor.translateAlternateColorCodes('&', "&" + stringArray[i]));
-                continue;
-            }
-            // If the part is not '&', append it as is to the final string.
-            stringBuilder.append(stringArray[i]);
+    private ColorHelper() {}
+
+    /**
+     * Parses a string containing both legacy (&) and hex (&#RRGGBB) color codes.
+     * This is the primary method that should be used for all color parsing.
+     *
+     * @param input The string to parse.
+     * @return The fully colored string.
+     */
+    public static String parse(String input) {
+        if (input == null || input.isEmpty()) {
+            return "";
+        }
+        // Manually parse hex codes first for reliability
+        Matcher matcher = HEX_PATTERN.matcher(input);
+        StringBuilder buffer = new StringBuilder(input.length() + 4 * 8);
+
+        while (matcher.find()) {
+            String group = matcher.group(1);
+            matcher.appendReplacement(buffer, ChatColor.of("#" + group).toString());
         }
 
-        // Return the fully processed string with color codes applied.
-        return stringBuilder.toString();
+        String hexParsedString = matcher.appendTail(buffer).toString();
+
+        return ChatColor.translateAlternateColorCodes('&', hexParsedString);
     }
 }

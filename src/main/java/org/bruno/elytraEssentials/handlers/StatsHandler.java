@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 
 public class StatsHandler {
 
@@ -42,6 +43,22 @@ public class StatsHandler {
                 }
             }
         }.runTaskAsynchronously(plugin);
+    }
+
+    public void saveAllOnlinePlayers() {
+        plugin.getMessagesHelper().sendDebugMessage("Saving stats for all online players...");
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            PlayerStats stats = statsCache.get(player.getUniqueId());
+            if (stats != null) {
+                try {
+                    // This is a synchronous call
+                    plugin.getDatabaseHandler().savePlayerStats(stats);
+                } catch (SQLException e) {
+                    plugin.getLogger().log(Level.SEVERE, "Failed to save stats for " + player.getName() + " during shutdown/reload.", e);
+                }
+            }
+        }
+        plugin.getMessagesHelper().sendDebugMessage("Finished saving all player stats.");
     }
 
     public void savePlayerStats(Player player) {

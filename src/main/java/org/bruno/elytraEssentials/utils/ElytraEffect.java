@@ -25,6 +25,16 @@ public class ElytraEffect {
         this.isActive = false;
     }
 
+    public ElytraEffect(ElytraEffect templateEffect) {
+        this.name = templateEffect.name;
+        this.displayMaterial = templateEffect.displayMaterial;
+        this.particle = templateEffect.particle;
+        this.lore = templateEffect.lore;
+        this.price = templateEffect.price;
+        this.permission = templateEffect.permission;
+        this.isActive = templateEffect.isActive;
+    }
+
     public String getName() {
         return name;
     }

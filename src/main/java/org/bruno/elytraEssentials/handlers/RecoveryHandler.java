@@ -13,30 +13,28 @@ import java.util.UUID;
 public class RecoveryHandler
 {
     private final ElytraEssentials plugin;
-
-    private int recoveryAmount;
-    private boolean isNotifyOnRecoveryEnabled;
-
     private BukkitTask task;
+
+    private final int recoveryAmount;
+    private final boolean isNotifyOnRecoveryEnabled;
 
     public RecoveryHandler(ElytraEssentials plugin) {
         this.plugin = plugin;
+
+        // Load config values once when the handler is created
+        this.recoveryAmount = plugin.getConfigHandlerInstance().getRecoveryAmount();
+        this.isNotifyOnRecoveryEnabled = plugin.getConfigHandlerInstance().getIsNotifyOnRecoveryEnabled();
     }
 
     public void start() {
-        if (this.task != null)
-            return;
+        if (this.task != null && !this.task.isCancelled()) return;
 
-        var config = plugin.getConfigHandlerInstance();
-        if (!config.getIsTimeLimitEnabled() || !config.getIsRecoveryEnabled())
-            return;
+        ConfigHandler config = plugin.getConfigHandlerInstance();
+        if (!config.getIsTimeLimitEnabled() || !config.getIsRecoveryEnabled()) return;
 
-        // Load config values once when the task starts
         int recoveryInterval = config.getRecoveryInterval();
-        this.recoveryAmount = config.getRecoveryAmount();
-        this.isNotifyOnRecoveryEnabled = config.getIsNotifyOnRecoveryEnabled();
 
-        // Schedule the task and store it in our variable
+        // The task now runs on the main thread, which is safer for modifying player data.
         this.task = Bukkit.getScheduler().runTaskTimer(plugin, this::recoverFlightTime, recoveryInterval * 20L, recoveryInterval * 20L);
     }
 
@@ -47,45 +45,45 @@ public class RecoveryHandler
         }
     }
 
+    /**
+     * The core logic for the recovery task. Runs once per configured interval.
+     */
     private void recoverFlightTime() {
-        var maxTimeLimit = plugin.getConfigHandlerInstance().getMaxTimeLimit();
+        int maxTimeLimit = plugin.getConfigHandlerInstance().getMaxTimeLimit();
 
         for (Player player : Bukkit.getOnlinePlayers()) {
-            if (PermissionsHelper.PlayerBypassTimeLimit(player))
+            if (PermissionsHelper.PlayerBypassTimeLimit(player)) {
                 continue;
+            }
 
             UUID playerId = player.getUniqueId();
+            int currentFlightTime = plugin.getElytraFlightListener().getCurrentFlightTime(playerId);
 
-            // Add recovery time to the player
-            int currentFlightTime = plugin.getElytraFlightListener().GetAllActiveFlights().getOrDefault(playerId, 0);
-
-            //  we have a limit to check
-            if (maxTimeLimit > 0) {
-                if (currentFlightTime == maxTimeLimit)
-                    continue;
-
-                int total = currentFlightTime + recoveryAmount;
-                if (total > maxTimeLimit){
-                    total = maxTimeLimit;
-                    recoveryAmount = maxTimeLimit - currentFlightTime;
-                }
-
-                this.plugin.getElytraFlightListener().UpdatePlayerFlightTime(playerId, total);
-
-                if (isNotifyOnRecoveryEnabled)
-                {
-                    player.getWorld().playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 0.5f);
-                    String message = this.plugin.getMessagesHandlerInstance().getElytraFlightTimeRecovery().replace("{0}", TimeHelper.formatFlightTime(recoveryAmount));
-                    plugin.getMessagesHelper().sendPlayerMessage(player, message);
-                }
+            // If a max time limit is set and the player is already at or above it, skip them.
+            if (maxTimeLimit > 0 && currentFlightTime >= maxTimeLimit) {
+                continue;
             }
-            else {
-                this.plugin.getElytraFlightListener().UpdatePlayerFlightTime(playerId, currentFlightTime + recoveryAmount);
 
-                if (isNotifyOnRecoveryEnabled) {
-                    String message = this.plugin.getMessagesHandlerInstance().getElytraFlightTimeRecovery().replace("{0}", TimeHelper.formatFlightTime(recoveryAmount));
-                    plugin.getMessagesHelper().sendPlayerMessage(player, message);
-                }
+            // Determine the actual amount of time to add, ensuring it doesn't exceed the max limit.
+            int timeToAdd = this.recoveryAmount;
+            if (maxTimeLimit > 0 && (currentFlightTime + timeToAdd) > maxTimeLimit) {
+                timeToAdd = maxTimeLimit - currentFlightTime;
+            }
+
+            // If there's no time to add, skip to the next player.
+            if (timeToAdd <= 0) {
+                continue;
+            }
+
+            // Use the new, safer method in the flight listener to add time.
+            plugin.getElytraFlightListener().addFlightTime(playerId, timeToAdd);
+
+            // Send notification if enabled.
+            if (isNotifyOnRecoveryEnabled) {
+                player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 0.5f);
+                String message = plugin.getMessagesHandlerInstance().getElytraFlightTimeRecovery()
+                        .replace("{0}", TimeHelper.formatFlightTime(timeToAdd));
+                plugin.getMessagesHelper().sendPlayerMessage(player, message);
             }
         }
     }

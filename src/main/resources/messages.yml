@@ -4,10 +4,11 @@
 #
 # This file controls all the messages shown to players.
 # You can use standard Minecraft color codes with the '&' symbol.
+# You can also use hex color codes, e.g., '&#FFD700' for a custom gold color.
 # Placeholders like {0}, {1}, etc., will be replaced by the plugin automatically.
 
 # The prefix that appears before most plugin messages.
-prefix: "&6&lElytraEssentials &e»"
+prefix: "&#FFD700ElytraEssentials &e» "
 
 # General Messages
 no-permission: "&cYou do not have permission to perform this action."

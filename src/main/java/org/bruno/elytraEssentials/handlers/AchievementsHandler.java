@@ -2,6 +2,7 @@ package org.bruno.elytraEssentials.handlers;
 
 
 import org.bruno.elytraEssentials.ElytraEssentials;
+import org.bruno.elytraEssentials.helpers.ColorHelper;
 import org.bruno.elytraEssentials.utils.PlayerStats;
 import org.bruno.elytraEssentials.utils.StatType;
 import org.bukkit.*;
@@ -159,8 +160,7 @@ public class AchievementsHandler {
 
                 //  Send Message
                 if (!achievement.message().isEmpty()) {
-                    String formattedMessage = ChatColor.translateAlternateColorCodes('&', achievement.message())
-                            .replace("{player}", player.getName());
+                    String formattedMessage = ColorHelper.parse(achievement.message()).replace("{player}", player.getName());
 
                     if (achievement.broadcast()) {
                         Bukkit.broadcastMessage(formattedMessage);

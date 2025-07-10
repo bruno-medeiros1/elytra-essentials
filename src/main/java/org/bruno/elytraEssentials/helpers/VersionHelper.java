@@ -1,14 +1,17 @@
 package org.bruno.elytraEssentials.helpers;
 
-/*
-* Version format being used: MAJOR.MINOR.PATCH:
-MAJOR: Increment for breaking changes or overhauls.
-MINOR: Increment for new features that are backward-compatible.
-PATCH: Increment for backward-compatible bug fixes.
-* */
-public class VersionHelper {
+/**
+ * Version format being used: MAJOR.MINOR.PATCH:
+ * - MAJOR: Increment for breaking changes or overhauls.
+ * - MINOR: Increment for new features that are backward-compatible.
+ * - PATCH: Increment for backward-compatible bug fixes.
+ */
 
-    //Compares two version strings to check if the latest version is newer.
+public final class VersionHelper {
+
+    private VersionHelper() {}
+
+    // Compares two version strings to check if the latest version is newer.
     public static boolean isNewerVersion(String current, String latest) {
         String[] currentParts = current.split("\\.");
         String[] latestParts = latest.split("\\.");

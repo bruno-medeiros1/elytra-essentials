@@ -9,6 +9,8 @@ import org.bruno.elytraEssentials.utils.PlayerStats;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.sql.SQLException;
+
 public class ElytraEssentialsPlaceholders extends PlaceholderExpansion {
 
     private final ElytraEssentials plugin;
@@ -34,46 +36,76 @@ public class ElytraEssentialsPlaceholders extends PlaceholderExpansion {
 
     @Override
     public boolean persist() {
-        return true;
+        return true; // This is good practice, it caches the results
     }
 
     @Override
     public String onPlaceholderRequest(Player player, @NotNull String identifier) {
-        if (player == null)
+        if (player == null) {
             return "";
+        }
 
-        //  Flight Time Placeholders
+        // Flight Time Placeholders
         if (identifier.equalsIgnoreCase("flight_time") || identifier.equalsIgnoreCase("flight_time_formatted")) {
-            if (!plugin.getConfigHandlerInstance().getIsTimeLimitEnabled())
+            if (!plugin.getConfigHandlerInstance().getIsTimeLimitEnabled()) {
                 return "Disabled";
-
-            if (PermissionsHelper.PlayerBypassTimeLimit(player))
+            }
+            if (PermissionsHelper.PlayerBypassTimeLimit(player)) {
                 return "Unlimited";
+            }
 
-            int flightTimeLeft = plugin.getElytraFlightListener().GetAllActiveFlights().getOrDefault(player.getUniqueId(), 0);
+            int flightTimeLeft = plugin.getElytraFlightListener().getCurrentFlightTime(player.getUniqueId());
 
             return identifier.equalsIgnoreCase("flight_time_formatted")
                     ? TimeHelper.formatFlightTime(flightTimeLeft)
                     : String.valueOf(flightTimeLeft);
         }
 
-        // Stats Placeholders
-        StatsHandler statsHandler = plugin.getStatsHandler();
-        PlayerStats stats = statsHandler.getStats(player);
+        // We get the stats once and use them for all stat-related placeholders
+        PlayerStats stats = plugin.getStatsHandler().getStats(player);
         if (stats == null) return "";
 
-        return switch (identifier.toLowerCase()) {
-            case "total_distance" -> String.format("%.1f", stats.getTotalDistance() / 1000.0) + "km";
-            case "total_flight_time" -> TimeHelper.formatFlightTime((int) stats.getTotalTimeSeconds());
-            case "longest_flight" -> String.format("%.0f", stats.getLongestFlight()) + " blocks";
-            case "average_speed" -> {
+        switch (identifier.toLowerCase()) {
+            // Flight Stats
+            case "total_distance_km":
+                return String.format("%.1f", stats.getTotalDistance() / 1000.0);
+            case "total_distance_blocks":
+                return String.format("%.0f", stats.getTotalDistance());
+            case "total_flight_time":
+                return TimeHelper.formatFlightTime((int) stats.getTotalTimeSeconds());
+            case "longest_flight":
+                return String.format("%.0f", stats.getLongestFlight());
+            case "average_speed":
                 if (stats.getTotalTimeSeconds() > 0) {
                     double avgSpeedKmh = (stats.getTotalDistance() / stats.getTotalTimeSeconds()) * 3.6;
-                    yield String.format("%.1f", avgSpeedKmh) + " km/h";
+                    return String.format("%.1f", avgSpeedKmh);
                 }
-                yield "0.0 km/h";
-            }
-            default -> null;
-        };
+                return "0.0";
+
+            // Boost Stats
+            case "boosts_used":
+                return String.valueOf(stats.getBoostsUsed());
+            case "super_boosts_used":
+                return String.valueOf(stats.getSuperBoostsUsed());
+            case "total_boosts":
+                return String.valueOf(stats.getBoostsUsed() + stats.getSuperBoostsUsed());
+
+            // Other Stats
+            case "plugin_saves":
+                return String.valueOf(stats.getPluginSaves());
+            case "active_effect":
+                String activeEffect = plugin.getEffectsHandler().getActiveEffect(player.getUniqueId());
+                return (activeEffect != null) ? activeEffect : "None";
+            case "effects_owned":
+                try {
+                    return String.valueOf(plugin.getDatabaseHandler().GetOwnedEffectKeys(player.getUniqueId()).size());
+                } catch (SQLException e) {
+                    return "Error";
+                }
+            case "effects_total":
+                return String.valueOf(plugin.getEffectsHandler().getEffectsRegistry().size());
+        }
+
+        return null; // Let PlaceholderAPI know the placeholder was not found
     }
 }
