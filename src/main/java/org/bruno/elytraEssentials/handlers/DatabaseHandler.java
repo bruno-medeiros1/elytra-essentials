@@ -461,6 +461,30 @@ public class DatabaseHandler {
         return topStats;
     }
 
+    /**
+     * Calculates a player's rank for a specific statistic.
+     * @param uuid The UUID of the player.
+     * @param statColumn The database column for the statistic.
+     * @return The player's rank, or -1 if not ranked.
+     * @throws SQLException If a database error occurs.
+     */
+    public int getPlayerRank(UUID uuid, String statColumn) throws SQLException {
+        // This query counts how many players have a better score than the target player.
+        // Adding 1 gives us the player's rank (e.g., if 0 players are better, rank is #1).
+        String query = "SELECT COUNT(*) FROM " + Constants.Database.Tables.PLAYER_STATS +
+                " WHERE " + statColumn + " > (SELECT " + statColumn + " FROM " +
+                Constants.Database.Tables.PLAYER_STATS + " WHERE uuid = ?)";
+
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, uuid.toString());
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) + 1;
+                }
+            }
+        }
+        return -1; // Indicates player not found or an error
+    }
 
     /**
      * Saves a player's complete statistics to the database.

@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 public class TopCommand implements ISubCommand {
@@ -128,7 +129,7 @@ public class TopCommand implements ISubCommand {
 
                 } catch (SQLException e) {
                     sender.sendMessage(ChatColor.RED + "An error occurred while fetching the leaderboard.");
-                    e.printStackTrace();
+                    plugin.getLogger().log(Level.SEVERE, "An error occurred while fetching the leaderboard.", e);
                 }
             }
         }.runTaskAsynchronously(plugin);
@@ -151,9 +152,9 @@ public class TopCommand implements ISubCommand {
         player.sendMessage("§7Click a category to view the top players.");
         player.sendMessage("");
 
-        sendLeaderboardLine(player, "§bTotal Distance Flown", "/ee top distance");
-        sendLeaderboardLine(player, "§bTotal Flight Time", "/ee top time");
-        sendLeaderboardLine(player, "§bLongest Single Flight", "/ee top longest");
+        sendLeaderboardLine(player, "§7Total Distance Flown", "/ee top distance");
+        sendLeaderboardLine(player, "§7Total Flight Time", "/ee top time");
+        sendLeaderboardLine(player, "§7Longest Single Flight", "/ee top longest");
 
         player.sendMessage("");
         player.sendMessage("§6§m----------------------------------------------------");
@@ -170,9 +171,9 @@ public class TopCommand implements ISubCommand {
 
         // Create the hover text
         BaseComponent[] hoverText = new TextComponent[]{
-                new TextComponent(TextComponent.fromLegacyText("§aClick to view the\n")),
-                new TextComponent(TextComponent.fromLegacyText(categoryName)),
-                new TextComponent(TextComponent.fromLegacyText("\n§aleaderboard."))
+                new TextComponent(TextComponent.fromLegacyText("§fClick to view the\n")),
+                new TextComponent(TextComponent.fromLegacyText(ChatColor.YELLOW + categoryName)),
+                new TextComponent(TextComponent.fromLegacyText("\n§fleaderboard."))
         };
         categoryComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(hoverText)));
 
@@ -195,10 +196,9 @@ public class TopCommand implements ISubCommand {
 
             // A list of all possible leaderboard categories
             List<String> allCategories = List.of("distance", "time", "longest");
-            List<String> allowedCategories = new ArrayList<>();
 
             // Check permission for each category before adding it as a suggestion
-            allowedCategories.addAll(allCategories);
+            List<String> allowedCategories = new ArrayList<>(allCategories);
 
             // Now, filter the list of *allowed* categories based on what the player is typing
             String currentArg = args[1].toLowerCase();
