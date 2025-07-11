@@ -70,14 +70,8 @@ public class ForgeGuiListener implements Listener {
                 case Constants.GUI.FORGE_CANCEL_SLOT:
                     event.setCancelled(true);
                     if (clickedItem != null && clickedItem.getType() == Material.RED_STAINED_GLASS_PANE) {
-                        player.closeInventory();
+                        handleCancelClick(topInventory, player);
                     }
-                    break;
-                case Constants.GUI.FORGE_ELYTRA_SLOT:
-                case Constants.GUI.FORGE_ARMOR_SLOT:
-                case Constants.GUI.FORGE_RESULT_SLOT:
-                    // Allow players to place and take items from the main interaction slots.
-                    // The update logic will handle the results.
                     break;
                 default:
                     event.setCancelled(true);
@@ -85,7 +79,6 @@ public class ForgeGuiListener implements Listener {
             }
         }
     }
-
 
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
@@ -167,24 +160,78 @@ public class ForgeGuiListener implements Listener {
         ItemStack armorSlot = forge.getItem(Constants.GUI.FORGE_ARMOR_SLOT);
         ItemStack middleSlot = forge.getItem(Constants.GUI.FORGE_RESULT_SLOT);
 
-        if (armoredElytraHelper.isArmoredElytra(middleSlot) && !armoredElytraHelper.isPreviewItem(middleSlot) && isEmpty(elytraSlot) && isEmpty(armorSlot)) {
+        boolean isRevertible = armoredElytraHelper.isArmoredElytra(middleSlot) && !armoredElytraHelper.isPreviewItem(middleSlot) && isEmpty(elytraSlot) && isEmpty(armorSlot);
+        boolean isCraftable = armoredElytraHelper.isPlainElytra(elytraSlot) && plugin.getArmoredElytraHelper().isChestplate(armorSlot);
+
+        if (isRevertible) {
             displayRevertedItems(forge, middleSlot);
             showActionButtons(forge, "Revert");
-        } else if (armoredElytraHelper.isPlainElytra(elytraSlot) && armoredElytraHelper.isChestplate(armorSlot)) {
+        } else if (isCraftable) {
+            if (elytraSlot == null) return;
             ItemStack armoredElytra = armoredElytraHelper.createArmoredElytra(elytraSlot, armorSlot, player);
             forge.setItem(Constants.GUI.FORGE_RESULT_SLOT, armoredElytra);
             showActionButtons(forge, "Forge");
-        }
-        else if (!armoredElytraHelper.isPreviewItem(middleSlot)) {
-            forge.setItem(Constants.GUI.FORGE_RESULT_SLOT, null);
+        } else {
+            // Not a valid recipe. Clear any preview items.
+            if (armoredElytraHelper.isPreviewItem(forge.getItem(Constants.GUI.FORGE_RESULT_SLOT))) {
+                forge.setItem(Constants.GUI.FORGE_RESULT_SLOT, null);
+            }
+            if (armoredElytraHelper.isPreviewItem(forge.getItem(Constants.GUI.FORGE_ELYTRA_SLOT))) {
+                forge.setItem(Constants.GUI.FORGE_ELYTRA_SLOT, null);
+                forge.setItem(Constants.GUI.FORGE_ARMOR_SLOT, null);
+            }
+
+            // Check if there are any items left to cancel.
+            boolean hasInputs = !isEmpty(forge.getItem(Constants.GUI.FORGE_ELYTRA_SLOT)) ||
+                    !isEmpty(forge.getItem(Constants.GUI.FORGE_ARMOR_SLOT)) ||
+                    !isEmpty(forge.getItem(Constants.GUI.FORGE_RESULT_SLOT));
+            updateActionButtons(forge, hasInputs);
         }
     }
-    
+
     private void showActionButtons(Inventory forge, String action) {
-        ItemStack confirmButton = GuiHelper.createGuiItem(Material.GREEN_WOOL, "§aConfirm " + action);
-        ItemStack cancelButton = GuiHelper.createGuiItem(Material.RED_WOOL, "§cCancel");
+        List<String> lore = new ArrayList<>();
+        lore.add("§7Click to complete the process.");
+
+        double moneyCost = plugin.getConfigHandlerInstance().getForgeCostMoney();
+        int xpCost = plugin.getConfigHandlerInstance().getForgeCostXpLevels();
+
+        if (moneyCost > 0 || xpCost > 0) {
+            lore.add("");
+            lore.add("§6Requirements:");
+            if (moneyCost > 0) lore.add(String.format(" §f- §e$%.2f", moneyCost));
+            if (xpCost > 0) lore.add(String.format(" §f- §b%d Levels", xpCost));
+        }
+
+        ItemStack confirmButton = GuiHelper.createGuiItem(Material.GREEN_STAINED_GLASS_PANE, "§aConfirm " + action, lore.toArray(new String[0]));
+        ItemStack cancelButton = GuiHelper.createGuiItem(Material.RED_STAINED_GLASS_PANE, "§cCancel");
+
         forge.setItem(Constants.GUI.FORGE_CONFIRM_SLOT, confirmButton);
         forge.setItem(Constants.GUI.FORGE_CANCEL_SLOT, cancelButton);
+    }
+
+    private void updateActionButtons(Inventory forge, boolean hasInputs) {
+        if (hasInputs) {
+            forge.setItem(Constants.GUI.FORGE_CANCEL_SLOT, GuiHelper.createGuiItem(Material.RED_STAINED_GLASS_PANE, "§cCancel"));
+        } else {
+            forge.setItem(Constants.GUI.FORGE_CANCEL_SLOT, null);
+            forge.setItem(Constants.GUI.FORGE_CONFIRM_SLOT, null);
+        }
+    }
+
+    /**
+     * Handles the logic for the "Cancel" button, returning items and resetting the GUI.
+     */
+    private void handleCancelClick(Inventory forge, Player player) {
+        // Return all items that are not preview items back to the player
+        returnAllItems(forge, player);
+
+        // Clear the interactive slots to reset the GUI state
+        forge.setItem(Constants.GUI.FORGE_ELYTRA_SLOT, null);
+        forge.setItem(Constants.GUI.FORGE_ARMOR_SLOT, null);
+        forge.setItem(Constants.GUI.FORGE_RESULT_SLOT, null);
+
+        player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.8f, 0.8f);
     }
 
     private void displayRevertedItems(Inventory forge, ItemStack armoredElytra) {

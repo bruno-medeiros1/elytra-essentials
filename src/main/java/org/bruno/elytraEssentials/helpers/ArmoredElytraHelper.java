@@ -103,6 +103,8 @@ public class ArmoredElytraHelper {
             meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.DAMAGE_ABSORBED_TAG), PersistentDataType.DOUBLE, 0.0);
             meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.PLATING_SHATTERED_TAG), PersistentDataType.INTEGER, 0);
 
+            meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.PREVIEW_ITEM_TAG), PersistentDataType.BOOLEAN, true);
+
             armoredElytra.setItemMeta(meta);
         }
         return armoredElytra;

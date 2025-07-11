@@ -16,9 +16,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 public class EffectsCommand implements ISubCommand {
@@ -226,25 +225,49 @@ public class EffectsCommand implements ISubCommand {
         new BukkitRunnable() {
             @Override
             public void run() {
+                Set<String> allOwnedEffects;
+
                 try {
-                    List<String> ownedKeys = plugin.getDatabaseHandler().GetOwnedEffectKeys(target.getUniqueId());
-                    new BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            sender.sendMessage(ChatColor.GOLD + "--- " + target.getName() + "'s Owned Effects ---");
-                            if (ownedKeys.isEmpty()) {
-                                sender.sendMessage(ChatColor.GRAY + "This player does not own any effects.");
-                            } else {
-                                for (String key : ownedKeys) {
-                                    sender.sendMessage(ChatColor.YELLOW + " - " + key);
+                    // Get effects from the database
+                    allOwnedEffects = new HashSet<>(plugin.getDatabaseHandler().GetOwnedEffectKeys(target.getUniqueId()));
+                } catch (SQLException e) {
+                    sender.sendMessage(ChatColor.RED + "A database error occurred while fetching owned effects.");
+                    plugin.getLogger().log(java.util.logging.Level.SEVERE, "Failed to list effects for " + target.getName(), e);
+                    return; // Stop if the database fails
+                }
+
+                // If the player is online, check their permissions
+                if (target.isOnline()) {
+                    Player targetPlayer = target.getPlayer();
+                    if (targetPlayer != null) {
+                        if (PermissionsHelper.hasAllEffectsPermission(targetPlayer)) {
+                            // If they have the wildcard, add all registered effects.
+                            allOwnedEffects.addAll(plugin.getEffectsHandler().getEffectsRegistry().keySet());
+                        } else {
+                            // Otherwise, check for each individual permission.
+                            for (Map.Entry<String, ElytraEffect> entry : plugin.getEffectsHandler().getEffectsRegistry().entrySet()) {
+                                if (targetPlayer.hasPermission(entry.getValue().getPermission())) {
+                                    allOwnedEffects.add(entry.getKey());
                                 }
                             }
                         }
-                    }.runTask(plugin);
-                } catch (SQLException e) {
-                    sender.sendMessage(ChatColor.RED + "A database error occurred.");
-                    plugin.getLogger().log(java.util.logging.Level.SEVERE, "Failed to list effects for " + target.getName(), e);
+                    }
                 }
+
+                // Switch back to the main thread to send the message
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        sender.sendMessage(ChatColor.GOLD + "--- " + target.getName() + "'s Owned Effects ---");
+                        if (allOwnedEffects.isEmpty()) {
+                            sender.sendMessage(ChatColor.GRAY + "This player does not have access to any effects.");
+                        } else {
+                            for (String key : allOwnedEffects) {
+                                sender.sendMessage(ChatColor.YELLOW + " - " + key);
+                            }
+                        }
+                    }
+                }.runTask(plugin);
             }
         }.runTaskAsynchronously(plugin);
     }
@@ -252,29 +275,37 @@ public class EffectsCommand implements ISubCommand {
     public void openOwnedEffects(Player player) {
         Inventory ownedEffects = Bukkit.createInventory(new EffectsHolder(), Constants.GUI.EFFECTS_INVENTORY_SIZE, Constants.GUI.EFFECTS_INVENTORY_NAME);
 
+        Set<String> keysToDisplay;
         try {
-            List<String> keysToDisplay;
-            if (PermissionsHelper.hasAllEffectsPermission(player)) {
-                keysToDisplay = new ArrayList<>(plugin.getEffectsHandler().getEffectsRegistry().keySet());
-            } else {
-                keysToDisplay = plugin.getDatabaseHandler().GetOwnedEffectKeys(player.getUniqueId());
-            }
-
-            addControlButtons(ownedEffects);
-
-            if (keysToDisplay.isEmpty()) {
-                ItemStack item = plugin.getEffectsHandler().createEmptyItemStack();
-                ownedEffects.setItem(13, item);
-            } else {
-                populateOwnedItems(ownedEffects, player, keysToDisplay);
-            }
-
-            player.openInventory(ownedEffects);
-
+            // Get effects from the database
+            keysToDisplay = new HashSet<>(plugin.getDatabaseHandler().GetOwnedEffectKeys(player.getUniqueId()));
         } catch (SQLException e) {
             player.sendMessage(ChatColor.RED + "An error occurred while fetching your effects.");
-            plugin.getLogger().log(java.util.logging.Level.SEVERE, "Failed to open owned effects GUI for " + player.getName(), e);
+            plugin.getLogger().log(Level.SEVERE, "Failed to open owned effects GUI for " + player.getName(), e);
+            return;
         }
+
+        // Add effects from permissions
+        if (PermissionsHelper.hasAllEffectsPermission(player)) {
+            keysToDisplay.addAll(plugin.getEffectsHandler().getEffectsRegistry().keySet());
+        } else {
+            for (Map.Entry<String, ElytraEffect> entry : plugin.getEffectsHandler().getEffectsRegistry().entrySet()) {
+                if (player.hasPermission(entry.getValue().getPermission())) {
+                    keysToDisplay.add(entry.getKey());
+                }
+            }
+        }
+
+        addControlButtons(ownedEffects);
+
+        if (keysToDisplay.isEmpty()) {
+            ItemStack item = plugin.getEffectsHandler().createEmptyItemStack();
+            ownedEffects.setItem(13, item);
+        } else {
+            populateOwnedItems(ownedEffects, player, new ArrayList<>(keysToDisplay));
+        }
+
+        player.openInventory(ownedEffects);
     }
 
     private void populateOwnedItems(Inventory inv, Player player, List<String> playerOwnedKeys) {

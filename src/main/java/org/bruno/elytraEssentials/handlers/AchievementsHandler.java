@@ -124,10 +124,10 @@ public class AchievementsHandler {
     }
 
     private void awardAchievement(Player player, Achievement achievement) throws SQLException {
-        // 1. Save the achievement to the database so they don't get it again.
+        // Save the achievement to the database so they don't get it again.
         plugin.getDatabaseHandler().addAchievement(player.getUniqueId(), achievement.id());
 
-        // 2. Schedule the rewards to run on the main server thread.
+        // Schedule the rewards to run on the main server thread.
         new BukkitRunnable() {
             @Override
             public void run() {
