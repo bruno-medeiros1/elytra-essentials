@@ -114,9 +114,9 @@ public class StatsCommand implements ISubCommand {
         double avgSpeedKmh = (totalTime > 0) ? (totalDistance / totalTime) * KMH_CONVERSION_FACTOR : 0;
 
         // --- Get Rank Strings ---
-        String distanceRankStr = (ranks.distanceRank > 0) ? " §e(#" + ranks.distanceRank + ")" : "";
-        String timeRankStr = (ranks.timeRank > 0) ? " §e(#" + ranks.timeRank + ")" : "";
-        String longestFlightRankStr = (ranks.longestFlightRank > 0) ? " §e(#" + ranks.longestFlightRank + ")" : "";
+        String distanceRankStr = (ranks.distanceRank > 0) ? ColorHelper.parse(" &#FFD700(#" + ranks.distanceRank + ")") : "";
+        String timeRankStr = (ranks.timeRank > 0) ? ColorHelper.parse(" &#FFD700(#" + ranks.timeRank + ")") : "";
+        String longestFlightRankStr = (ranks.longestFlightRank > 0) ? ColorHelper.parse(" &#FFD700(#" + ranks.longestFlightRank + ")") : "";
 
         int effectsOwned = 0;
         int totalEffects = plugin.getEffectsHandler().getEffectsRegistry().size();

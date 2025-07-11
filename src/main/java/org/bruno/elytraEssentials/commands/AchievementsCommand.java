@@ -57,7 +57,6 @@ public class AchievementsCommand implements ISubCommand {
         populateItems(gui, player, page, filter);
         addControlButtons(gui, page, filter);
 
-        player.playSound(player.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1.0f, 1.0f);
         player.openInventory(gui);
     }
 

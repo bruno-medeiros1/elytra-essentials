@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 
 public class AchievementsHandler {
 
@@ -62,8 +63,7 @@ public class AchievementsHandler {
 
                 achievements.put(key, new Achievement(key, name, type, value, description, displayItem, message, commands, rewards, broadcast));
             } catch (Exception e) {
-                plugin.getLogger().warning("Failed to load achievement '" + key + "'. Please check its format in achievements.yml.");
-                e.printStackTrace();
+                plugin.getLogger().log(Level.WARNING, "Failed to load achievement '" + key + "'. Please check its format in achievements.yml.", e);
             }
         }
     }
@@ -118,8 +118,7 @@ public class AchievementsHandler {
                 }
 
             } catch (SQLException e) {
-                plugin.getLogger().severe("Database error while checking achievements for " + player.getName());
-                e.printStackTrace();
+                plugin.getLogger().log(Level.SEVERE, "Database error while checking achievements for " + player.getName(), e);
             }
         }
     }

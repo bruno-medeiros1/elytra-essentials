@@ -38,8 +38,7 @@ public class StatsHandler {
                     PlayerStats stats = plugin.getDatabaseHandler().getPlayerStats(player.getUniqueId());
                     statsCache.put(player.getUniqueId(), stats);
                 } catch (SQLException e) {
-                    plugin.getLogger().severe("Could not load stats for player " + player.getName());
-                    e.printStackTrace();
+                    plugin.getLogger().log(Level.SEVERE, "Could not load stats for player " + player.getName(), e);
                 }
             }
         }.runTaskAsynchronously(plugin);
@@ -71,8 +70,7 @@ public class StatsHandler {
                         plugin.getDatabaseHandler().savePlayerStats(stats);
 
                     } catch (SQLException e) {
-                        plugin.getLogger().severe("Could not save stats for player " + player.getName());
-                        e.printStackTrace();
+                        plugin.getLogger().log(Level.SEVERE, "Could not save stats for player " + player.getName(), e);
                     }
                 }
             }.runTaskAsynchronously(plugin);
