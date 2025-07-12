@@ -200,7 +200,7 @@ public class ElytraBoostListener implements Listener {
                                 player.setGliding(true);
                             }
                         }
-                    }.runTaskLater(plugin, 1L);
+                    }.runTaskLater(plugin, 2L);
 
                     player.getWorld().playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.2f, 1.0f);
 

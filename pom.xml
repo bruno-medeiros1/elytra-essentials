@@ -52,6 +52,40 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- ProGuard Maven Plugin To Obfuscate -->
+            <plugin>
+                <groupId>com.github.wvengen</groupId>
+                <artifactId>proguard-maven-plugin</artifactId>
+                <version>2.7.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>proguard</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <proguardInclude>${project.basedir}/proguard.cfg</proguardInclude>
+
+                    <injar>${project.build.finalName}.jar</injar>
+                    <outjar>${project.build.finalName}.jar</outjar>
+
+                    <!-- This tells ProGuard where to find the Java libraries. -->
+                    <libs>
+                        <lib>${java.home}/jmods/java.base.jmod</lib>
+                        <lib>${java.home}/jmods/java.sql.jmod</lib>
+                    </libs>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.guardsquare</groupId>
+                        <artifactId>proguard-base</artifactId>
+                        <version>7.7.0</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
         </plugins>
         <resources>
             <resource>
