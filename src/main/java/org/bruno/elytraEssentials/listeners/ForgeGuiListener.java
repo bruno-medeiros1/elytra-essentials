@@ -63,13 +63,13 @@ public class ForgeGuiListener implements Listener {
                 case Constants.GUI.FORGE_CONFIRM_SLOT:
                     event.setCancelled(true);
                     //  Only handle click if the confirm button is actually there
-                    if (clickedItem != null && clickedItem.getType() == Material.GREEN_STAINED_GLASS_PANE) {
+                    if (clickedItem != null && clickedItem.getType() == Material.PLAYER_HEAD) {
                         handleConfirmClick(topInventory, player);
                     }
                     break;
                 case Constants.GUI.FORGE_CANCEL_SLOT:
                     event.setCancelled(true);
-                    if (clickedItem != null && clickedItem.getType() == Material.RED_STAINED_GLASS_PANE) {
+                    if (clickedItem != null && clickedItem.getType() == Material.PLAYER_HEAD) {
                         handleCancelClick(topInventory, player);
                     }
                     break;
@@ -203,8 +203,8 @@ public class ForgeGuiListener implements Listener {
             if (xpCost > 0) lore.add(String.format(" §f- §b%d Levels", xpCost));
         }
 
-        ItemStack confirmButton = GuiHelper.createGuiItem(Material.GREEN_STAINED_GLASS_PANE, "§aConfirm " + action, lore.toArray(new String[0]));
-        ItemStack cancelButton = GuiHelper.createGuiItem(Material.RED_STAINED_GLASS_PANE, "§cCancel");
+        ItemStack confirmButton = GuiHelper.createAcceptButton(action, lore);
+        ItemStack cancelButton = GuiHelper.createCancelButton();
 
         forge.setItem(Constants.GUI.FORGE_CONFIRM_SLOT, confirmButton);
         forge.setItem(Constants.GUI.FORGE_CANCEL_SLOT, cancelButton);
@@ -212,7 +212,7 @@ public class ForgeGuiListener implements Listener {
 
     private void updateActionButtons(Inventory forge, boolean hasInputs) {
         if (hasInputs) {
-            forge.setItem(Constants.GUI.FORGE_CANCEL_SLOT, GuiHelper.createGuiItem(Material.RED_STAINED_GLASS_PANE, "§cCancel"));
+            forge.setItem(Constants.GUI.FORGE_CANCEL_SLOT, GuiHelper.createCancelButton());
         } else {
             forge.setItem(Constants.GUI.FORGE_CANCEL_SLOT, null);
             forge.setItem(Constants.GUI.FORGE_CONFIRM_SLOT, null);
