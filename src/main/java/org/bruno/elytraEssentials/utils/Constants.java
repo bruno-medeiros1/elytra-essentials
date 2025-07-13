@@ -8,6 +8,7 @@ public final class Constants {
 
     public static final class Inventory {
         public static final int CHESTPLATE_SLOT = 38;
+        public static final int MAIN_INV_SIZE = 36;
     }
 
     public static final class Integrations {

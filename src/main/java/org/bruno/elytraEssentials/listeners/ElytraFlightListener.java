@@ -5,10 +5,9 @@ import org.bruno.elytraEssentials.handlers.ConfigHandler;
 import org.bruno.elytraEssentials.helpers.ColorHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.helpers.TimeHelper;
+import org.bruno.elytraEssentials.utils.Constants;
 import org.bruno.elytraEssentials.utils.PlayerStats;
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -22,6 +21,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -37,15 +37,14 @@ public class ElytraFlightListener implements Listener
     private static final int TICKS_IN_ONE_SECOND = 20;
     private static final double METERS_PER_SECOND_TO_KMH = 3.6;
     private static final double MAX_FLIGHT_SPEED = 200.0;
+    private static final long DEPLOY_COOLDOWN_MS = 5000;
+    private static final int DEPLOY_MIN_FALL_DISTANCE = 5;
 
     private final ElytraEssentials plugin;
 
     // Config Values
-    private boolean isGlobalFlightDisabled;
-    private boolean isSpeedLimitEnabled;
-    private boolean isTimeLimitEnabled;
-    private boolean isElytraBreakProtectionEnabled;
-    private boolean isKineticEnergyProtectionEnabled;
+    private boolean isGlobalFlightDisabled, isSpeedLimitEnabled, isTimeLimitEnabled, isElytraBreakProtectionEnabled,
+            isKineticEnergyProtectionEnabled, isEmergencyDeployEnabled;
     private double maxSpeed;
     private List disabledElytraWorlds;
     private HashMap<String, Double> perWorldSpeedLimits;
@@ -56,6 +55,7 @@ public class ElytraFlightListener implements Listener
     private final HashMap<UUID, Double> currentFlightDistances = new HashMap<>();
     private final Set<UUID> noFallDamagePlayers = new HashSet<>();
     private final HashMap<UUID, Integer> initialFlightTime = new HashMap<>();
+    private final HashMap<UUID, Long> deployCooldowns = new HashMap<>(); // For Emergency Deploy
 
     // Task for the countdown
     private BukkitTask flightTimeTask;
@@ -87,6 +87,7 @@ public class ElytraFlightListener implements Listener
         currentFlightDistances.remove(player.getUniqueId());
         noFallDamagePlayers.remove(player.getUniqueId());
         initialFlightTime.remove(player.getUniqueId());
+        deployCooldowns.remove(player.getUniqueId());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -105,6 +106,9 @@ public class ElytraFlightListener implements Listener
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPlayerMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
+
+        handleEmergencyDeploy(player);
+
         if (!player.isGliding()) {
             removeFlightBossBar(player);
             return;
@@ -172,7 +176,7 @@ public class ElytraFlightListener implements Listener
         PlayerStats stats = plugin.getStatsHandler().getStats(player);
         double flightDistance = currentFlightDistances.getOrDefault(player.getUniqueId(), 0.0);
         if (flightDistance > stats.getLongestFlight()) {
-            stats.setLongestFlight(flightDistance);
+                stats.setLongestFlight(flightDistance);
             String message = plugin.getMessagesHandlerInstance().getNewPRLongestFlightMessage()
                     .replace("{0}", String.format("%.0f", flightDistance));
             plugin.getMessagesHelper().sendPlayerMessage(player, message);
@@ -273,6 +277,48 @@ public class ElytraFlightListener implements Listener
         currentFlightDistances.compute(player.getUniqueId(), (uuid, dist) -> (dist == null ? 0 : dist) + distanceMoved);
     }
 
+    private void handleEmergencyDeploy(Player player) {
+        if (!isEmergencyDeployEnabled || player.isInsideVehicle() || player.getVelocity().getY() >= 0 || player.isGliding() || player.isOnGround()) {
+            return;
+        }
+        if (isOnEmergencyDeployCooldown(player.getUniqueId()) || player.getFallDistance() < DEPLOY_MIN_FALL_DISTANCE || !PermissionsHelper.hasAutoDeployPermission(player)) {
+            return;
+        }
+
+        PlayerInventory inventory = player.getInventory();
+        if (inventory.getChestplate() != null) return;
+
+        for (int i = 0; i < Constants.Inventory.MAIN_INV_SIZE; i++) {
+            ItemStack item = inventory.getItem(i);
+            if (item != null && item.getType() == Material.ELYTRA) {
+                inventory.setChestplate(item.clone());
+                item.setAmount(item.getAmount() - 1);
+
+                player.setGliding(true);
+                player.setFallDistance(0);
+
+                Vector launchDirection = player.getLocation().getDirection().setY(0).normalize();
+                Vector launchVelocity = launchDirection.multiply(0.6).setY(0.5);
+                player.setVelocity(launchVelocity);
+
+                deployCooldowns.put(player.getUniqueId(), System.currentTimeMillis() + DEPLOY_COOLDOWN_MS);
+
+                player.playSound(player.getLocation(), Sound.ITEM_TOTEM_USE, 0.8f, 0.8f);
+                plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getEmergencyDeploySuccess());
+                break;
+            }
+        }
+    }
+
+    private boolean isOnEmergencyDeployCooldown(UUID playerId) {
+        if (!deployCooldowns.containsKey(playerId)) return false;
+        if (System.currentTimeMillis() > deployCooldowns.get(playerId)) {
+            deployCooldowns.remove(playerId);
+            return false;
+        }
+        return true;
+    }
+
     private String calculateSpeedColor(double speed) {
         if (speed > 180) return "§4";
         if (speed > 125) return "§c";
@@ -292,6 +338,7 @@ public class ElytraFlightListener implements Listener
         this.isElytraBreakProtectionEnabled = config.getIsElytraBreakProtectionEnabled();
         this.isKineticEnergyProtectionEnabled = config.getIsKineticEnergyProtectionEnabled();
         this.maxSpeed = config.getDefaultSpeedLimit();
+        this.isEmergencyDeployEnabled = config.getIsEmergencyDeployEnabled();
     }
 
     private void createFlightBossBar(Player player) {
