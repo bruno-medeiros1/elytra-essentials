@@ -27,7 +27,7 @@ public class ShopCommand implements ISubCommand {
     @Override
     public boolean Execute(CommandSender sender, String[] args) {
         if (!(sender instanceof Player player)){
-            sender.sendMessage(ChatColor.RED + "Only players can use this command.");
+            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cOnly players can use this command.");
             return true;
         }
 

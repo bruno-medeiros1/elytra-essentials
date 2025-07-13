@@ -1,7 +1,6 @@
 package org.bruno.elytraEssentials.commands;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
-import org.bruno.elytraEssentials.helpers.ColorHelper;
 import org.bruno.elytraEssentials.utils.Constants;
 import org.bruno.elytraEssentials.gui.EffectsHolder;
 import org.bruno.elytraEssentials.helpers.GuiHelper;
@@ -31,7 +30,7 @@ public class EffectsCommand implements ISubCommand {
     public boolean Execute(CommandSender sender, String[] args) {
         if (args.length == 0) {
             if (!(sender instanceof Player player)) {
-                sender.sendMessage(ChatColor.RED + "This command can only be run by a player.");
+                plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cThis command can only be run by a player.");
                 return true;
             }
             if (!PermissionsHelper.hasEffectsPermission(player)) {
@@ -57,7 +56,7 @@ public class EffectsCommand implements ISubCommand {
                 handleList(sender, args);
                 break;
             default:
-                sender.sendMessage(ChatColor.RED + "Unknown subcommand. Usage: /ee effects <clear, give, remove, list>");
+                plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cUnknown subcommand. Usage: /ee effects <clear, give, remove, list>");
                 break;
         }
         return true;
@@ -66,7 +65,7 @@ public class EffectsCommand implements ISubCommand {
 
     private void handleClear(CommandSender sender, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(ChatColor.RED + "This command can only be run by a player.");
+            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cThis command can only be run by a player.");
             return;
         }
         if (!PermissionsHelper.hasClearEffectsCommandPermission(player)) {
@@ -76,7 +75,7 @@ public class EffectsCommand implements ISubCommand {
 
         String activeEffectKey = plugin.getEffectsHandler().getActiveEffect(player.getUniqueId());
         if (activeEffectKey == null) {
-            player.sendMessage(ChatColor.RED + "You do not have an active effect to clear.");
+            plugin.getMessagesHelper().sendPlayerMessage(player,"&cYou do not have an active effect to clear.");
             return;
         }
         plugin.getEffectsHandler().handleDeselection(player, activeEffectKey);
@@ -84,28 +83,28 @@ public class EffectsCommand implements ISubCommand {
 
     private void handleGive(CommandSender sender, String[] args) {
         if (!PermissionsHelper.hasGiveEffectPermission(sender)) {
-            sender.sendMessage(ColorHelper.parse(plugin.getMessagesHandlerInstance().getNoPermissionMessage()));
+            plugin.getMessagesHelper().sendCommandSenderMessage(sender, plugin.getMessagesHandlerInstance().getNoPermissionMessage());
             return;
         }
         if (args.length < 3) {
-            sender.sendMessage(ChatColor.RED + "Usage: /ee effects give <player> <effect_id>");
+            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cUsage: /ee effects give <player> <effect>");
             return;
         }
 
         OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
         if (!target.hasPlayedBefore() && !target.isOnline()) {
-            sender.sendMessage(ChatColor.RED + "Player '" + args[1] + "' not found.");
+            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cPlayer '" + args[1] + "' not found.");
             return;
         }
 
         String effectKey = args[2].toUpperCase();
         if (!plugin.getEffectsHandler().getEffectsRegistry().containsKey(effectKey)) {
-            sender.sendMessage(ChatColor.RED + "Effect ID '" + effectKey + "' not found.");
+            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cEffect '" + effectKey + "' not found.");
             return;
         }
 
         if (target.isOnline() && PermissionsHelper.hasAllEffectsPermission(target.getPlayer())) {
-            sender.sendMessage(ChatColor.YELLOW + target.getName() + " has access to all effects via permissions.");
+            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&e" + target.getName() + " has access to all effects via permissions.");
             return;
         }
 
@@ -118,7 +117,7 @@ public class EffectsCommand implements ISubCommand {
                         new BukkitRunnable() {
                             @Override
                             public void run() {
-                                sender.sendMessage(ChatColor.RED + target.getName() + " already owns this effect.");
+                                plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&c" + target.getName() + " already owns this effect.");
                             }
                         }.runTask(plugin);
                         return;
@@ -128,7 +127,7 @@ public class EffectsCommand implements ISubCommand {
                     new BukkitRunnable() {
                         @Override
                         public void run() {
-                            sender.sendMessage(ChatColor.GREEN + "Successfully gave the " + effectKey + " effect to " + target.getName() + ".");
+                            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&aSuccessfully gave the " + effectKey + " effect to " + target.getName() + ".");
                         }
                     }.runTask(plugin);
 
@@ -136,10 +135,10 @@ public class EffectsCommand implements ISubCommand {
                     new BukkitRunnable() {
                         @Override
                         public void run() {
-                            sender.sendMessage(ChatColor.RED + "A database error occurred.");
+                            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cA database error occurred.");
                         }
                     }.runTask(plugin);
-                    plugin.getLogger().log(java.util.logging.Level.SEVERE, "Failed to give effect to " + target.getName(), e);
+                    plugin.getLogger().log(Level.SEVERE, "Failed to give effect to " + target.getName(), e);
                 }
             }
         }.runTaskAsynchronously(plugin);
@@ -147,24 +146,24 @@ public class EffectsCommand implements ISubCommand {
 
     private void handleRemove(CommandSender sender, String[] args) {
         if (!PermissionsHelper.hasRemoveEffectPermission(sender)) {
-            sender.sendMessage(ColorHelper.parse(plugin.getMessagesHandlerInstance().getNoPermissionMessage()));
+            plugin.getMessagesHelper().sendCommandSenderMessage(sender, plugin.getMessagesHandlerInstance().getNoPermissionMessage());
             return;
         }
         if (args.length < 3) {
-            sender.sendMessage(ChatColor.RED + "Usage: /ee effects remove <player> <effect_id>");
+            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cUsage: /ee effects remove <player> <effect>");
             return;
         }
 
         OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
         if (!target.hasPlayedBefore() && !target.isOnline()) {
-            sender.sendMessage(ChatColor.RED + "Player '" + args[1] + "' not found.");
+            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cPlayer '" + args[1] + "' not found.");
             return;
         }
 
         String effectKey = args[2].toUpperCase();
 
         if (target.isOnline() && PermissionsHelper.hasAllEffectsPermission(target.getPlayer())) {
-            sender.sendMessage(ChatColor.YELLOW + "Cannot remove effects from a player who has wildcard permissions.");
+            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&eCannot remove effects from a player who has wildcard permissions.");
             return;
         }
 
@@ -177,7 +176,7 @@ public class EffectsCommand implements ISubCommand {
                         new BukkitRunnable() {
                             @Override
                             public void run() {
-                                sender.sendMessage(ChatColor.RED + target.getName() + " does not own this effect.");
+                                plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&c" + target.getName() + " does not own this effect.");
                             }
                         }.runTask(plugin);
                         return;
@@ -187,7 +186,7 @@ public class EffectsCommand implements ISubCommand {
                     new BukkitRunnable() {
                         @Override
                         public void run() {
-                            sender.sendMessage(ChatColor.GREEN + "Successfully removed the " + effectKey + " effect from " + target.getName() + ".");
+                            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&aSuccessfully removed the " + effectKey + " effect from " + target.getName() + ".");
                         }
                     }.runTask(plugin);
 
@@ -195,10 +194,10 @@ public class EffectsCommand implements ISubCommand {
                     new BukkitRunnable() {
                         @Override
                         public void run() {
-                            sender.sendMessage(ChatColor.RED + "A database error occurred.");
+                            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cA database error occurred.");
                         }
                     }.runTask(plugin);
-                    plugin.getLogger().log(java.util.logging.Level.SEVERE, "Failed to remove effect from " + target.getName(), e);
+                    plugin.getLogger().log(Level.SEVERE, "Failed to remove effect from " + target.getName(), e);
                 }
             }
         }.runTaskAsynchronously(plugin);
@@ -206,21 +205,21 @@ public class EffectsCommand implements ISubCommand {
 
     private void handleList(CommandSender sender, String[] args) {
         if (!PermissionsHelper.hasListEffectsPermission(sender)) {
-            sender.sendMessage(ColorHelper.parse(plugin.getMessagesHandlerInstance().getNoPermissionMessage()));
+            plugin.getMessagesHelper().sendCommandSenderMessage(sender,plugin.getMessagesHandlerInstance().getNoPermissionMessage());
             return;
         }
         if (args.length < 2) {
-            sender.sendMessage(ChatColor.RED + "Usage: /ee effects list <player>");
+            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cUsage: /ee effects list <player>");
             return;
         }
 
         OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
         if (!target.hasPlayedBefore() && !target.isOnline()) {
-            sender.sendMessage(ChatColor.RED + "Player '" + args[1] + "' not found.");
+            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cPlayer '" + args[1] + "' not found.");
             return;
         }
 
-        sender.sendMessage(ChatColor.YELLOW + "Fetching owned effects for " + target.getName() + "...");
+        plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&eFetching owned effects for " + target.getName() + "...");
 
         new BukkitRunnable() {
             @Override
@@ -231,9 +230,9 @@ public class EffectsCommand implements ISubCommand {
                     // Get effects from the database
                     allOwnedEffects = new HashSet<>(plugin.getDatabaseHandler().GetOwnedEffectKeys(target.getUniqueId()));
                 } catch (SQLException e) {
-                    sender.sendMessage(ChatColor.RED + "A database error occurred while fetching owned effects.");
-                    plugin.getLogger().log(java.util.logging.Level.SEVERE, "Failed to list effects for " + target.getName(), e);
-                    return; // Stop if the database fails
+                    plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cA database error occurred while fetching owned effects.");
+                    plugin.getLogger().log(Level.SEVERE, "Failed to list effects for " + target.getName(), e);
+                    return;
                 }
 
                 // If the player is online, check their permissions
@@ -280,7 +279,7 @@ public class EffectsCommand implements ISubCommand {
             // Get effects from the database
             keysToDisplay = new HashSet<>(plugin.getDatabaseHandler().GetOwnedEffectKeys(player.getUniqueId()));
         } catch (SQLException e) {
-            player.sendMessage(ChatColor.RED + "An error occurred while fetching your effects.");
+            plugin.getMessagesHelper().sendPlayerMessage(player,"&cAn error occurred while fetching your effects.");
             plugin.getLogger().log(Level.SEVERE, "Failed to open owned effects GUI for " + player.getName(), e);
             return;
         }

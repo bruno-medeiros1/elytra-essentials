@@ -4,7 +4,6 @@ import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.utils.Constants;
 import org.bruno.elytraEssentials.utils.PlayerStats;
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
@@ -38,7 +37,7 @@ public class DatabaseHandler {
     }
 
     public void Initialize() throws SQLException {
-        plugin.getMessagesHelper().sendConsoleLog("info", "Using " + storageType.name() + " for data storage.");
+        plugin.getMessagesHelper().sendConsoleMessage("Using " + storageType.name() + " for data storage.");
 
         if (storageType == StorageType.MYSQL) {
             connection = DriverManager.getConnection(
@@ -55,7 +54,7 @@ public class DatabaseHandler {
             File dbFile = new File(databaseFolder, Constants.Files.SQLITE_DB_NAME);
             connection = DriverManager.getConnection("jdbc:sqlite:" + dbFile.getAbsolutePath());
         }
-        plugin.getMessagesHelper().sendConsoleLog("info", "Database connection established.");
+        plugin.getMessagesHelper().sendConsoleMessage("Database connection established.");
         InitializeTables();
     }
 
@@ -79,7 +78,7 @@ public class DatabaseHandler {
         executeTableQuery(Constants.Database.Tables.OWNED_EFFECTS);
         executeTableQuery(Constants.Database.Tables.PLAYER_STATS);
         executeTableQuery(Constants.Database.Tables.PLAYER_ACHIEVEMENTS);
-        plugin.getMessagesHelper().sendConsoleLog("info", "Database tables verified and initialized successfully.");
+        plugin.getMessagesHelper().sendConsoleMessage("Database tables verified and initialized successfully.");
     }
 
     private void executeTableQuery(String tableName) throws SQLException {
@@ -535,7 +534,7 @@ public class DatabaseHandler {
             if (plugin.getElytraFlightListener() != null) {
                 plugin.getElytraFlightListener().saveAllFlightTimes();
             }
-            plugin.getMessagesHelper().sendConsoleLog("info", "All player data saved successfully.");
+            plugin.getMessagesHelper().sendConsoleMessage("All player data saved successfully.");
         } catch (Exception e) {
             plugin.getLogger().log(Level.SEVERE, "A critical error occurred while saving player data.", e);
         }

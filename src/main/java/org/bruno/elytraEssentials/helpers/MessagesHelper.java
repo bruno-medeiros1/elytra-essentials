@@ -9,6 +9,7 @@ import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.utils.ServerVersion;
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 /**
@@ -84,35 +85,9 @@ public class MessagesHelper {
         player.sendMessage(formattedMessage);
     }
 
-    /**
-     * Sends a styled log message to the console with a log level prefix.
-     * @param level The log level (e.g., "info", "warning", "error").
-     * @param message The message to log.
-     */
-    public void sendConsoleLog(String level, String message) {
-        String formattedLevel;
-        String messageColor;
-
-        switch (level.toLowerCase()) {
-            case "warning" -> {
-                messageColor = "&e";
-                formattedLevel = "&e" + level;
-            }
-            case "error" -> {
-                messageColor = "&c";
-                formattedLevel = "&c" + level;
-            }
-            case "severe" -> {
-                messageColor = "&4";
-                formattedLevel = "&4" + level;
-            }
-            default -> { // "info" and any other case
-                messageColor = "&a";
-                formattedLevel = "&a" + level;
-            }
-        }
-        String formattedMessage = ColorHelper.parse(pluginPrefix + "&r[" + formattedLevel + "&r] - " + messageColor + message);
-        Bukkit.getConsoleSender().sendMessage(formattedMessage);
+    public void sendCommandSenderMessage(CommandSender sender, String message){
+        String formattedMessage = ColorHelper.parse(pluginPrefix + "&r" + message);
+        sender.sendMessage(formattedMessage);
     }
 
     /**
@@ -121,7 +96,7 @@ public class MessagesHelper {
      */
     public void sendDebugMessage(String message) {
         if (debugEnabled) {
-            String formattedMessage = ColorHelper.parse("&6Debug&7: " + message);
+            String formattedMessage = ColorHelper.parse(pluginPrefix + "&r[&6Debug&r] - " + message);
             Bukkit.getConsoleSender().sendMessage(formattedMessage);
         }
     }

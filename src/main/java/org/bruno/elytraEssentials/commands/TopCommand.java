@@ -36,12 +36,12 @@ public class TopCommand implements ISubCommand {
     @Override
     public boolean Execute(CommandSender sender, String[] args) {
         if (!(sender instanceof Player || sender instanceof ConsoleCommandSender)) {
-            sender.sendMessage("§cThis command can only be run by players or the console.");
+            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cThis command can only be run by players or the console.");
             return true;
         }
 
         if (args.length > 1){
-            sender.sendMessage(ChatColor.RED + "Usage: /ee top <distance,time,longest>");
+            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cUsage: /ee top <distance,time,longest>");
             return true;
         }
 
@@ -81,7 +81,7 @@ public class TopCommand implements ISubCommand {
                 format = "§e#%d §f%s §7- §b%.0f blocks";
                 break;
             default:
-                sender.sendMessage(ChatColor.RED + "Invalid category. Use: distance, time, longestflight");
+                plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cInvalid category. Use: distance, time, longest");
                 return true;
         }
 
@@ -102,16 +102,18 @@ public class TopCommand implements ISubCommand {
                             String playerName = (player.getName() != null) ? player.getName() : "Unknown";
                             Double value = entry.getValue();
 
-                            String formattedLine;
-                            if (category.equals("time")) {
-                                formattedLine = String.format(format, rank, playerName, TimeHelper.formatFlightTime(value.intValue()));
-                            } else if (category.equals("distance")) {
-                                formattedLine = String.format(format, rank, playerName, value / 1000.0);
-                            } else {
-                                formattedLine = String.format(format, rank, playerName, value);
+                            String formattedLine = "";
+                            switch (category) {
+                                case "time" ->
+                                        formattedLine = String.format(format, rank, playerName, TimeHelper.formatFlightTime(value.intValue()));
+                                case "distance" ->
+                                        formattedLine = String.format(format, rank, playerName, value / 1000.0);
+                                case "longest" -> formattedLine = String.format(format, rank, playerName, value);
                             }
-                            formattedMessages.add(formattedLine);
-                            rank++;
+                            if (!formattedLine.isBlank()) {
+                                formattedMessages.add(formattedLine);
+                                rank++;
+                            }
                         }
                     }
 
@@ -128,7 +130,7 @@ public class TopCommand implements ISubCommand {
                     }.runTask(plugin);
 
                 } catch (SQLException e) {
-                    sender.sendMessage(ChatColor.RED + "An error occurred while fetching the leaderboard.");
+                    plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cAn error occurred while fetching the leaderboard.");
                     plugin.getLogger().log(Level.SEVERE, "An error occurred while fetching the leaderboard.", e);
                 }
             }
@@ -172,7 +174,7 @@ public class TopCommand implements ISubCommand {
         // Create the hover text
         BaseComponent[] hoverText = new TextComponent[]{
                 new TextComponent(TextComponent.fromLegacyText("§fClick to view the\n")),
-                new TextComponent(TextComponent.fromLegacyText(ChatColor.YELLOW + categoryName)),
+                new TextComponent(TextComponent.fromLegacyText("§e" + categoryName)),
                 new TextComponent(TextComponent.fromLegacyText("\n§fleaderboard."))
         };
         categoryComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(hoverText)));

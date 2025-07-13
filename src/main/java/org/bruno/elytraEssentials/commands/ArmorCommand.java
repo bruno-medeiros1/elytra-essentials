@@ -10,7 +10,6 @@ import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bruno.elytraEssentials.utils.Constants;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
@@ -44,13 +43,13 @@ public class ArmorCommand implements ISubCommand {
             return true;
         }
 
-        sender.sendMessage(ChatColor.RED + "Usage: /ee armor <repair>");
+        plugin.getMessagesHelper().sendCommandSenderMessage(sender, "&cUsage: /ee armor <repair>");
         return true;
     }
 
     private void handleInfoCommand(CommandSender sender) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(ChatColor.RED + "This command can only be run by a player.");
+            plugin.getMessagesHelper().sendCommandSenderMessage(sender, "&cThis command can only be run by a player.");
             return;
         }
 
@@ -61,13 +60,13 @@ public class ArmorCommand implements ISubCommand {
 
         ItemStack chestplate = player.getInventory().getChestplate();
         if (!isArmoredElytra(chestplate)) {
-            player.sendMessage(ChatColor.RED + "You are not currently wearing an Armored Elytra.");
+            plugin.getMessagesHelper().sendPlayerMessage(player, "&cYou are not currently wearing an Armored Elytra.");
             return;
         }
 
         ItemMeta meta = chestplate.getItemMeta();
         if (meta == null) {
-            player.sendMessage(ChatColor.RED + "Error: Could not read item data.");
+            plugin.getMessagesHelper().sendPlayerMessage(player, "&cError: Could not read item data.");
             return;
         }
 
@@ -88,7 +87,7 @@ public class ArmorCommand implements ISubCommand {
 
     private void handleRepairCommand(CommandSender sender) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(ChatColor.RED + "This command can only be run by a player.");
+            plugin.getMessagesHelper().sendCommandSenderMessage(sender, "&cThis command can only be run by a player.");
             return;
         }
 
@@ -99,7 +98,7 @@ public class ArmorCommand implements ISubCommand {
 
         ItemStack chestplate = player.getInventory().getChestplate();
         if (!isArmoredElytra(chestplate)) {
-            player.sendMessage(ChatColor.RED + "You must be wearing an Armored Elytra to repair it.");
+            plugin.getMessagesHelper().sendPlayerMessage(player,"&eYou must be wearing an Armored Elytra to repair it.");
             return;
         }
 
@@ -114,7 +113,7 @@ public class ArmorCommand implements ISubCommand {
         int maxDurability = container.getOrDefault(maxDurabilityKey, PersistentDataType.INTEGER, 1);
 
         if (currentDurability >= maxDurability) {
-            player.sendMessage(ChatColor.GREEN + "Your Armored Elytra's plating is already at full durability!");
+            plugin.getMessagesHelper().sendPlayerMessage(player,"&aYour Armored Elytra's plating is already at full durability!");
             return;
         }
 
@@ -132,7 +131,7 @@ public class ArmorCommand implements ISubCommand {
         chestplate.setItemMeta(meta);
 
         player.playSound(player.getLocation(), Sound.ENTITY_IRON_GOLEM_REPAIR, 1.0f, 1.2f);
-        player.sendMessage(ChatColor.GREEN + "Your Armored Elytra's plating has been fully repaired!");
+        plugin.getMessagesHelper().sendPlayerMessage(player,"&aYour Armored Elytra's plating has been fully repaired!");
     }
 
     private boolean handleRepairPayment(Player player) {

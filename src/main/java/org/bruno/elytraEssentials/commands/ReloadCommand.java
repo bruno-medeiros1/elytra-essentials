@@ -21,11 +21,11 @@ public class ReloadCommand implements ISubCommand {
     @Override
     public boolean Execute(CommandSender sender, String[] args) {
         if (!PermissionsHelper.hasReloadPermission(sender)) {
-            sender.sendMessage(ColorHelper.parse(plugin.getMessagesHandlerInstance().getNoPermissionMessage()));
+            plugin.getMessagesHelper().sendCommandSenderMessage(sender, ColorHelper.parse(plugin.getMessagesHandlerInstance().getNoPermissionMessage()));
             return true;
         }
 
-        sender.sendMessage(ColorHelper.parse(plugin.getMessagesHandlerInstance().getReloadStartMessage()));
+        plugin.getMessagesHelper().sendCommandSenderMessage(sender, ColorHelper.parse(plugin.getMessagesHandlerInstance().getReloadStartMessage()));
 
         // Start the Reload Process
         try {
@@ -38,14 +38,14 @@ public class ReloadCommand implements ISubCommand {
             plugin.setupHandlers();
 
             if (!plugin.setupDatabase()) {
-                sender.sendMessage("§cReload failed: Could not re-establish database connection. Check console.");
+                plugin.getMessagesHelper().sendCommandSenderMessage(sender,"§cReload failed: Could not re-establish database connection. Check console.");
                 return true;
             }
 
             plugin.startAllPluginTasks();
 
             // Validate the flight time for online players.
-            plugin.getMessagesHelper().sendConsoleLog("info", "Reloading data for all online players...");
+            plugin.getMessagesHelper().sendConsoleMessage("Reloading data for all online players...");
             plugin.getElytraFlightListener().reloadOnlinePlayerFlightTimes();
 
             // Reload the main stats for all online players.
@@ -53,9 +53,9 @@ public class ReloadCommand implements ISubCommand {
                 plugin.getStatsHandler().loadPlayerStats(player);
             }
 
-            sender.sendMessage(ColorHelper.parse(plugin.getMessagesHandlerInstance().getReloadSuccessMessage()));
+            plugin.getMessagesHelper().sendCommandSenderMessage(sender, plugin.getMessagesHandlerInstance().getReloadSuccessMessage());
         } catch (Exception e) {
-            sender.sendMessage("§cAn error occurred during reload. The server may be in an unstable state. Please check the console.");
+            plugin.getMessagesHelper().sendCommandSenderMessage(sender, "&cAn error occurred during reload. The server may be in an unstable state. Please check the console.");
             plugin.getLogger().log(Level.SEVERE, "A critical error occurred during plugin reload.", e);
         }
 

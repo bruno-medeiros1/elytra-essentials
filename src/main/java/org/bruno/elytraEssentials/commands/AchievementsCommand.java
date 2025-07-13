@@ -10,9 +10,7 @@ import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bruno.elytraEssentials.utils.Constants;
 import org.bruno.elytraEssentials.utils.StatType;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -36,7 +34,7 @@ public class AchievementsCommand implements ISubCommand {
     @Override
     public boolean Execute(CommandSender sender, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(ChatColor.RED + "This command can only be run by a player.");
+            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cThis command can only be run by a player.");
             return true;
         }
 
@@ -73,7 +71,7 @@ public class AchievementsCommand implements ISubCommand {
         try {
             unlockedAchievements = plugin.getDatabaseHandler().getUnlockedAchievementIds(player.getUniqueId());
         } catch (SQLException e) {
-            player.sendMessage(ChatColor.RED + "Could not load your achievement data.");
+            plugin.getMessagesHelper().sendPlayerMessage(player,"&cCould not load your achievement data.");
             plugin.getLogger().log(Level.SEVERE, "Failed to fetch achievements for player " + player.getName(), e);
             return;
         }

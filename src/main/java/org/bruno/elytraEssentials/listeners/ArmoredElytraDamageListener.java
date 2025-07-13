@@ -80,7 +80,7 @@ public class ArmoredElytraDamageListener implements Listener {
             container.set(new NamespacedKey(plugin, Constants.NBT.PLATING_SHATTERED_TAG), PersistentDataType.INTEGER, shatteredCount + 1);
 
             player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
-            player.sendMessage("§cYour Armored Elytra's plating has shattered!");
+            plugin.getMessagesHelper().sendPlayerMessage(player, "&cYour Armored Elytra's plating has shattered!");
         }
     }
 

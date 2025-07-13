@@ -160,7 +160,7 @@ public final class ElytraEssentials extends JavaPlugin {
     }
 
     private void setupListeners() {
-        messagesHelper.sendConsoleLog("info", "Registering event listeners...");
+        Bukkit.getLogger().info("Registering event listeners...");
 
         // Initialize all listeners and store their instances
         this.elytraFlightListener = new ElytraFlightListener(this);
@@ -190,7 +190,7 @@ public final class ElytraEssentials extends JavaPlugin {
     }
 
     private void setupCommands() {
-        messagesHelper.sendConsoleLog("info", "Registering commands...");
+        Bukkit.getLogger().info("Registering commands...");
 
         this.helpCommand = new HelpCommand(this);
         this.reloadCommand = new ReloadCommand(this);
@@ -232,7 +232,7 @@ public final class ElytraEssentials extends JavaPlugin {
             return true;
         }
         economy = rsp.getProvider();
-        messagesHelper.sendConsoleLog("info", "Successfully hooked into Vault.");
+        Bukkit.getLogger().info("Successfully hooked into Vault.");
         return true;
     }
 
@@ -240,7 +240,7 @@ public final class ElytraEssentials extends JavaPlugin {
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
             this.elytraStatsExpansion = new ElytraEssentialsPlaceholders(this);
             this.elytraStatsExpansion.register();
-            messagesHelper.sendConsoleLog("info", "Successfully hooked into PlaceholderAPI.");
+            Bukkit.getLogger().info("Successfully hooked into PlaceholderAPI.");
         } else {
             getLogger().warning("PlaceholderAPI not found! Placeholders will not work.");
         }
@@ -256,7 +256,7 @@ public final class ElytraEssentials extends JavaPlugin {
         if (configHandler.getIsCheckForUpdatesEnabled()) {
             new UpdaterHandler(this, Constants.Integrations.SPIGOT_RESOURCE_ID).getVersion(latestVersion -> {
                 if (VersionHelper.isNewerVersion(getDescription().getVersion(), latestVersion)) {
-                    messagesHelper.sendConsoleLog("warning", "A new version (" + latestVersion + ") is available!");
+                    Bukkit.getLogger().warning("A new version (" + latestVersion + ") is available!");
                     this.isNewerVersionAvailable = true;
                     this.latestVersion = latestVersion;
                 }

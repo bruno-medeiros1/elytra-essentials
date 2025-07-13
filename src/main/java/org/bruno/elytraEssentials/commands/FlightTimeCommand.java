@@ -1,12 +1,10 @@
 package org.bruno.elytraEssentials.commands;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
-import org.bruno.elytraEssentials.helpers.ColorHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.helpers.TimeHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -29,12 +27,12 @@ public class FlightTimeCommand implements ISubCommand {
     @Override
     public boolean Execute(CommandSender sender, String[] args) {
         if (!plugin.getConfigHandlerInstance().getIsTimeLimitEnabled()) {
-            sender.sendMessage(ColorHelper.parse(plugin.getMessagesHandlerInstance().getFeatureNotEnabled()));
+            plugin.getMessagesHelper().sendCommandSenderMessage(sender, plugin.getMessagesHandlerInstance().getFeatureNotEnabled());
             return true;
         }
 
         if (!PermissionsHelper.hasFlightTimeCommandPermission(sender)) {
-            sender.sendMessage(ColorHelper.parse(plugin.getMessagesHandlerInstance().getNoPermissionMessage()));
+            plugin.getMessagesHelper().sendCommandSenderMessage(sender, plugin.getMessagesHandlerInstance().getNoPermissionMessage());
             return true;
         }
 
@@ -80,7 +78,7 @@ public class FlightTimeCommand implements ISubCommand {
                     }
 
                     if (finalAmount <= 0) {
-                        sender.sendMessage("§cPlayer already has the maximum flight time.");
+                        plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cPlayer already has the maximum flight time.");
                         return;
                     }
 
@@ -90,8 +88,7 @@ public class FlightTimeCommand implements ISubCommand {
                         String message = plugin.getMessagesHandlerInstance().getElytraFlightTimeAdded().replace("{0}", TimeHelper.formatFlightTime(finalAmount));
                         plugin.getMessagesHelper().sendPlayerMessage(target.getPlayer(), message);
                     }
-                    sender.sendMessage("§aAdded " + TimeHelper.formatFlightTime(finalAmount) + " of flight time to " + target.getName() + ".");
-
+                    plugin.getMessagesHelper().sendConsoleMessage("&aAdded " + TimeHelper.formatFlightTime(finalAmount) + " of flight time to " + target.getName() + ".");
                 } catch (SQLException e) {
                     handleSqlException(sender, "add flight time to", target.getName(), e);
                 }
@@ -123,7 +120,7 @@ public class FlightTimeCommand implements ISubCommand {
                         String message = plugin.getMessagesHandlerInstance().getElytraFlightTimeRemoved().replace("{0}", TimeHelper.formatFlightTime(amount));
                         plugin.getMessagesHelper().sendPlayerMessage(target.getPlayer(), message);
                     }
-                    sender.sendMessage("§aRemoved " + TimeHelper.formatFlightTime(amount) + " of flight time from " + target.getName() + ".");
+                    plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&aRemoved " + TimeHelper.formatFlightTime(amount) + " of flight time from " + target.getName() + ".");
 
                 } catch (SQLException e) {
                     handleSqlException(sender, "remove flight time from", target.getName(), e);
@@ -156,7 +153,7 @@ public class FlightTimeCommand implements ISubCommand {
                         String message = plugin.getMessagesHandlerInstance().getElytraFlightTimeSet().replace("{0}", TimeHelper.formatFlightTime(finalAmount));
                         plugin.getMessagesHelper().sendPlayerMessage(target.getPlayer(), message);
                     }
-                    sender.sendMessage("§aSet " + target.getName() + "'s flight time to " + TimeHelper.formatFlightTime(finalAmount));
+                    plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&aSet " + target.getName() + "'s flight time to " + TimeHelper.formatFlightTime(finalAmount));
 
                 } catch (SQLException e) {
                     handleSqlException(sender, "set flight time for", target.getName(), e);
@@ -182,7 +179,7 @@ public class FlightTimeCommand implements ISubCommand {
                         plugin.getElytraFlightListener().setFlightTime(target.getUniqueId(), 0);
                         plugin.getMessagesHelper().sendPlayerMessage(target.getPlayer(), plugin.getMessagesHandlerInstance().getElytraFlightTimeCleared());
                     }
-                    sender.sendMessage("§aCleared all flight time for " + target.getName() + ".");
+                    plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&aCleared all flight time for " + target.getName() + ".");
                 } catch (SQLException e) {
                     handleSqlException(sender, "clear flight time for", target.getName(), e);
                 }
@@ -193,11 +190,11 @@ public class FlightTimeCommand implements ISubCommand {
     private boolean validateTargetPlayer(CommandSender sender, OfflinePlayer target, String targetName) {
         if (!target.hasPlayedBefore() && !target.isOnline()) {
             String message = plugin.getMessagesHandlerInstance().getPlayerNotFound().replace("{0}", targetName);
-            sender.sendMessage(ColorHelper.parse(message));
+            plugin.getMessagesHelper().sendCommandSenderMessage(sender, message);
             return false;
         }
         if (target.isOnline() && PermissionsHelper.PlayerBypassTimeLimit(target.getPlayer())) {
-            sender.sendMessage("§cThe player " + targetName + " has time limit bypass and cannot be managed.");
+            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cThe player " + targetName + " has time limit bypass and cannot be managed.");
             return false;
         }
         return true;
@@ -215,14 +212,14 @@ public class FlightTimeCommand implements ISubCommand {
             if (value <= 0) throw new NumberFormatException();
             return value;
         } catch (NumberFormatException e) {
-            sender.sendMessage("§cInvalid number. Please enter a positive integer.");
+            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cInvalid number. Please enter a positive integer.");
             return -1;
         }
     }
 
     private void handleSqlException(CommandSender sender, String action, String targetName, SQLException e) {
         plugin.getLogger().log(Level.SEVERE, "Failed to " + action + " " + targetName, e);
-        sender.sendMessage(ChatColor.RED + "A database error occurred. Please check the console for details.");
+        plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cA database error occurred. Please check the console for details.");
     }
 
     @Override

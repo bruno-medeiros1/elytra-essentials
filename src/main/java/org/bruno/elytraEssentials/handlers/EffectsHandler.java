@@ -64,7 +64,7 @@ public class EffectsHandler {
             plugin.getMessagesHelper().sendPlayerMessage(player, message);
             return true;
         } catch (SQLException e) {
-            handleSqlException(e, player, "An error occurred while processing your purchase.");
+            handleSqlException(e, player, "&cAn error occurred while processing your purchase.");
             return false;
         }
     }
@@ -88,7 +88,7 @@ public class EffectsHandler {
             plugin.getMessagesHelper().sendPlayerMessage(player, message);
             return true;
         } catch (SQLException e) {
-            handleSqlException(e, player, "An error occurred while trying to activate the effect!");
+            handleSqlException(e, player, "&cAn error occurred while trying to activate the effect!");
             return false;
         }
     }
@@ -112,7 +112,7 @@ public class EffectsHandler {
             plugin.getMessagesHelper().sendPlayerMessage(player, message);
             return true;
         } catch (SQLException e) {
-            handleSqlException(e, player, "An error occurred while updating your effect.");
+            handleSqlException(e, player, "&cAn error occurred while updating your effect.");
             return false;
         }
     }
@@ -484,7 +484,7 @@ public class EffectsHandler {
 
     private void handleSqlException(SQLException e, Player player, String message) {
         player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 0.8f);
-        player.sendMessage(ChatColor.RED + message);
+        plugin.getMessagesHelper().sendPlayerMessage(player, message);
         plugin.getLogger().log(Level.SEVERE, "A database error occurred for player " + player.getName(), e);
     }
 }

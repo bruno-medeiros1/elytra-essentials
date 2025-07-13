@@ -12,7 +12,6 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
-import org.bukkit.ChatColor;
 import org.bukkit.command.TabCompleter;
 import org.jetbrains.annotations.NotNull;
 
@@ -36,7 +35,7 @@ public class ElytraEssentialsCommand implements CommandExecutor, TabCompleter {
                 subCommands.get("help").Execute(sender, new String[0]);
             } catch (SQLException e) {
                 plugin.getLogger().log(Level.SEVERE, "A database error occurred while executing command /ee help'" + "' for " + sender.getName(), e);
-                sender.sendMessage(ChatColor.RED + "An unexpected database error occurred. Please contact an administrator.");
+                plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cAn unexpected database error occurred. Please contact an administrator.");
                 return true;
             }
             return true;
@@ -46,7 +45,7 @@ public class ElytraEssentialsCommand implements CommandExecutor, TabCompleter {
         ISubCommand commandHandler = subCommands.get(subCommandName);
 
         if (commandHandler == null) {
-            sender.sendMessage(ChatColor.RED + "Unknown subcommand. Use /ee help for available commands.");
+            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cUnknown subcommand. Use /ee help for available commands.");
             return true;
         }
 
@@ -56,11 +55,11 @@ public class ElytraEssentialsCommand implements CommandExecutor, TabCompleter {
             return commandHandler.Execute(sender, subCommandArgs);
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "A database error occurred while executing command '" + subCommandName + "' for " + sender.getName(), e);
-            sender.sendMessage(ChatColor.RED + "An unexpected database error occurred. Please contact an administrator.");
+            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cAn unexpected database error occurred. Please contact an administrator.");
             return true;
         } catch (Exception e) {
             plugin.getLogger().log(Level.SEVERE, "An unexpected error occurred while executing command '" + subCommandName + "' for " + sender.getName(), e);
-            sender.sendMessage(ChatColor.RED + "An unexpected error occurred. Please contact an administrator.");
+            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cAn unexpected error occurred. Please contact an administrator.");
             return true;
         }
     }
