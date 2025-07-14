@@ -56,42 +56,67 @@ public final class GuiHelper {
 
     public static ItemStack createPreviousPageButton(boolean isActive) {
         if (isActive) {
-            return createCustomHead(Constants.Skull.ARROW_LEFT_ACTIVE, "§aPrevious Page", "§7Click to go to the previous page.");
+            try {
+                return createCustomHead(Constants.Skull.ARROW_LEFT_ACTIVE, "§aPrevious Page", "§7Click to go to the previous page.");
+            } catch (Throwable e) {
+                return createGuiItem(Material.RED_STAINED_GLASS_PANE, "§aPrevious Page", "§7Click to go to the previous page.");
+            }
         } else {
-            return createCustomHead(Constants.Skull.ARROW_LEFT_INACTIVE, "§cPrevious Page", "§7You are on the first page.");
+            try {
+                return createCustomHead(Constants.Skull.ARROW_LEFT_INACTIVE, "§aPrevious Page", "§7Click to go to the previous page.");
+            } catch (Throwable e) {
+                return createGuiItem(Material.RED_STAINED_GLASS_PANE, "§aPrevious Page", "§7Click to go to the previous page.");
+            }
         }
     }
 
     public static ItemStack createNextPageButton(boolean isActive) {
         if (isActive) {
-            return createCustomHead(Constants.Skull.ARROW_RIGHT_ACTIVE, "§aNext Page", "§7Click to go to the next page.");
+            try {
+                return createCustomHead(Constants.Skull.ARROW_RIGHT_ACTIVE, "§aNext Page", "§7Click to go to the next page.");
+            } catch (Throwable e) {
+                return createGuiItem(Material.GREEN_STAINED_GLASS_PANE, "§aNext Page", "§7Click to go to the next page.");
+            }
         } else {
-            return createCustomHead(Constants.Skull.ARROW_RIGHT_INACTIVE, "§cNext Page", "§7You are on the last page.");
+            try {
+                return createCustomHead(Constants.Skull.ARROW_RIGHT_INACTIVE, "§cNext Page", "§7You are on the last page.");
+            } catch (Throwable e) {
+                return createGuiItem(Material.GRAY_STAINED_GLASS_PANE, "§cNext Page", "§7You are on the last page.");
+            }
         }
     }
 
     public static ItemStack createAcceptButton(String action, List<String> lore){
-        return createCustomHead(Constants.Skull.GREEN_CHECKMARK, "§aConfirm " + action, lore.toArray(new String[0]));
+        try {
+            return createCustomHead(Constants.Skull.GREEN_CHECKMARK, "§aConfirm " + action, lore.toArray(new String[0]));
+        } catch (Throwable e) {
+            return createGuiItem(Material.GREEN_STAINED_GLASS_PANE, "§aConfirm " + action, lore.toArray(new String[0]));
+        }
     }
 
     public static ItemStack createCancelButton() {
-        return createCustomHead(Constants.Skull.RED_X, "§cCancel", "§7Click here to cancel the operation.");
+        try {
+            return createCustomHead(Constants.Skull.RED_X, "§cCancel", "§7Click here to cancel the operation.");
+        } catch (Throwable e) {
+            return createGuiItem(Material.RED_STAINED_GLASS_PANE, "§cCancel", "§7Click here to cancel the operation.");
+        }
     }
 
     /**
      * Creates a player head with a custom texture from a Base64 string.
      * This method uses the modern PlayerProfile API and does not require reflection or external libraries.
+     * Only compatible with 1.19 and above.
      */
     private static ItemStack createCustomHead(String base64, String name, String... lore) {
         ItemStack head = new ItemStack(Material.PLAYER_HEAD);
         SkullMeta meta = (SkullMeta) head.getItemMeta();
         if (meta == null) return head;
 
-        // Create a new, blank player profile.
-        PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID());
-        PlayerTextures textures = profile.getTextures();
-
         try {
+            // Create a new, blank player profile.
+            PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID());
+            PlayerTextures textures = profile.getTextures();
+
             // Decode the Base64 string to get the texture URL.
             byte[] decoded = Base64.getDecoder().decode(base64);
             String decodedString = new String(decoded, StandardCharsets.UTF_8);
@@ -105,20 +130,24 @@ public final class GuiHelper {
                 throw new IllegalArgumentException("Could not find URL in decoded texture data.");
             }
 
-        } catch (Exception e) {
+            // Apply the textured profile to the skull meta.
+            profile.setTextures(textures);
+            meta.setOwnerProfile(profile);
+
+            // Set display name and lore.
+            meta.setDisplayName(name);
+            meta.setLore(Arrays.asList(lore));
+            head.setItemMeta(meta);
+        }
+        catch (Exception e) {
             // Fallback to a default item if the texture fails to load
             Bukkit.getLogger().warning("Failed to create custom head texture: " + e.getMessage());
             return createGuiItem(Material.BARRIER, name, lore);
         }
+        catch (Throwable e){
+            throw e; // Re-throw any other unexpected errors
+        }
 
-        // Apply the textured profile to the skull meta.
-        profile.setTextures(textures);
-        meta.setOwnerProfile(profile);
-
-        // Set display name and lore.
-        meta.setDisplayName(name);
-        meta.setLore(Arrays.asList(lore));
-        head.setItemMeta(meta);
         return head;
     }
 
