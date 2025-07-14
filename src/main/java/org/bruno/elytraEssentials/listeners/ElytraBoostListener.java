@@ -3,6 +3,7 @@ package org.bruno.elytraEssentials.listeners;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.utils.PlayerStats;
+import org.bruno.elytraEssentials.utils.ServerVersion;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
@@ -204,8 +205,18 @@ public class ElytraBoostListener implements Listener {
 
                     player.getWorld().playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.2f, 1.0f);
 
-                    player.getWorld().spawnParticle(Particle.EXPLOSION, player.getLocation(), 1);
-                    player.getWorld().spawnParticle(Particle.FIREWORK, player.getLocation(), 30, 0.5, 0.5, 0.5, 0.1);
+                    if (plugin.getServerVersion().ordinal() == ServerVersion.V_1_21.ordinal() ) {
+                        player.getWorld().spawnParticle(Particle.EXPLOSION, player.getLocation(), 1);
+                        player.getWorld().spawnParticle(Particle.FIREWORK, player.getLocation(), 30, 0.5, 0.5, 0.5, 0.1);
+                    }
+                    else {
+                        // For versions before 1.20 and below, use the old explosion particle
+                        Particle particle = Particle.valueOf("EXPLOSION_NORMAL");
+                        player.getWorld().spawnParticle(particle, player.getLocation(), 1);
+
+                        Particle particle2 = Particle.valueOf("FIREWORKS_SPARK");
+                        player.getWorld().spawnParticle(particle2, player.getLocation(), 30, 0.5, 0.5, 0.5, 0.1);
+                    }
 
                     cancelCharge(player);
                 }
