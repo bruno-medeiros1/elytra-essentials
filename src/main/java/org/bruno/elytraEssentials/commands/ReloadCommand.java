@@ -38,15 +38,18 @@ public class ReloadCommand implements ISubCommand {
             plugin.setupHandlers();
 
             if (!plugin.setupDatabase()) {
-                plugin.getMessagesHelper().sendCommandSenderMessage(sender,"§cReload failed: Could not re-establish database connection. Check console.");
+                plugin.getLogger().severe("§cReload failed: Could not re-establish database connection. Check console.");
                 return true;
             }
 
-            plugin.startAllPluginTasks();
-
             // Validate the flight time for online players.
-            plugin.getMessagesHelper().sendConsoleMessage("Reloading data for all online players...");
+            plugin.getLogger().info("Reloading data for all online players...");
             plugin.getElytraFlightListener().reloadOnlinePlayerFlightTimes();
+
+            // Re-assign the config variables for the ElytraFlightListener
+            plugin.getElytraFlightListener().assignConfigVariables();
+
+            plugin.startAllPluginTasks();
 
             // Reload the main stats for all online players.
             for (Player player : Bukkit.getOnlinePlayers()) {

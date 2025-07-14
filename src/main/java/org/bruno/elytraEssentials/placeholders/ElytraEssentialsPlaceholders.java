@@ -68,19 +68,19 @@ public class ElytraEssentialsPlaceholders extends PlaceholderExpansion {
         switch (identifier.toLowerCase()) {
             // Flight Stats
             case "total_distance_km":
-                return String.format("%.1f", stats.getTotalDistance() / 1000.0);
+                return String.format("%.1f km", stats.getTotalDistance() / 1000.0);
             case "total_distance_blocks":
-                return String.format("%.0f", stats.getTotalDistance());
+                return String.format("%.0f blocks", stats.getTotalDistance());
             case "total_flight_time":
                 return TimeHelper.formatFlightTime((int) stats.getTotalTimeSeconds());
             case "longest_flight":
-                return String.format("%.0f", stats.getLongestFlight());
+                return String.format("%.0f blocks", stats.getLongestFlight());
             case "average_speed":
                 if (stats.getTotalTimeSeconds() > 0) {
                     double avgSpeedKmh = (stats.getTotalDistance() / stats.getTotalTimeSeconds()) * 3.6;
-                    return String.format("%.1f", avgSpeedKmh);
+                    return String.format("%.1f km/h", avgSpeedKmh);
                 }
-                return "0.0";
+                return "0.0 km/h";
 
             // Boost Stats
             case "boosts_used":

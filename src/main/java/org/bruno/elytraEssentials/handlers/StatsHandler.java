@@ -106,7 +106,7 @@ public class StatsHandler {
         };
     }
 
-    //  Gliding State ---
+    // Gliding State
     public void setGliding(Player player, boolean isGliding) {
         if (isGliding) {
             glidingPlayers.add(player.getUniqueId());

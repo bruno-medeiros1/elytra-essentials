@@ -154,7 +154,7 @@ public class StatsCommand implements ISubCommand {
         sender.sendMessage(secondary + arrow + text + "Saves: " + value + String.format("%d times", stats.getPluginSaves()));
         sender.sendMessage(secondary + arrow + text + "Effects Unlocked: " + value + String.format("%d/%d", effectsOwned, totalEffects));
         sender.sendMessage(secondary + arrow + text + "Active Effect: " + value + activeEffect);
-        // ... (your existing logic to display effects) ...
+
         sender.sendMessage("");
         sender.sendMessage(primary + "§m----------------------------------------------------");
     }

@@ -42,6 +42,7 @@ public class ImportDbCommand implements ISubCommand {
         if (args.length < 1) {
             sender.sendMessage("§cUsage: /ee importdb <backup_filename>");
             sender.sendMessage("§eUse tab-complete to see available backup files.");
+            sender.sendMessage("§7If none are shown, please wait for your first backup file to be generated.");
             return true;
         }
 

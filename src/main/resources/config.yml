@@ -8,10 +8,9 @@
 #   general: Toggles for plugin-wide features like debug mode and protections.
 #   armored-elytra: Settings for the armored elytra feature.
 #   storage: Configure your database settings (SQLite or MySQL).
-#   flight:  Control all aspects of elytra mechanics like speed, time, and worlds.
-#   boost:   Settings for the elytra boost feature.
+#   flight:  Control all aspects of elytra mechanics like speed, time, worlds, boost and combat-tag.
 #
-# For messages and shop items, please see messages.yml and shop.yml.
+# For messages, achievements and shop items, please see messages.yml, achievements.yml and shop.yml.
 
 general:
   # Enable detailed debug messages in the server console.
@@ -117,10 +116,11 @@ flight:
 
     charged-jump:
       # Set to true to enable the charged jump feature from the ground.
+      # If boost is not enabled, this will not work.
       enabled: true
 
       # The time in seconds it takes to fully charge the jump.
-      charge-time: 2
+      charge-time: 2  # [Default: 2 seconds]
 
       # The strength of the upward launch. 1.5 is a strong vertical boost.
       jump-strength: 1.5
