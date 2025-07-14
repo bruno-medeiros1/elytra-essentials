@@ -160,8 +160,8 @@ public class ArmoredElytraListener implements Listener {
     }
 
     private void removeArmorAttributes(Player player) {
-        AttributeInstance armorAttr = player.getAttribute(Attribute.ARMOR);
-        AttributeInstance toughnessAttr = player.getAttribute(Attribute.ARMOR_TOUGHNESS);
+        AttributeInstance armorAttr = plugin.getArmoredElytraHelper().getArmorAttribute(player);
+        AttributeInstance toughnessAttr = plugin.getArmoredElytraHelper().getToughnessAttribute(player);
 
         if (armorAttr != null) {
             for (AttributeModifier modifier : armorAttr.getModifiers()) {

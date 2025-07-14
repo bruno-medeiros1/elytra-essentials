@@ -2,8 +2,12 @@ package org.bruno.elytraEssentials.helpers;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.utils.Constants;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
@@ -220,8 +224,26 @@ public class ArmoredElytraHelper {
         return item != null && item.getType() == Material.ELYTRA && !isArmoredElytra(item);
     }
 
-    public boolean isEmpty(ItemStack item) {
-        return item == null || item.getType() == Material.AIR;
+    public AttributeInstance getArmorAttribute(Player player) {
+        Attribute attribute = Registry.ATTRIBUTE.get(NamespacedKey.minecraft("generic.armor"));
+
+        if (attribute == null) {
+            plugin.getLogger().warning("Unable to resolve 'generic.armor' attribute. Report this to the plugin author!");
+            return null;
+        }
+
+        return player.getAttribute(attribute);
+    }
+
+    public AttributeInstance getToughnessAttribute(Player player) {
+        Attribute attribute = Registry.ATTRIBUTE.get(NamespacedKey.minecraft("generic.armor_toughness"));
+
+        if (attribute == null) {
+            plugin.getLogger().warning("Unable to resolve 'generic.armor_toughness' attribute. Report this to the plugin author!");
+            return null;
+        }
+
+        return player.getAttribute(attribute);
     }
 
     private int getArmorPoints(Material armorType) {
