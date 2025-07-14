@@ -151,7 +151,7 @@ public class StatsCommand implements ISubCommand {
         sender.sendMessage(secondary + arrow + text + "Average Speed: " + value + String.format("%.1f km/h", avgSpeedKmh));
         sender.sendMessage("");
         sender.sendMessage(secondary + arrow + text + "Boosts Used: " + value + String.format("%d (%d Super Boosts)", stats.getBoostsUsed(), stats.getSuperBoostsUsed()));
-        sender.sendMessage(secondary + arrow + text + "Plugin Saves: " + value + String.format("%d times", stats.getPluginSaves()));
+        sender.sendMessage(secondary + arrow + text + "Saves: " + value + String.format("%d times", stats.getPluginSaves()));
         sender.sendMessage(secondary + arrow + text + "Effects Unlocked: " + value + String.format("%d/%d", effectsOwned, totalEffects));
         sender.sendMessage(secondary + arrow + text + "Active Effect: " + value + activeEffect);
         // ... (your existing logic to display effects) ...

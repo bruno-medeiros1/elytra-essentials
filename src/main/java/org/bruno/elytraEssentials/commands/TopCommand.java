@@ -154,9 +154,9 @@ public class TopCommand implements ISubCommand {
         player.sendMessage("§7Click a category to view the top players.");
         player.sendMessage("");
 
-        sendLeaderboardLine(player, "§7Total Distance Flown", "/ee top distance");
-        sendLeaderboardLine(player, "§7Total Flight Time", "/ee top time");
-        sendLeaderboardLine(player, "§7Longest Single Flight", "/ee top longest");
+        sendLeaderboardLine(player, "§eTotal Distance Flown", "/ee top distance");
+        sendLeaderboardLine(player, "§eTotal Flight Time", "/ee top time");
+        sendLeaderboardLine(player, "§eLongest Single Flight", "/ee top longest");
 
         player.sendMessage("");
         player.sendMessage("§6§m----------------------------------------------------");
