@@ -4,8 +4,9 @@ import org.bruno.elytraEssentials.utils.Constants;
 import org.bruno.elytraEssentials.utils.StatType;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -13,6 +14,8 @@ import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.profile.PlayerProfile;
 import org.bukkit.profile.PlayerTextures;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -175,6 +178,25 @@ public final class GuiHelper {
         }
 
         return createGuiItem(Material.HOPPER, "§eFilter: §b" + filterName, lore.toArray(new String[0]));
+    }
+
+    /**
+     * In API versions 1.20.6 and earlier, InventoryView is a class.
+     * In versions 1.21 and later, it is an interface.
+     * This method uses reflection to get the top Inventory object from the
+     * InventoryView associated with an InventoryEvent, to avoid runtime errors.
+     * @param event The generic InventoryEvent with an InventoryView to inspect.
+     * @return The top Inventory object from the event's InventoryView.
+     */
+    public static Inventory getTopInventory(InventoryEvent event) {
+        try {
+            Object view = event.getView();
+            Method getTopInventory = view.getClass().getMethod("getTopInventory");
+            getTopInventory.setAccessible(true);
+            return (Inventory) getTopInventory.invoke(view);
+        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**

@@ -35,7 +35,7 @@ public class ForgeGuiListener implements Listener {
     public void onInventoryClick(InventoryClickEvent event) {
         if (!plugin.getConfigHandlerInstance().getIsArmoredElytraEnabled()) return;
 
-        Inventory topInventory = event.getView().getTopInventory();
+        Inventory topInventory = GuiHelper.getTopInventory(event);
         if (topInventory.getHolder() == null || !(topInventory.getHolder() instanceof ForgeHolder)) return;
 
         if (!(event.getWhoClicked() instanceof Player player)) return;
