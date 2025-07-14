@@ -74,10 +74,25 @@ public class ShopCommand implements ISubCommand {
         int startIndex = page * Constants.GUI.SHOP_ITEMS_PER_PAGE;
         int endIndex = Math.min(startIndex + Constants.GUI.SHOP_ITEMS_PER_PAGE, effectsList.size());
 
-        for (int i = 0; i < (endIndex - startIndex); i++) {
-            Map.Entry<String, ElytraEffect> entry = effectsList.get(startIndex + i);
+        int guiSlotIndex = 0;
+        for (int i = startIndex; i < endIndex; i++) {
+            Map.Entry<String, ElytraEffect> entry = effectsList.get(i);
+
+            // If effect is not supported in this version, skip it
+            if (entry.getValue() == null) {
+                continue;
+            }
+
             ItemStack item = plugin.getEffectsHandler().createShopItem(entry.getKey(), entry.getValue(), player);
-            shop.setItem(Constants.GUI.SHOP_ITEM_SLOTS.get(i), item);
+
+            if (guiSlotIndex < Constants.GUI.SHOP_ITEM_SLOTS.size()) {
+                shop.setItem(Constants.GUI.SHOP_ITEM_SLOTS.get(guiSlotIndex), item);
+            } else {
+                plugin.getLogger().warning("Not enough GUI slots to display all effects.");
+                break;
+            }
+
+            guiSlotIndex++;
         }
     }
 

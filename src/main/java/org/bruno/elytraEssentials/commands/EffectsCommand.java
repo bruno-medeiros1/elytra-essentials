@@ -286,10 +286,14 @@ public class EffectsCommand implements ISubCommand {
 
         // Add effects from permissions
         if (PermissionsHelper.hasAllEffectsPermission(player)) {
-            keysToDisplay.addAll(plugin.getEffectsHandler().getEffectsRegistry().keySet());
+            for (Map.Entry<String, ElytraEffect> entry : plugin.getEffectsHandler().getEffectsRegistry().entrySet()) {
+                if (entry.getValue() != null) {
+                    keysToDisplay.add(entry.getKey());
+                }
+            }
         } else {
             for (Map.Entry<String, ElytraEffect> entry : plugin.getEffectsHandler().getEffectsRegistry().entrySet()) {
-                if (player.hasPermission(entry.getValue().getPermission())) {
+                if (entry.getValue() != null && player.hasPermission(entry.getValue().getPermission())) {
                     keysToDisplay.add(entry.getKey());
                 }
             }
