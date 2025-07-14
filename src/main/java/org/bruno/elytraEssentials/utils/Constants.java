@@ -98,7 +98,7 @@ public final class Constants {
         public static final String CMD_FORGE = "elytraessentials.command.forge";
         public static final String CMD_ARMOR = "elytraessentials.command.armor";
         public static final String CMD_REPAIR = "elytraessentials.command.armor.repair";
-        public static final String CMD_IMPORT_DB = "elytraessentials.admin.importdb";
+        public static final String CMD_IMPORT_DB = "elytraessentials.command.importdb";
         public static final String CMD_ACHIEVEMENTS = "elytraessentials.command.achievements";
 
         // Bypass Permissions

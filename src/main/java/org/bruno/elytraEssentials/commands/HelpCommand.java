@@ -6,6 +6,7 @@ import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
+import org.bruno.elytraEssentials.utils.Constants;
 import org.bukkit.ChatColor;
 import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
@@ -31,32 +32,32 @@ public class HelpCommand implements ISubCommand {
     }
 
     private void initializeHelpEntries() {
-        allCommands.add(new HelpEntry("/ee reload", "Reloads the plugin's configuration files.", "elytraessentials.command.reload"));
-        allCommands.add(new HelpEntry("/ee shop", "Opens the effects shop GUI.", "elytraessentials.command.shop"));
+        allCommands.add(new HelpEntry("/ee reload", "Reloads the plugin's configuration files.", Constants.Permissions.CMD_RELOAD));
+        allCommands.add(new HelpEntry("/ee shop", "Opens the effects shop GUI.", Constants.Permissions.CMD_SHOP));
 
-        allCommands.add(new HelpEntry("/ee effects", "Opens the owned effects GUI.", "elytraessentials.command.effects"));
-        allCommands.add(new HelpEntry("/ee effects clear", "Clears your active elytra effect.", "elytraessentials.command.effects.clear"));
-        allCommands.add(new HelpEntry("/ee effects give <player> <effect>", "Gives a effect to a player.", "elytraessentials.command.effects.give"));
-        allCommands.add(new HelpEntry("/ee effects remove <player> <effect>", "Removes an effect from a player.", "elytraessentials.command.effects.remove"));
-        allCommands.add(new HelpEntry("/ee effects list <player>", "Shows the player's owned effects.", "elytraessentials.command.effects.list"));
+        allCommands.add(new HelpEntry("/ee effects", "Opens the owned effects GUI.", Constants.Permissions.CMD_EFFECTS));
+        allCommands.add(new HelpEntry("/ee effects clear", "Clears your active elytra effect.", Constants.Permissions.CMD_EFFECTS_CLEAR));
+        allCommands.add(new HelpEntry("/ee effects give <player> <effect>", "Gives an effect to a player.", Constants.Permissions.CMD_EFFECTS_GIVE));
+        allCommands.add(new HelpEntry("/ee effects remove <player> <effect>", "Removes an effect from a player.", Constants.Permissions.CMD_EFFECTS_REMOVE));
+        allCommands.add(new HelpEntry("/ee effects list <player>", "Shows the player's owned effects.", Constants.Permissions.CMD_EFFECTS_LIST));
 
-        allCommands.add(new HelpEntry("/ee ft set <player> <seconds>", "Sets the total player's flight time.", "elytraessentials.command.flighttime"));
-        allCommands.add(new HelpEntry("/ee ft add <player> <seconds>", "Adds time to the player's flight time.", "elytraessentials.command.flighttime"));
-        allCommands.add(new HelpEntry("/ee ft remove <player> <seconds>", "Removes time from the player's flight time.", "elytraessentials.command.flighttime"));
-        allCommands.add(new HelpEntry("/ee ft clear <player>", "Clears all flight time a player has.", "elytraessentials.command.flighttime"));
+        allCommands.add(new HelpEntry("/ee ft set <player> <seconds>", "Sets the total player's flight time.", Constants.Permissions.CMD_FLIGHT_TIME));
+        allCommands.add(new HelpEntry("/ee ft add <player> <seconds>", "Adds time to the player's flight time.", Constants.Permissions.CMD_FLIGHT_TIME));
+        allCommands.add(new HelpEntry("/ee ft remove <player> <seconds>", "Removes time from the player's flight time.", Constants.Permissions.CMD_FLIGHT_TIME));
+        allCommands.add(new HelpEntry("/ee ft clear <player>", "Clears all flight time a player has.", Constants.Permissions.CMD_FLIGHT_TIME));
 
-        allCommands.add(new HelpEntry("/ee stats", "View your flight statistics.", "elytraessentials.command.stats"));
-        allCommands.add(new HelpEntry("/ee stats <player>", "View other player's flight statistics.", "elytraessentials.command.stats.others"));
+        allCommands.add(new HelpEntry("/ee stats", "View your flight statistics.", Constants.Permissions.CMD_STATS));
+        allCommands.add(new HelpEntry("/ee stats <player>", "View other player's flight statistics.", Constants.Permissions.CMD_STATS_OTHERS));
 
-        allCommands.add(new HelpEntry("/ee top <distance, time, longest>", "View leaderboard statistics.", "elytraessentials.command.top"));
+        allCommands.add(new HelpEntry("/ee top <distance, time, longest>", "View leaderboard statistics.", Constants.Permissions.CMD_TOP));
 
-        allCommands.add(new HelpEntry("/ee forge", "Opens the Armored Elytra forge GUI.", "elytraessentials.command.forge"));
-        allCommands.add(new HelpEntry("/ee armor", "Shows stats for your worn Armored Elytra.", "elytraessentials.command.armor"));
-        allCommands.add(new HelpEntry("/ee armor repair", "Repairs your worn Armored Elytra.", "elytraessentials.command.forge.repair"));
+        allCommands.add(new HelpEntry("/ee forge", "Opens the Armored Elytra forge GUI.", Constants.Permissions.CMD_FORGE));
+        allCommands.add(new HelpEntry("/ee armor", "Shows stats for your worn Armored Elytra.", Constants.Permissions.CMD_ARMOR));
+        allCommands.add(new HelpEntry("/ee armor repair", "Repairs your worn Armored Elytra.", Constants.Permissions.CMD_REPAIR));
 
-        allCommands.add(new HelpEntry("/ee importdb <file> --confirm", "Restores a database backup.", "elytraessentials.command.importdb"));
+        allCommands.add(new HelpEntry("/ee importdb <file> --confirm", "Restores a database backup.", Constants.Permissions.CMD_IMPORT_DB));
 
-        allCommands.add(new HelpEntry("/ee achievements", "Opens the achievements GUI.", "elytraessentials.command.achievements"));
+        allCommands.add(new HelpEntry("/ee achievements", "Opens the achievements GUI.", Constants.Permissions.CMD_ACHIEVEMENTS));
     }
 
     @Override
