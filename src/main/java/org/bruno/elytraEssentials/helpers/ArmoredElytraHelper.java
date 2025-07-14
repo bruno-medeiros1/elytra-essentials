@@ -99,7 +99,7 @@ public class ArmoredElytraHelper {
             meta.addEnchant(Enchantment.LURE, 1, true);
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
 
-            meta.getPersistentDataContainer().set(armoredElytraKey, PersistentDataType.BOOLEAN, true);
+            meta.getPersistentDataContainer().set(armoredElytraKey, PersistentDataType.BYTE, (byte) 1);
             meta.getPersistentDataContainer().set(durabilityKey, PersistentDataType.INTEGER, currentArmorDurability);
             meta.getPersistentDataContainer().set(maxDurabilityKey, PersistentDataType.INTEGER, maxArmorDurability);
             meta.getPersistentDataContainer().set(materialKey, PersistentDataType.STRING, chestplate.getType().name());
@@ -107,7 +107,7 @@ public class ArmoredElytraHelper {
             meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.DAMAGE_ABSORBED_TAG), PersistentDataType.DOUBLE, 0.0);
             meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.PLATING_SHATTERED_TAG), PersistentDataType.INTEGER, 0);
 
-            meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.PREVIEW_ITEM_TAG), PersistentDataType.BOOLEAN, true);
+            meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.PREVIEW_ITEM_TAG), PersistentDataType.BYTE, (byte) 1);
 
             armoredElytra.setItemMeta(meta);
         }
@@ -142,7 +142,7 @@ public class ArmoredElytraHelper {
                     chestMeta.addEnchant(enchantment, level, true);
                 }
             }
-            chestMeta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.PREVIEW_ITEM_TAG), PersistentDataType.BOOLEAN, true);
+            chestMeta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.PREVIEW_ITEM_TAG), PersistentDataType.BYTE, (byte) 1);
 
             chestplate.setItemMeta(chestMeta);
         }
@@ -173,7 +173,7 @@ public class ArmoredElytraHelper {
                     elytraMeta.addEnchant(enchantment, level, true);
                 }
             }
-            elytraMeta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.PREVIEW_ITEM_TAG), PersistentDataType.BOOLEAN, true);
+            elytraMeta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.PREVIEW_ITEM_TAG), PersistentDataType.BYTE, (byte) 1);
 
             plainElytra.setItemMeta(elytraMeta);
         }
@@ -217,7 +217,7 @@ public class ArmoredElytraHelper {
         if (item == null || item.getType() != Material.ELYTRA) return false;
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return false;
-        return meta.getPersistentDataContainer().has(armoredElytraKey, PersistentDataType.BOOLEAN);
+        return meta.getPersistentDataContainer().has(armoredElytraKey, PersistentDataType.BYTE);
     }
 
     public boolean isPlainElytra(ItemStack item) {

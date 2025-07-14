@@ -298,7 +298,7 @@ public class ArmorCommand implements ISubCommand {
         if (item == null || item.getType() != Material.ELYTRA) return false;
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return false;
-        return meta.getPersistentDataContainer().has(new NamespacedKey(plugin, Constants.NBT.ARMORED_ELYTRA_TAG), PersistentDataType.BOOLEAN);
+        return meta.getPersistentDataContainer().has(new NamespacedKey(plugin, Constants.NBT.ARMORED_ELYTRA_TAG), PersistentDataType.BYTE);
     }
 
     private List<String> getEnchantmentLines(PersistentDataContainer container) {

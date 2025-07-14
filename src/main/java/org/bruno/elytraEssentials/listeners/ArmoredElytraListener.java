@@ -187,7 +187,7 @@ public class ArmoredElytraListener implements Listener {
         if (item == null || item.getType() != Material.ELYTRA) return false;
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return false;
-        return meta.getPersistentDataContainer().has(armoredElytraKey, PersistentDataType.BOOLEAN);
+        return meta.getPersistentDataContainer().has(armoredElytraKey, PersistentDataType.BYTE);
     }
 
 
