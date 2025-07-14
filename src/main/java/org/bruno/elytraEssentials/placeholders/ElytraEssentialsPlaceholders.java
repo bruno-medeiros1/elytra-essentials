@@ -91,7 +91,7 @@ public class ElytraEssentialsPlaceholders extends PlaceholderExpansion {
                 return String.valueOf(stats.getBoostsUsed() + stats.getSuperBoostsUsed());
 
             // Other Stats
-            case "plugin_saves":
+            case "saves":
                 return String.valueOf(stats.getPluginSaves());
             case "active_effect":
                 String activeEffect = plugin.getEffectsHandler().getActiveEffect(player.getUniqueId());
