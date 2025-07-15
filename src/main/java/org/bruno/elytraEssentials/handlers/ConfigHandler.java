@@ -115,7 +115,7 @@ public class ConfigHandler {
 
         this.isBoostEnabled = this.fileConfiguration.getBoolean("flight.boost.enabled", true);
         this.boostItem = this.fileConfiguration.getString("flight.boost.item", "FEATHER");
-        this.boostCooldown = this.fileConfiguration.getInt("flight.boost.cooldown", 2000);
+        this.boostCooldown = this.fileConfiguration.getInt("flight.boost.cooldown", 1000);
         this.isChargedJumpEnabled = this.fileConfiguration.getBoolean("flight.boost.charged-jump.enabled", true);
         this.chargeTime = this.fileConfiguration.getInt("flight.boost.charged-jump.charge-time", 2);
         this.jumpStrength = this.fileConfiguration.getDouble("flight.boost.charged-jump.jump-strength", 1.5);

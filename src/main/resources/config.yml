@@ -112,7 +112,7 @@ flight:
     item: FEATHER
 
     # Players or groups with the permission 'elytraessentials.bypass.boostcooldown' can bypass this cooldown.
-    cooldown: 2000 # Cooldown time in milliseconds
+    cooldown: 1000 # Cooldown time in milliseconds
 
     charged-jump:
       # Set to true to enable the charged jump feature from the ground.
