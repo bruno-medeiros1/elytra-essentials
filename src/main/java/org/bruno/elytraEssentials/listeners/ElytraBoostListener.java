@@ -191,6 +191,8 @@ public class ElytraBoostListener implements Listener {
                 }
 
                 if (ticksElapsed >= totalTicksToCharge) {
+                    plugin.getMessagesHelper().sendTitleMessage(player, "&r", "&#FFD700LAUNCH!", 5, 20, 10);
+
                     double jumpStrength = plugin.getConfigHandlerInstance().getJumpStrength();
                     player.setVelocity(player.getVelocity().add(new Vector(0, jumpStrength, 0)));
 

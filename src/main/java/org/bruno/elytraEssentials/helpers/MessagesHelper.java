@@ -67,6 +67,22 @@ public class MessagesHelper {
     }
 
     /**
+     * Sends a title and subtitle message to a player's screen.
+     *
+     * @param player The player who will receive the title.
+     * @param title The main title text (supports '&' color codes).
+     * @param subtitle The subtitle text (supports '&' color codes).
+     * @param fadeIn The time in ticks for the title to fade in.
+     * @param stay The time in ticks for the title to stay on screen.
+     * @param fadeOut The time in ticks for the title to fade out.
+     */
+    public void sendTitleMessage(Player player, String title, String subtitle, int fadeIn, int stay, int fadeOut) {
+        String coloredTitle = (title != null) ? ColorHelper.parse(title) : "";
+        String coloredSubtitle = (subtitle != null) ? ColorHelper.parse(subtitle) : "";
+        player.sendTitle(coloredTitle, coloredSubtitle, fadeIn, stay, fadeOut);
+    }
+
+    /**
      * Sends a standard, prefixed message to the server console.
      * @param message The message to send.
      */
