@@ -4,9 +4,7 @@ import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.utils.PlayerStats;
 import org.bruno.elytraEssentials.utils.ServerVersion;
-import org.bukkit.Material;
-import org.bukkit.Particle;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -186,6 +184,9 @@ public class ElytraBoostListener implements Listener {
                     bossBar.setColor(BarColor.YELLOW);
                 }
 
+                // Play the charge-up effect if the player has an active effect
+                playChargeUpEffect(player, ticksElapsed, totalTicksToCharge);
+
                 if (ticksElapsed % 4 == 0) {
                     player.playSound(player.getLocation(), Sound.BLOCK_TRIPWIRE_CLICK_ON, 0.5f, 1.5f);
                 }
@@ -247,6 +248,45 @@ public class ElytraBoostListener implements Listener {
     }
 
     /**
+     * Checks if a player's normal boost message should be active.
+     * @param uuid The player's UUID.
+     * @return true if the boost is active, false otherwise.
+     */
+    public boolean isBoostActive(UUID uuid) {
+        Long expiryTime = boostMessageExpirations.get(uuid);
+        if (expiryTime == null) {
+            return false;
+        }
+
+        // Check if the current time has passed the expiry time
+        if (System.currentTimeMillis() > expiryTime) {
+            boostMessageExpirations.remove(uuid); // Clean up expired entry
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Checks if a player's super boost message should be active.
+     * @param uuid The player's UUID.
+     * @return true if the super boost is active, false otherwise.
+     */
+    public boolean isSuperBoostActive(UUID uuid) {
+        Long expiryTime = superBoostMessageExpirations.get(uuid);
+        if (expiryTime == null) {
+            return false;
+        }
+
+        if (System.currentTimeMillis() > expiryTime) {
+            superBoostMessageExpirations.remove(uuid); // Clean up expired entry
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Checks if a player is on cooldown. Sends them a message if they are.
      * @param player The player to check.
      * @return True if the player is on cooldown, false otherwise.
@@ -285,41 +325,48 @@ public class ElytraBoostListener implements Listener {
     }
 
     /**
-     * Checks if a player's normal boost message should be active.
-     * @param uuid The player's UUID.
-     * @return true if the boost is active, false otherwise.
+     * Handles the visual particle effects for the charged jump.
+     * Place this method within the same class that contains your handleChargedJump logic.
      */
-    public boolean isBoostActive(UUID uuid) {
-        Long expiryTime = boostMessageExpirations.get(uuid);
-        if (expiryTime == null) {
-            return false;
+    private void playChargeUpEffect(Player player, long ticksElapsed, long totalTicksToCharge) {
+        // --- Configuration ---
+        double radius = 1.0; // The radius of the particle circle.
+        int particleCount = 20; // How many particles are in the circle at any time.
+        double rotationSpeed = 0.1; // How fast the circle rotates.
+        double maxRiseHeight = 1.5; // How high the particles will rise by the end of the charge.
+
+        // --- Calculation ---
+        Location playerLocation = player.getLocation();
+        double progress = (double) ticksElapsed / totalTicksToCharge;
+
+        // The angle offset makes the circle rotate over time.
+        double angleOffset = ticksElapsed * rotationSpeed;
+        // The y-offset makes the particles rise as the charge progresses.
+        double yOffset = progress * maxRiseHeight;
+
+        // Interpolate color from Green -> Yellow -> Red based on charge progress
+        Color startColor;
+        if (progress < 0.5) {
+            // Green to Yellow (from 0% to 50% progress)
+            float r = (float) (progress * 2); // Red component increases
+            startColor = Color.fromRGB((int) (r * 255), 255, 0);
+        } else {
+            // Yellow to Red (from 50% to 100% progress)
+            float g = (float) (1.0 - (progress - 0.5) * 2); // Green component decreases
+            startColor = Color.fromRGB(255, (int) (g * 255), 0);
         }
+        // The dust transition options allow for the color-changing effect.
+        Particle.DustTransition dustOptions = new Particle.DustTransition(startColor, Color.RED, 1.0f);
 
-        // Check if the current time has passed the expiry time
-        if (System.currentTimeMillis() > expiryTime) {
-            boostMessageExpirations.remove(uuid); // Clean up expired entry
-            return false;
+        // --- Particle Spawning ---
+        for (int i = 0; i < particleCount; i++) {
+            double angle = 2 * Math.PI * i / particleCount + angleOffset;
+            double x = playerLocation.getX() + radius * Math.cos(angle);
+            double z = playerLocation.getZ() + radius * Math.sin(angle);
+            Location particleLocation = new Location(player.getWorld(), x, playerLocation.getY() + yOffset, z);
+
+            // Spawn the particle. Use DustTransition for the cool color-changing effect.
+            player.getWorld().spawnParticle(Particle.DUST_COLOR_TRANSITION, particleLocation, 1, 0, 0, 0, 0, dustOptions, true);
         }
-
-        return true;
-    }
-
-    /**
-     * Checks if a player's super boost message should be active.
-     * @param uuid The player's UUID.
-     * @return true if the super boost is active, false otherwise.
-     */
-    public boolean isSuperBoostActive(UUID uuid) {
-        Long expiryTime = superBoostMessageExpirations.get(uuid);
-        if (expiryTime == null) {
-            return false;
-        }
-
-        if (System.currentTimeMillis() > expiryTime) {
-            superBoostMessageExpirations.remove(uuid); // Clean up expired entry
-            return false;
-        }
-
-        return true;
     }
 }
