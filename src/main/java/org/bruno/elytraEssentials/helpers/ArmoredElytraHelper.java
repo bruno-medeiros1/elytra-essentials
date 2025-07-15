@@ -288,9 +288,8 @@ public class ArmoredElytraHelper {
             // Fallback to UUID (older versions)
             UUID legacyKey = toUUID(key);
 
-            if (modifier.getUniqueId().equals(legacyKey)) {
-                armorAttr.addModifier(modifier);
-            }
+            alreadyExists = armorAttr.getModifiers().stream()
+                    .anyMatch(existing -> existing.getUniqueId().equals(legacyKey));
         }
 
         if (!alreadyExists) {
@@ -325,6 +324,7 @@ public class ArmoredElytraHelper {
         } catch (Exception e) {
             // Fallback to UUID
             UUID legacyUUID = toUUID(key);
+
             alreadyExists = toughnessAttr.getModifiers().stream()
                     .anyMatch(mod -> mod.getUniqueId().equals(legacyUUID));
         }
