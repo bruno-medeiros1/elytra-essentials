@@ -63,13 +63,13 @@ public class ForgeGuiListener implements Listener {
                 case Constants.GUI.FORGE_CONFIRM_SLOT:
                     event.setCancelled(true);
                     //  Only handle click if the confirm button is actually there
-                    if (clickedItem != null && clickedItem.getType() == Material.PLAYER_HEAD) {
+                    if (clickedItem != null && (clickedItem.getType() == Material.PLAYER_HEAD || clickedItem.getType() == Material.GREEN_STAINED_GLASS_PANE)) {
                         handleConfirmClick(topInventory, player);
                     }
                     break;
                 case Constants.GUI.FORGE_CANCEL_SLOT:
                     event.setCancelled(true);
-                    if (clickedItem != null && clickedItem.getType() == Material.PLAYER_HEAD) {
+                    if (clickedItem != null && (clickedItem.getType() == Material.PLAYER_HEAD || clickedItem.getType() == Material.RED_STAINED_GLASS_PANE)) {
                         handleCancelClick(topInventory, player);
                     }
                     break;

@@ -5,7 +5,6 @@ import org.bruno.elytraEssentials.utils.Constants;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.AttributeInstance;
-import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -20,11 +19,9 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemBreakEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.attribute.Attribute;
 
 import java.util.Objects;
 
@@ -141,21 +138,20 @@ public class ArmoredElytraListener implements Listener {
         Material armorType = getArmorMaterialFromNbt(armoredElytra);
         if (armorType == null) return;
 
-        double armorPoints = getArmorPoints(armorType);
-        double armorToughness = getArmorToughness(armorType);
+        int armorPoints = getArmorPoints(armorType);
+        int armorToughness = getArmorToughness(armorType);
 
-        AttributeInstance armorAttr = player.getAttribute(Attribute.ARMOR);
-        AttributeInstance toughnessAttr = player.getAttribute(Attribute.ARMOR_TOUGHNESS);
+        AttributeInstance armorAttr = plugin.getArmoredElytraHelper().getArmorAttribute(player);
+        AttributeInstance toughnessAttr = plugin.getArmoredElytraHelper().getToughnessAttribute(player);
+
         if (armorAttr == null || toughnessAttr == null) return;
 
         if (armorPoints > 0){
-            AttributeModifier armorMod = new AttributeModifier(armoredElytraKey, armorPoints, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.CHEST);
-            armorAttr.addModifier(armorMod);
+            plugin.getArmoredElytraHelper().setArmorModifier(player, armoredElytraKey, armorPoints);
         }
 
         if (armorToughness > 0) {
-            AttributeModifier toughnessMod = new AttributeModifier(toughnessElytraKey, armorToughness, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.CHEST);
-            toughnessAttr.addModifier(toughnessMod);
+            plugin.getArmoredElytraHelper().setToughnessModifier(player, toughnessElytraKey, armorToughness);
         }
     }
 
@@ -164,21 +160,11 @@ public class ArmoredElytraListener implements Listener {
         AttributeInstance toughnessAttr = plugin.getArmoredElytraHelper().getToughnessAttribute(player);
 
         if (armorAttr != null) {
-            for (AttributeModifier modifier : armorAttr.getModifiers()) {
-                if (modifier.getKey().equals(armoredElytraKey)) {
-                    armorAttr.removeModifier(modifier);
-                    break;
-                }
-            }
+            plugin.getArmoredElytraHelper().removeArmorModifier(player, armoredElytraKey);
         }
 
         if (toughnessAttr != null) {
-            for (AttributeModifier modifier : toughnessAttr.getModifiers()) {
-                if (modifier.getKey().equals(toughnessElytraKey)) {
-                    toughnessAttr.removeModifier(modifier);
-                    break;
-                }
-            }
+            plugin.getArmoredElytraHelper().removeToughnessModifier(player, toughnessElytraKey);
         }
     }
 

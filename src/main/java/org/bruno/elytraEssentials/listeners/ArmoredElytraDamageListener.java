@@ -2,10 +2,11 @@ package org.bruno.elytraEssentials.listeners;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.utils.Constants;
+import org.bruno.elytraEssentials.utils.ServerVersion;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -59,11 +60,12 @@ public class ArmoredElytraDamageListener implements Listener {
         //  Damage absorption logic from original chestplate enchantments
         double initialDamage = event.getDamage();
         double finalDamage = applyAllProtection(initialDamage, container, event.getCause());
+
         event.setDamage(finalDamage);
 
         double absorbed = initialDamage - finalDamage;
-        double totalAbsorbed = container.getOrDefault(new NamespacedKey(plugin, Constants.NBT.DAMAGE_ABSORBED_TAG), PersistentDataType.DOUBLE, 0.0);
-        container.set(new NamespacedKey(plugin, Constants.NBT.DAMAGE_ABSORBED_TAG), PersistentDataType.DOUBLE, totalAbsorbed + absorbed);
+        double totalAbsorbed = container.getOrDefault(new NamespacedKey(plugin, Constants.NBT.DAMAGE_ABSORBED_TAG), PersistentDataType.FLOAT, 0.0f);
+        container.set(new NamespacedKey(plugin, Constants.NBT.DAMAGE_ABSORBED_TAG), PersistentDataType.FLOAT, (float) (totalAbsorbed + absorbed));
 
         //  Handle Armor Durability
         //  TODO: Improve durability to not be so narrow to just removing 1 point
@@ -85,28 +87,42 @@ public class ArmoredElytraDamageListener implements Listener {
     }
 
     private double applyAllProtection(double damage, PersistentDataContainer container, EntityDamageEvent.DamageCause cause) {
+        //  Assuming the enchantment names don't change in future versions.
+        String protectionKey = resolveProtectionKeyAlias("PROTECTION");
+        String fireProtKeyStr = resolveProtectionKeyAlias("FIRE_PROTECTION");
+        String blastProtKeyStr = resolveProtectionKeyAlias("BLAST_PROTECTION");
+        String projProtKeyStr = resolveProtectionKeyAlias("PROJECTILE_PROTECTION");
 
-        // Each level reduces applicable damage by 4%. Capped at 80% total reduction from all sources.
-        NamespacedKey protKey = new NamespacedKey(plugin, "chestplate_enchant_" + Enchantment.PROTECTION.getKey().getKey());
-        int protectionLevel = container.getOrDefault(protKey, PersistentDataType.INTEGER, 0);
-        damage = damage * (1.0 - (protectionLevel * 0.04));
+        //  Since the enchantments are only possible on chestplates,
+        //  we can safely use the "chestplate_enchant_" prefix.
+        int protectionLevel = getLevel(container, "chestplate_enchant_" + protectionKey);
+        int fireProtLevel = getLevel(container, "chestplate_enchant_" + fireProtKeyStr);
+        int blastProtLevel = getLevel(container, "chestplate_enchant_" + blastProtKeyStr);
+        int projProtLevel = getLevel(container, "chestplate_enchant_" + projProtKeyStr);
 
-        // Each level reduces that specific damage type by 8%.
+        double reduction = 0.0;
+
+        // Fire Protection: 15% less fire damage per level
         if (isFireDamage(cause)) {
-            NamespacedKey fireProtKey = new NamespacedKey(plugin, "chestplate_enchant_" + Enchantment.FIRE_PROTECTION.getKey().getKey());
-            int fireProtLevel = container.getOrDefault(fireProtKey, PersistentDataType.INTEGER, 0);
-            damage = damage * (1.0 - (fireProtLevel * 0.08));
-        } else if (cause == EntityDamageEvent.DamageCause.ENTITY_EXPLOSION || cause == EntityDamageEvent.DamageCause.BLOCK_EXPLOSION) {
-            NamespacedKey blastProtKey = new NamespacedKey(plugin, "chestplate_enchant_" + Enchantment.BLAST_PROTECTION.getKey().getKey());
-            int blastProtLevel = container.getOrDefault(blastProtKey, PersistentDataType.INTEGER, 0);
-            damage = damage * (1.0 - (blastProtLevel * 0.08));
-        } else if (cause == EntityDamageEvent.DamageCause.PROJECTILE) {
-            NamespacedKey projProtKey = new NamespacedKey(plugin, "chestplate_enchant_" + Enchantment.PROJECTILE_PROTECTION.getKey().getKey());
-            int projProtLevel = container.getOrDefault(projProtKey, PersistentDataType.INTEGER, 0);
-            damage = damage * (1.0 - (projProtLevel * 0.08));
+            reduction += fireProtLevel * 0.15;
         }
 
-        return Math.max(0, damage); // Ensure damage never goes below zero.
+        // Blast Protection: 15% less from explosions per level
+        if (cause == EntityDamageEvent.DamageCause.ENTITY_EXPLOSION ||
+                cause == EntityDamageEvent.DamageCause.BLOCK_EXPLOSION) {
+            reduction += blastProtLevel * 0.15;
+        }
+
+        // Projectile Protection: 15% less projectile damage per level
+        if (cause == EntityDamageEvent.DamageCause.PROJECTILE) {
+            reduction += projProtLevel * 0.15;
+        }
+
+        // Protection: 4% reduction for *any* damage type per level
+        reduction += protectionLevel * 0.04;
+
+        // Cap the total damage reduction at 80% (Minecraft vanilla rule)
+        return damage * (1 - Math.min(reduction, 0.8));
     }
 
     private void updateDurabilityLore(ItemMeta meta) {
@@ -157,5 +173,25 @@ public class ArmoredElytraDamageListener implements Listener {
                 cause == EntityDamageEvent.DamageCause.FIRE_TICK ||
                 cause == EntityDamageEvent.DamageCause.LAVA ||
                 cause == EntityDamageEvent.DamageCause.HOT_FLOOR;
+    }
+
+    private String resolveProtectionKeyAlias(String key) {
+        if (ServerVersion.getCurrent().equals(ServerVersion.V_1_18) || ServerVersion.getCurrent().equals(ServerVersion.V_1_19)
+                || ServerVersion.getCurrent().equals(ServerVersion.V_1_20))
+        {
+            return switch (key) {
+                case "PROTECTION" -> "PROTECTION_ENVIRONMENTAL";
+                case "FIRE_PROTECTION" -> "PROTECTION_FIRE";
+                case "BLAST_PROTECTION" -> "PROTECTION_EXPLOSIONS";
+                case "PROJECTILE_PROTECTION" -> "PROTECTION_PROJECTILE";
+                default -> key;
+            };
+        }
+        return key; // For 1.21+, use new names
+    }
+
+    private int getLevel(PersistentDataContainer container, String key) {
+        NamespacedKey namespacedKey = new NamespacedKey(plugin, key.toLowerCase()); // Normalize if needed
+        return container.getOrDefault(namespacedKey, PersistentDataType.INTEGER, 0);
     }
 }
