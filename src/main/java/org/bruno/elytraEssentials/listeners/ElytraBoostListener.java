@@ -149,6 +149,10 @@ public class ElytraBoostListener implements Listener {
         }
 
         double chargeTimeSeconds = plugin.getConfigHandlerInstance().getChargeTime();
+        if (chargeTimeSeconds <= 0) {
+            return;
+        }
+
         long totalTicksToCharge = (long) (chargeTimeSeconds * 20);
 
         BossBar bossBar = plugin.getServer().createBossBar("§aCharging Jump... §20%", BarColor.GREEN, BarStyle.SOLID);
@@ -187,18 +191,21 @@ public class ElytraBoostListener implements Listener {
                 }
 
                 if (ticksElapsed >= totalTicksToCharge) {
-                    bossBar.setTitle("§6§lLAUNCH!!");
-                    bossBar.setColor(BarColor.WHITE);
-
                     double jumpStrength = plugin.getConfigHandlerInstance().getJumpStrength();
                     player.setVelocity(player.getVelocity().add(new Vector(0, jumpStrength, 0)));
 
-                    //  Schedule the glide to activate with a 1-tick delay.
+                    //  Schedule the glide to activate with a 2-tick delay.
                     new BukkitRunnable() {
                         @Override
                         public void run() {
                             if (player.isOnline() && !player.isOnGround()) {
                                 player.setGliding(true);
+
+                                // Makes sure we trigger the glide start event
+                                ElytraFlightListener flightListener = plugin.getElytraFlightListener();
+                                if (flightListener != null) {
+                                    flightListener.handleGlideStart(player);
+                                }
                             }
                         }
                     }.runTaskLater(plugin, 2L);

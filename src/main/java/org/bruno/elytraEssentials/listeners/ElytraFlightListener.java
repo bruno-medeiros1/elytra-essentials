@@ -150,8 +150,80 @@ public class ElytraFlightListener implements Listener
     }
     //</editor-fold>
 
+    /**
+     * Reloads the flight time from the database for all currently online players.
+     * This is intended to be called after a plugin reload.
+     */
+    public void reloadOnlinePlayerFlightTimes() {
+        // This check is important in case the feature was just enabled on reload
+        if (!isTimeLimitEnabled) {
+            return;
+        }
+
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            loadPlayerFlightTime(player.getUniqueId());
+        }
+    }
+
+    public void saveAllFlightTimes() {
+        plugin.getMessagesHelper().sendDebugMessage("Saving flight time for all online players...");
+        for (UUID playerId : new HashSet<>(flightTimeData.keySet())) {
+            savePlayerFlightTime(playerId);
+        }
+        plugin.getMessagesHelper().sendDebugMessage("Finished saving all player flight times.");
+    }
+
+    public int getCurrentFlightTime(UUID player) {
+        return flightTimeData.getOrDefault(player, 0);
+    }
+
+    public void setFlightTime(UUID player, int flightTime) {
+        flightTimeData.put(player, flightTime);
+        initialFlightTime.put(player, flightTime); // Also reset initial time for boss bar
+    }
+
+    public void addFlightTime(UUID player, int secondsToAdd) {
+        int currentTime = getCurrentFlightTime(player);
+        flightTimeData.put(player, currentTime + secondsToAdd);
+
+        // Also update the initial time to keep the Boss Bar progress ratio correct.
+        int currentInitial = initialFlightTime.getOrDefault(player, 0);
+        initialFlightTime.put(player, currentInitial + secondsToAdd);
+    }
+
+    public void start() {
+        if (flightTimeTask != null && !flightTimeTask.isCancelled()) return;
+        if (!isTimeLimitEnabled) return;
+
+        this.flightTimeTask = new BukkitRunnable() {
+            @Override
+            public void run() {
+                handleFlightTimeCountdown();
+            }
+        }.runTaskTimer(plugin, 20L, 20L); // Run every second
+    }
+
+    public void cancel() {
+        if (flightTimeTask != null) {
+            flightTimeTask.cancel();
+        }
+    }
+
+    public void assignConfigVariables() {
+        ConfigHandler config = plugin.getConfigHandlerInstance();
+        this.isGlobalFlightDisabled = config.getIsGlobalFlightDisabled();
+        this.isSpeedLimitEnabled = config.getIsSpeedLimitEnabled();
+        this.disabledElytraWorlds = config.getDisabledWorlds();
+        this.perWorldSpeedLimits = config.getPerWorldSpeedLimits();
+        this.isTimeLimitEnabled = config.getIsTimeLimitEnabled();
+        this.isElytraBreakProtectionEnabled = config.getIsElytraBreakProtectionEnabled();
+        this.isKineticEnergyProtectionEnabled = config.getIsKineticEnergyProtectionEnabled();
+        this.maxSpeed = config.getDefaultSpeedLimit();
+        this.isEmergencyDeployEnabled = config.getIsEmergencyDeployEnabled();
+    }
+
     //<editor-fold desc="Core Logic Helpers">
-    private void handleGlideStart(Player player) {
+    public void handleGlideStart(Player player) {
         // Check for flight restrictions
         if (isGlobalFlightDisabled) {
             plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getElytraUsageDisabledMessage());
@@ -328,19 +400,6 @@ public class ElytraFlightListener implements Listener
     //</editor-fold>
 
     //<editor-fold desc="Data & Config Management">
-    public void assignConfigVariables() {
-        ConfigHandler config = plugin.getConfigHandlerInstance();
-        this.isGlobalFlightDisabled = config.getIsGlobalFlightDisabled();
-        this.isSpeedLimitEnabled = config.getIsSpeedLimitEnabled();
-        this.disabledElytraWorlds = config.getDisabledWorlds();
-        this.perWorldSpeedLimits = config.getPerWorldSpeedLimits();
-        this.isTimeLimitEnabled = config.getIsTimeLimitEnabled();
-        this.isElytraBreakProtectionEnabled = config.getIsElytraBreakProtectionEnabled();
-        this.isKineticEnergyProtectionEnabled = config.getIsKineticEnergyProtectionEnabled();
-        this.maxSpeed = config.getDefaultSpeedLimit();
-        this.isEmergencyDeployEnabled = config.getIsEmergencyDeployEnabled();
-    }
-
     private void createFlightBossBar(Player player) {
         if (!isTimeLimitEnabled || flightBossBars.containsKey(player.getUniqueId())) return;
 
@@ -393,63 +452,4 @@ public class ElytraFlightListener implements Listener
         }
     }
     //</editor-fold>
-
-    /**
-     * Reloads the flight time from the database for all currently online players.
-     * This is intended to be called after a plugin reload.
-     */
-    public void reloadOnlinePlayerFlightTimes() {
-        // This check is important in case the feature was just enabled on reload
-        if (!isTimeLimitEnabled) {
-            return;
-        }
-
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            loadPlayerFlightTime(player.getUniqueId());
-        }
-    }
-
-    public void saveAllFlightTimes() {
-        plugin.getMessagesHelper().sendDebugMessage("Saving flight time for all online players...");
-        for (UUID playerId : new HashSet<>(flightTimeData.keySet())) {
-            savePlayerFlightTime(playerId);
-        }
-        plugin.getMessagesHelper().sendDebugMessage("Finished saving all player flight times.");
-    }
-
-    public int getCurrentFlightTime(UUID player) {
-        return flightTimeData.getOrDefault(player, 0);
-    }
-
-    public void setFlightTime(UUID player, int flightTime) {
-        flightTimeData.put(player, flightTime);
-        initialFlightTime.put(player, flightTime); // Also reset initial time for boss bar
-    }
-
-    public void addFlightTime(UUID player, int secondsToAdd) {
-        int currentTime = getCurrentFlightTime(player);
-        flightTimeData.put(player, currentTime + secondsToAdd);
-
-        // Also update the initial time to keep the Boss Bar progress ratio correct.
-        int currentInitial = initialFlightTime.getOrDefault(player, 0);
-        initialFlightTime.put(player, currentInitial + secondsToAdd);
-    }
-
-    public void start() {
-        if (flightTimeTask != null && !flightTimeTask.isCancelled()) return;
-        if (!isTimeLimitEnabled) return;
-
-        this.flightTimeTask = new BukkitRunnable() {
-            @Override
-            public void run() {
-                handleFlightTimeCountdown();
-            }
-        }.runTaskTimer(plugin, 20L, 20L); // Run every second
-    }
-
-    public void cancel() {
-        if (flightTimeTask != null) {
-            flightTimeTask.cancel();
-        }
-    }
 }
