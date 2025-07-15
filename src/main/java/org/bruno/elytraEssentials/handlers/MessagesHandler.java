@@ -86,7 +86,7 @@ public final class MessagesHandler {
         this.flightTimeLimit = fileConfiguration.getString("flight-time-limit", "&eFlight Time Left: &6{0}");
 
         // Boost Messages
-        this.boostCooldown = fileConfiguration.getString("boost-cooldown", "&7You must wait &e{0} before boosting again.");
+        this.boostCooldown = fileConfiguration.getString("boost-cooldown", "&7You must wait &e{0}s &7before boosting again.");
 
         //  SpeedoMeter
         this.speedoMeterNormal = fileConfiguration.getString("speedometer-normal", "&eSpeed: {0}{1} &ekm/h");

@@ -38,7 +38,7 @@ flight-time-bypass: "&eYou have unlimited time!"
 flight-time-limit: "&eFlight Time Left: &6{0}" # Used for the boss bar
 
 # Boost Messages
-boost-cooldown: "&7You must wait &e{0} before boosting again."
+boost-cooldown: "&7You must wait &e{0}s &7before boosting again."
 
 # Speedometer Messages (Action Bar)
 speedometer-normal: "&eSpeed: {0}{1} &ekm/h"

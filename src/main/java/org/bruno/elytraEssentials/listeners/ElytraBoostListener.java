@@ -31,6 +31,7 @@ public class ElytraBoostListener implements Listener {
 
     private final ElytraEssentials plugin;
     private final HashMap<UUID, Long> cooldowns = new HashMap<>();
+    private final HashMap<UUID, Long> cooldownMessageSent = new HashMap<>();
 
     private final HashMap<UUID, Long> superBoostMessageExpirations = new HashMap<>();
     private final HashMap<UUID, Long> boostMessageExpirations = new HashMap<>();
@@ -63,6 +64,7 @@ public class ElytraBoostListener implements Listener {
         // Clean up all maps when a player leaves
         UUID playerId = event.getPlayer().getUniqueId();
         cooldowns.remove(playerId);
+        cooldownMessageSent.remove(playerId);
         boostMessageExpirations.remove(playerId);
         superBoostMessageExpirations.remove(playerId);
         cancelCharge(event.getPlayer()); // Cancel any active charge
@@ -307,18 +309,28 @@ public class ElytraBoostListener implements Listener {
         long timeSinceLastBoost = System.currentTimeMillis() - lastBoostTime;
 
         if (timeSinceLastBoost < effectiveCooldownMs) {
-            // Player is on cooldown, send them the message
+            // Player is on cooldown. Check if we should send a message.
+            long lastMessageCooldownTime = cooldownMessageSent.getOrDefault(player.getUniqueId(), 0L);
 
-            // Only send the "wait X seconds" message if the cooldown is significant (e.g., > 1 second)
-            if (effectiveCooldownMs > 1000) {
-                long remainingMs = effectiveCooldownMs - timeSinceLastBoost;
-                int remainingSeconds = (int) Math.ceil(remainingMs / 1000.0);
+            // We only send a message if it's for a new cooldown instance.
+            // If the current cooldown start time is different from the last one we sent a message for,
+            // it means the player has triggered a new cooldown and should be notified once.
+            if (lastBoostTime != lastMessageCooldownTime) {
+                // Only send the "wait X seconds" message if the cooldown is significant.
+                if (effectiveCooldownMs > 1000) {
+                    long remainingMs = effectiveCooldownMs - timeSinceLastBoost;
+                    // Ensure we don't show "0 seconds".
+                    int remainingSeconds = Math.max(1, (int) Math.ceil(remainingMs / 1000.0));
 
-                String messageTemplate = plugin.getMessagesHandlerInstance().getBoostCooldown();
-                String message = messageTemplate.replace("{0}", String.valueOf(remainingSeconds));
-                plugin.getMessagesHelper().sendPlayerMessage(player, message);
+                    String messageTemplate = plugin.getMessagesHandlerInstance().getBoostCooldown();
+                    String message = messageTemplate.replace("{0}", String.valueOf(remainingSeconds));
+                    plugin.getMessagesHelper().sendPlayerMessage(player, message);
+
+                    // Record that we've sent a message for this specific cooldown instance.
+                    cooldownMessageSent.put(player.getUniqueId(), lastBoostTime);
+                }
             }
-            return true; // Player is on cooldown
+            return true; // Player is on cooldown (message may or may not have been sent).
         }
 
         return false;
