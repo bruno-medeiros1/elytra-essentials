@@ -100,6 +100,11 @@ public class ArmoredElytraHelper {
                 meta.getPersistentDataContainer().set(key, PersistentDataType.INTEGER, level);
             });
 
+            // Apply combined enchantments to the actual item
+            displayEnchants.forEach((enchant, level) -> {
+                meta.addEnchant(enchant, level, true);
+            });
+
             meta.addEnchant(Enchantment.LURE, 1, true);
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
 
