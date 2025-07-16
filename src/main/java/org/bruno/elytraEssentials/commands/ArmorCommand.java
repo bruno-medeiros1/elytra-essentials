@@ -17,6 +17,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
@@ -112,8 +113,13 @@ public class ArmorCommand implements ISubCommand {
         int currentDurability = container.getOrDefault(durabilityKey, PersistentDataType.INTEGER, 0);
         int maxDurability = container.getOrDefault(maxDurabilityKey, PersistentDataType.INTEGER, 1);
 
-        if (currentDurability >= maxDurability) {
-            plugin.getMessagesHelper().sendPlayerMessage(player,"&aYour Armored Elytra's plating is already at full durability!");
+        boolean elytraFull = true;
+        if (meta instanceof Damageable damageableMeta) {
+            elytraFull = damageableMeta.getDamage() <= 0;
+        }
+
+        if (currentDurability >= maxDurability && elytraFull) {
+            plugin.getMessagesHelper().sendPlayerMessage(player,"&aYour Armored Elytra's is already fully repaired!");
             return;
         }
 
@@ -126,12 +132,19 @@ public class ArmorCommand implements ISubCommand {
         // Set durability to max
         container.set(durabilityKey, PersistentDataType.INTEGER, maxDurability);
 
+        // Also repair the Elytra's native durability
+        if (meta instanceof Damageable damageable) {
+            damageable.setDamage(0);
+        }
+
         // Update the lore
         updateDurabilityLore(meta);
+
+        // Apply all changes to item
         chestplate.setItemMeta(meta);
 
         player.playSound(player.getLocation(), Sound.ENTITY_IRON_GOLEM_REPAIR, 1.0f, 1.2f);
-        plugin.getMessagesHelper().sendPlayerMessage(player,"&aYour Armored Elytra's plating has been fully repaired!");
+        plugin.getMessagesHelper().sendPlayerMessage(player,"&aYour Armored Elytra's has been fully repaired!");
     }
 
     private boolean handleRepairPayment(Player player) {
