@@ -131,6 +131,14 @@ public class BoostHandler {
 
     private void handleChargedJump(Player player) {
         if (!configHandler.getIsBoostEnabled() || !configHandler.getIsChargedJumpEnabled()) return;
+        if (configHandler.getIsTimeLimitEnabled()){
+            var currentTime = flightHandler.getCurrentFlightTime(player.getUniqueId());
+            if (currentTime == 0){
+                messagesHelper.sendActionBarMessage(player, messagesHandler.getElytraFlightTimeExpired());
+                return;
+            }
+        }
+
         if (chargingTasks.containsKey(player.getUniqueId())) return; // Already charging
 
         ItemStack chestplate = player.getInventory().getChestplate();
