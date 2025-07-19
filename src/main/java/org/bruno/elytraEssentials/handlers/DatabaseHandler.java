@@ -6,6 +6,9 @@ import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.utils.CancellableTask;
 import org.bruno.elytraEssentials.utils.Constants;
 import org.bruno.elytraEssentials.utils.PlayerStats;
+import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.IOException;
@@ -150,7 +153,6 @@ public class DatabaseHandler {
         if (storageType != StorageType.SQLITE) return;
 
         // TODO: Add a config option to enable/disable automatic backups
-
         if (this.backupTask != null) return;
 
         long interval = Constants.Database.Backups.BACKUP_INTERVAL_TICKS;
@@ -168,6 +170,89 @@ public class DatabaseHandler {
             this.backupTask.cancel();
             this.backupTask = null;
         }
+    }
+
+    /**
+     * Imports a database backup file into the live database.
+     * This method will kick all players, copy the backup to a temporary file,
+     * verify its integrity, and then swap it with the live database.
+     *
+     * @param backupFileName The name of the backup file to import.
+     * @param sender The CommandSender who initiated the import.
+     * @param backupFile The actual File object representing the backup.
+     */
+    public void importFromBackup(String backupFileName, CommandSender sender, File backupFile) {
+        logger.warning("Starting database import from backup: " + backupFileName);
+        messagesHelper.sendCommandSenderMessage(sender, "&eStarting import process... Kicking all players.");
+
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            player.kickPlayer("Server is restoring a data backup. Please reconnect in a moment.");
+        }
+
+        logger.info("All players kicked. Shutting down plugin services...");
+        plugin.shutdownAllPluginTasks();
+        this.Disconnect();
+
+        foliaHelper.runAsyncTask(() -> {
+            File databaseFolder = new File(plugin.getDataFolder(), Constants.Files.DB_FOLDER);
+            File liveDbFile = new File(databaseFolder, Constants.Files.SQLITE_DB_NAME);
+            File tempDbFile = new File(databaseFolder, "import_temp.db");
+
+            try {
+                // 1. STAGING
+                Files.copy(backupFile.toPath(), tempDbFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+                // 2. VERIFICATION
+                try (Connection testConnection = DriverManager.getConnection("jdbc:sqlite:" + tempDbFile.getAbsolutePath())) {
+                    if (!testConnection.isValid(2)) {
+                        throw new SQLException("Import verification failed: Backup file is corrupted or invalid.");
+                    }
+                    logger.info("Backup file verified successfully.");
+                } catch (SQLException e) {
+                    // If verification fails, schedule cleanup and restart on the main thread
+                    foliaHelper.runTaskOnMainThread(() -> {
+                        messagesHelper.sendCommandSenderMessage(sender,"&cImport failed! The selected backup file appears to be corrupted. No changes were made.");
+                        logger.log(Level.SEVERE, "Could not verify the integrity of the backup file '" + backupFileName + "'. Aborting import.", e);
+                        if (!tempDbFile.delete()) {
+                            logger.warning("Could not delete temporary database file: " + tempDbFile.getName());
+                        }
+                        try {
+                            this.Initialize(); // Reconnect to the original database
+                            plugin.startAllPluginTasks();
+                        } catch (SQLException ex) {
+                            logger.log(Level.SEVERE, "Failed to reconnect to original database after failed import.", ex);
+                        }
+                    });
+                    return; // Stop the async task
+                }
+
+                // 3. COMMIT
+                if (liveDbFile.exists() && !liveDbFile.delete()) throw new IOException("Could not delete the old live database file.");
+                if (!tempDbFile.renameTo(liveDbFile)) throw new IOException("Could not rename temporary database file.");
+
+                logger.info("Successfully restored backup file to live database.");
+
+                // 4. RE-INITIALIZE (on the main thread)
+                foliaHelper.runTaskOnMainThread(() -> {
+                    try {
+                        logger.info("Re-initializing plugin services...");
+                        this.Initialize();
+                        plugin.startAllPluginTasks();
+                        messagesHelper.sendCommandSenderMessage(sender, "&aDatabase import successful! Players can now reconnect.");
+                        logger.info("Database import complete.");
+                    } catch (SQLException e) {
+                        messagesHelper.sendCommandSenderMessage(sender,"&cImport failed during re-initialization. The server may need a restart. Check console.");
+                        logger.log(Level.SEVERE, "Failed to re-initialize services after database import.", e);
+                    }
+                });
+
+            } catch (IOException e) {
+                foliaHelper.runTaskOnMainThread(() -> {
+                    messagesHelper.sendCommandSenderMessage(sender,"&cA critical file error occurred. Check the console for details.");
+                    logger.log(Level.SEVERE, "Failed to perform database file swap during import.", e);
+                });
+            }
+        });
     }
 
     private void backupSQLiteDatabase() {

@@ -3,7 +3,7 @@ package org.bruno.elytraEssentials.handlers;
 import org.bukkit.configuration.file.FileConfiguration;
 
 public final class MessagesHandler {
-    private final FileConfiguration fileConfiguration;
+    private FileConfiguration fileConfiguration;
 
     private String prefix;
     private String noPermission;
@@ -55,6 +55,15 @@ public final class MessagesHandler {
         loadMessages();
     }
 
+    /**
+     * Reloads all message strings from a new FileConfiguration object.
+     * This is called from the main plugin's reload sequence.
+     * @param newFileConfiguration The newly reloaded messages.yml config object.
+     */
+    public void reload(FileConfiguration newFileConfiguration) {
+        this.fileConfiguration = newFileConfiguration;
+        loadMessages();
+    }
 
     public void loadMessages(){
         // General Messages
@@ -136,7 +145,6 @@ public final class MessagesHandler {
     public String getElytraFlightTimeBypass() { return this.flightTimeBypass; }
     public String getElytraFlightTimeCleared() { return this.flightTimeCleared; }
     public String getElytraFlightTimeExpired() { return this.flightTimeExpired; }
-    public String getElytraFlightTimeRecovery() { return this.flightTimeRecovery; }
     public String getElytraFlightTimeRemoved() { return this.flightTimeRemoved; }
     public String getElytraFlightTimeSet() { return this.flightTimeSet; }
     public String getElytraTimeLimitMessage() { return this.flightTimeLimit; }

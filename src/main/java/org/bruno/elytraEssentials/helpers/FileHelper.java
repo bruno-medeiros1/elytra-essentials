@@ -58,6 +58,17 @@ public final class FileHelper {
         return YamlConfiguration.loadConfiguration(file);
     }
 
+    /**
+     * Reloads all custom configuration files from the disk.
+     */
+    public void reloadAll() {
+        logger.info("Reloading custom configuration files...");
+        this.messagesConfig = setupCustomFile(Constants.Files.MESSAGES);
+        this.shopConfig = setupCustomFile(Constants.Files.SHOP);
+        this.achievementsConfig = setupCustomFile(Constants.Files.ACHIEVEMENTS);
+        logger.info("All custom files have been reloaded.");
+    }
+
     public FileConfiguration getMessagesConfig() {
         return this.messagesConfig;
     }

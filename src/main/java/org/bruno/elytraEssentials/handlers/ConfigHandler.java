@@ -9,8 +9,9 @@ import java.util.List;
 import java.util.logging.Logger;
 
 public class ConfigHandler {
-    private final FileConfiguration fileConfiguration;
     private final Logger logger;
+
+    private FileConfiguration fileConfiguration;
 
     // General section
     private boolean isDebugModeEnabled;
@@ -132,6 +133,17 @@ public class ConfigHandler {
         this.combatTagCooldown = this.fileConfiguration.getInt("flight.combat-tag.duration", 10);
         this.isCombatTagPreventFallDamageEnabled = this.fileConfiguration.getBoolean("flight.combat-tag.prevent-fall-damage", true);
         this.isCombatTagPlayerDamageOnlyEnabled = this.fileConfiguration.getBoolean("flight.combat-tag.player-damage-only", true);
+    }
+
+    /**
+     * Reloads the configuration values from a new FileConfiguration object.
+     * This is called from the main plugin's reload sequence.
+     * @param newFileConfiguration The newly reloaded config object.
+     */
+    public void reload(FileConfiguration newFileConfiguration) {
+        this.fileConfiguration = newFileConfiguration;
+        SetConfigVariables();
+        logger.info("Configuration values have been reloaded.");
     }
 
     public final boolean getIsDebugModeEnabled() {

@@ -30,6 +30,7 @@ import org.bruno.elytraEssentials.placeholders.ElytraEssentialsPlaceholders;
 import org.bruno.elytraEssentials.utils.Constants;
 import org.bruno.elytraEssentials.utils.ServerVersion;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -183,7 +184,7 @@ public final class ElytraEssentials extends JavaPlugin {
         getLogger().info("Registering commands...");
 
         var helpCommand = new HelpCommand(this);
-        var reloadCommand = new ReloadCommand(this, this.messagesHelper, this.statsHandler, this.databaseHandler, this.messagesHandler, getLogger());
+        var reloadCommand = new ReloadCommand(this, this.messagesHelper, this.messagesHandler);
         var flightTimeCommand = new FlightTimeCommand(this.flightHandler, this.configHandler, this.messagesHelper, this.foliaHelper, this.messagesHandler);
         var shopCommand = new ShopCommand(this.shopGuiHandler, this.messagesHelper);
         var effectsCommand = new EffectsCommand(getLogger(), this.effectsGuiHandler, this.effectsHandler, this.databaseHandler, this.foliaHelper, this.messagesHelper);
@@ -191,7 +192,7 @@ public final class ElytraEssentials extends JavaPlugin {
         var topCommand = new TopCommand(this.statsHandler, this.messagesHelper);
         var forgeCommand = new ForgeCommand(this.forgeGuiHandler, this.configHandler, this.messagesHelper);
         var armorCommand = new ArmorCommand(this, this.messagesHelper, this.economy, this.configHandler, this.messagesHandler);
-        var importDbCommand = new ImportDbCommand(this, getLogger(), this.messagesHelper, this.databaseHandler, this.messagesHandler);
+        var importDbCommand = new ImportDbCommand(this, messagesHandler, this.messagesHelper, this.databaseHandler);
         var achievementsCommand = new AchievementsCommand(this.achievementsGuiHandler, this.messagesHelper);
 
         // Commands
@@ -274,5 +275,29 @@ public final class ElytraEssentials extends JavaPlugin {
         if (achievementsHandler != null) achievementsHandler.start();
         if (flightHandler != null) flightHandler.start();
         if (combatTagHandler != null) combatTagHandler.start();
+    }
+
+    public void reload() {
+        // Stop all repeating tasks
+        shutdownAllPluginTasks();
+
+        // Reload configuration files from disk
+        reloadConfig();
+        fileHelper.reloadAll();
+
+        // Tell handlers to update their internal values from the reloaded configs
+        configHandler.reload(getConfig());
+        messagesHandler.reload(fileHelper.getMessagesConfig());
+        messagesHelper.setPrefix(messagesHandler.getPrefixMessage());
+
+        // Restart all repeating tasks with the new settings
+        startAllPluginTasks();
+
+        // Reload data for all online players
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            statsHandler.loadPlayerStats(player);
+            flightHandler.loadPlayerData(player);
+            effectsHandler.loadPlayerActiveEffect(player);
+        }
     }
 }
