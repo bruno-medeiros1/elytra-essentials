@@ -3,6 +3,7 @@ package org.bruno.elytraEssentials.commands;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.handlers.ConfigHandler;
 import org.bruno.elytraEssentials.handlers.FlightHandler;
+import org.bruno.elytraEssentials.handlers.MessagesHandler;
 import org.bruno.elytraEssentials.helpers.FoliaHelper;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
@@ -18,19 +19,19 @@ import java.util.stream.Stream;
 
 public class FlightTimeCommand implements ISubCommand {
 
-    private final ElytraEssentials plugin;
     private final FlightHandler flightHandler;
     private final ConfigHandler configHandler;
     private final MessagesHelper messagesHelper;
     private final FoliaHelper foliaHelper;
+    private final MessagesHandler messagesHandler;
 
-    public FlightTimeCommand(ElytraEssentials plugin, FlightHandler flightHandler, ConfigHandler configHandler, MessagesHelper messagesHelper, FoliaHelper foliaHelper) {
-        this.plugin = plugin;
-
+    public FlightTimeCommand(FlightHandler flightHandler, ConfigHandler configHandler, MessagesHelper messagesHelper, FoliaHelper foliaHelper,
+                             MessagesHandler messagesHandler) {
         this.flightHandler = flightHandler;
         this.configHandler = configHandler;
         this.messagesHelper = messagesHelper;
         this.foliaHelper = foliaHelper;
+        this.messagesHandler = messagesHandler;
     }
 
     @Override
@@ -113,7 +114,7 @@ public class FlightTimeCommand implements ISubCommand {
 
     private boolean validateTargetPlayer(CommandSender sender, OfflinePlayer target, String targetName) {
         if (!target.hasPlayedBefore() && !target.isOnline()) {
-            String message = plugin.getMessagesHandlerInstance().getPlayerNotFound().replace("{0}", targetName);
+            String message = messagesHandler.getPlayerNotFound().replace("{0}", targetName);
             messagesHelper.sendCommandSenderMessage(sender, message);
             return false;
         }

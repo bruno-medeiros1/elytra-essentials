@@ -6,19 +6,22 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.*;
+import java.util.logging.Logger;
 
 /**
  * A helper class to manage all custom configuration files for the plugin.
  */
 public final class FileHelper {
     private final ElytraEssentials plugin;
+    private final Logger logger;
 
     private FileConfiguration messagesConfig;
     private FileConfiguration shopConfig;
     private FileConfiguration achievementsConfig;
 
-    public FileHelper(ElytraEssentials plugin) {
+    public FileHelper(ElytraEssentials plugin, Logger logger) {
         this.plugin = plugin;
+        this.logger = logger;
 
         initialize();
     }
@@ -28,11 +31,11 @@ public final class FileHelper {
      * This method should be called once from the main onEnable() method.
      */
     public void initialize() {
-        plugin.getLogger().info("Loading custom configuration files...");
+        logger.info("Loading custom configuration files...");
         this.messagesConfig = setupCustomFile(Constants.Files.MESSAGES);
         this.shopConfig = setupCustomFile(Constants.Files.SHOP);
         this.achievementsConfig = setupCustomFile(Constants.Files.ACHIEVEMENTS);
-        plugin.getLogger().info("All custom configuration files loaded successfully.");
+        logger.info("All custom configuration files loaded successfully.");
     }
 
     /**
@@ -47,7 +50,7 @@ public final class FileHelper {
 
         // If the file doesn't exist, save the default from the JAR.
         if (!file.exists()) {
-            plugin.getLogger().info("File not found: " + fileName + ". Creating from defaults.");
+            logger.info("File not found: " + fileName + ". Creating from defaults.");
             plugin.saveResource(fileName, false);
         }
 

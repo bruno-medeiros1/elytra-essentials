@@ -17,28 +17,39 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class EffectsHandler {
     private final ElytraEssentials plugin;
     private final FoliaHelper foliaHelper;
     private final DatabaseHandler databaseHandler;
     private final MessagesHelper messagesHelper;
+    private final ServerVersion serverVersion;
+    private final Economy economy;
+    private final TpsHandler tpsHandler;
+    private final MessagesHandler messagesHandler;
+    private final Logger logger;
 
     private final Map<String, ElytraEffect> effectsRegistry = new HashMap<>();
 
     private final Map<UUID, String> activePlayerEffects = new HashMap<>();
 
-    public EffectsHandler(ElytraEssentials plugin, FileConfiguration fileConfiguration, FoliaHelper foliaHelper, DatabaseHandler databaseHandler, MessagesHelper messagesHelper) {
+    public EffectsHandler(ElytraEssentials plugin, FileConfiguration fileConfiguration, FoliaHelper foliaHelper, DatabaseHandler databaseHandler, MessagesHelper messagesHelper,
+                          ServerVersion serverVersion, Economy economy, TpsHandler tpsHandler, MessagesHandler messagesHandler, Logger logger) {
         this.plugin = plugin;
         this.foliaHelper = foliaHelper;
         this.databaseHandler = databaseHandler;
         this.messagesHelper = messagesHelper;
+        this.serverVersion = serverVersion;
+        this.economy = economy;
+        this.tpsHandler = tpsHandler;
+        this.messagesHandler = messagesHandler;
+        this.logger = logger;
 
         registerEffects();
         loadEffectsConfig(fileConfiguration);
@@ -46,31 +57,30 @@ public class EffectsHandler {
 
     public boolean handlePurchase(Player player, String effectKey, String effectPermission) {
         try {
-            List<String> ownedEffects = plugin.getDatabaseHandler().GetOwnedEffectKeys(player.getUniqueId());
+            List<String> ownedEffects = databaseHandler.GetOwnedEffectKeys(player.getUniqueId());
 
             if (PermissionsHelper.hasAllEffectsPermission(player) || player.hasPermission(effectPermission) || ownedEffects.contains(effectKey)) {
                 player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 0.8f);
-                messagesHelper.sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getEffectGuiOwned());
+                messagesHelper.sendPlayerMessage(player, messagesHandler.getEffectGuiOwned());
                 return false;
             }
 
             ElytraEffect effect = effectsRegistry.get(effectKey);
             if (effect == null) return false;
 
-            Economy economy = plugin.getEconomy();
             if (economy != null && !economy.has(player, effect.getPrice())) {
                 player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 0.8f);
-                messagesHelper.sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getNotEnoughMoney());
+                messagesHelper.sendPlayerMessage(player, messagesHandler.getNotEnoughMoney());
                 return false;
             }
 
             if (economy != null) {
                 economy.withdrawPlayer(player, effect.getPrice());
             }
-            plugin.getDatabaseHandler().AddOwnedEffect(player.getUniqueId(), effectKey);
+            databaseHandler.AddOwnedEffect(player.getUniqueId(), effectKey);
 
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 0.8f);
-            String message = plugin.getMessagesHandlerInstance().getPurchaseSuccessful().replace("{0}", ColorHelper.parse(effect.getName()));
+            String message = messagesHandler.getPurchaseSuccessful().replace("{0}", ColorHelper.parse(effect.getName()));
             messagesHelper.sendPlayerMessage(player, message);
             return true;
         } catch (SQLException e) {
@@ -86,15 +96,15 @@ public class EffectsHandler {
 
             // Deactivate the old effect first
             if (currentActive != null) {
-                plugin.getDatabaseHandler().UpdateOwnedEffect(player.getUniqueId(), currentActive, false);
+                databaseHandler.UpdateOwnedEffect(player.getUniqueId(), currentActive, false);
             }
 
             // Activate the new effect
-            plugin.getDatabaseHandler().UpdateOwnedEffect(player.getUniqueId(), effectKey, true);
+            databaseHandler.UpdateOwnedEffect(player.getUniqueId(), effectKey, true);
             setActiveEffect(player.getUniqueId(), effectKey); // Update cache
 
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 0.8f);
-            String message = plugin.getMessagesHandlerInstance().getEffectSelected().replace("{0}", ColorHelper.parse(effectsRegistry.get(effectKey).getName()));
+            String message = messagesHandler.getEffectSelected().replace("{0}", ColorHelper.parse(effectsRegistry.get(effectKey).getName()));
             messagesHelper.sendPlayerMessage(player, message);
             return true;
         } catch (SQLException e) {
@@ -114,11 +124,11 @@ public class EffectsHandler {
             String activeEffect = getActiveEffect(player.getUniqueId());
             if (activeEffect == null || !effectKey.equals(activeEffect)) return false;
 
-            plugin.getDatabaseHandler().UpdateOwnedEffect(player.getUniqueId(), effectKey, false);
+            databaseHandler.UpdateOwnedEffect(player.getUniqueId(), effectKey, false);
             setActiveEffect(player.getUniqueId(), null); // Clear from cache
 
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 0.8f);
-            String message = plugin.getMessagesHandlerInstance().getEffectDeselected().replace("{0}", ColorHelper.parse(effectsRegistry.get(effectKey).getName()));
+            String message = messagesHandler.getEffectDeselected().replace("{0}", ColorHelper.parse(effectsRegistry.get(effectKey).getName()));
             messagesHelper.sendPlayerMessage(player, message);
             return true;
         } catch (SQLException e) {
@@ -133,14 +143,14 @@ public class EffectsHandler {
 
         List<String> ownedEffects;
         try {
-            ownedEffects = plugin.getDatabaseHandler().GetOwnedEffectKeys(player.getUniqueId());
+            ownedEffects = databaseHandler.GetOwnedEffectKeys(player.getUniqueId());
         }
         catch (SQLException e) {
             throw new RuntimeException(e);
         }
 
         List<String> lore = new ArrayList<>();
-        lore.add(ChatColor.GOLD + "Price: "  + ChatColor.YELLOW  + "$" + effect.getPrice());
+        lore.add("§6Price: " + "§e$" + effect.getPrice());
         lore.add("");
         for (String loreLine : effect.getLore()) {
             lore.add(ColorHelper.parse(loreLine));
@@ -148,9 +158,9 @@ public class EffectsHandler {
         lore.add("");
 
         if (player.hasPermission(effect.getPermission()) || ownedEffects.contains(effectKey)) {
-            lore.add(ColorHelper.parse(plugin.getMessagesHandlerInstance().getEffectGuiOwned()));
+            lore.add(ColorHelper.parse(messagesHandler.getEffectGuiOwned()));
         } else {
-            lore.add(ColorHelper.parse(plugin.getMessagesHandlerInstance().getEffectGuiPurchase()));
+            lore.add(ColorHelper.parse(messagesHandler.getEffectGuiPurchase()));
         }
 
         if (meta != null) {
@@ -187,7 +197,7 @@ public class EffectsHandler {
         }
         lore.add("");
         if (effect.getIsActive()){
-            lore.add(ColorHelper.parse(plugin.getMessagesHandlerInstance().getEffectGuiDeselect()));
+            lore.add(ColorHelper.parse(messagesHandler.getEffectGuiDeselect()));
 
             if (meta != null) {
                 meta.addEnchant(Enchantment.LURE, 1, true);
@@ -195,7 +205,7 @@ public class EffectsHandler {
             }
         }
         else{
-            lore.add(ColorHelper.parse(plugin.getMessagesHandlerInstance().getEffectGuiSelect()));
+            lore.add(ColorHelper.parse(messagesHandler.getEffectGuiSelect()));
         }
 
         if (meta != null) {
@@ -223,10 +233,10 @@ public class EffectsHandler {
 
             List<String> lore = new ArrayList<>();
             lore.add("");
-            lore.add(ChatColor.WHITE + "You don't own any elytra effect");
-            lore.add(ChatColor.WHITE + "Visit the shop for more info");
+            lore.add("§fYou don't own any elytra effect");
+            lore.add("§fVisit the shop for more info");
             lore.add("");
-            lore.add(ChatColor.GRAY + "/ee shop");
+            lore.add("§7/ee shop");
             meta.setLore(lore);
         }
 
@@ -239,7 +249,7 @@ public class EffectsHandler {
         if (activeEffectKey == null) return;
 
         ElytraEffect effect = effectsRegistry.get(activeEffectKey);
-        if (effect == null || plugin.getTpsHandler().isLagProtectionActive()) return;
+        if (effect == null || tpsHandler.isLagProtectionActive()) return;
 
         Vector direction = player.getLocation().getDirection().normalize();
         Vector offset = direction.multiply(-1);
@@ -268,7 +278,7 @@ public class EffectsHandler {
                     setActiveEffect(player.getUniqueId(), activeEffect);
                 }
             } catch (SQLException e) {
-                plugin.getLogger().log(Level.SEVERE, "Could not load active effect for " + player.getName(), e);
+                logger.log(Level.SEVERE, "Could not load active effect for " + player.getName(), e);
             }
         });
     }
@@ -472,16 +482,10 @@ public class EffectsHandler {
                                                 Map<ServerVersion, String> particleNames,
                                                 List<String> lore, int price, String permission) {
 
-        ServerVersion currentVersion = plugin.getServerVersion();
-        if (currentVersion == null || currentVersion == ServerVersion.UNKNOWN) {
-            plugin.getLogger().warning("Could not register effect '" + name + "' due to an unknown server version.");
-            return;
-        }
-
-        String particleNameToUse = particleNames.getOrDefault(currentVersion, particleNames.get(ServerVersion.V_1_21));
+        String particleNameToUse = particleNames.getOrDefault(serverVersion, particleNames.get(ServerVersion.V_1_21));
 
         if (particleNameToUse == null) {
-            plugin.getLogger().warning("Could not register effect '" + name + "'. No valid particle name was defined for this version.");
+            logger.warning("Could not register effect '" + name + "'. No valid particle name was defined for this version.");
             return;
         }
 
@@ -489,7 +493,7 @@ public class EffectsHandler {
             Particle particle = Particle.valueOf(particleNameToUse.toUpperCase());
             effectsRegistry.put(key, new ElytraEffect(name, material, particle, lore, price, permission));
         } catch (IllegalArgumentException e) {
-            plugin.getLogger().warning("Could not register effect '" + name + "'. Particle '" + particleNameToUse + "' is not valid on this server version.");
+            logger.warning("Could not register effect '" + name + "'. Particle '" + particleNameToUse + "' is not valid on this server version.");
         }
     }
 
@@ -500,6 +504,6 @@ public class EffectsHandler {
     private void handleSqlException(SQLException e, Player player, String message) {
         player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 0.8f);
         messagesHelper.sendPlayerMessage(player, message);
-        plugin.getLogger().log(Level.SEVERE, "A database error occurred for player " + player.getName(), e);
+        logger.log(Level.SEVERE, "A database error occurred for player " + player.getName(), e);
     }
 }

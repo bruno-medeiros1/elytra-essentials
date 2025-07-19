@@ -23,6 +23,7 @@ import org.bukkit.persistence.PersistentDataType;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class EffectsGuiHandler {
     private final ElytraEssentials plugin;
@@ -30,15 +31,18 @@ public class EffectsGuiHandler {
     private final DatabaseHandler databaseHandler;
     private final FoliaHelper foliaHelper;
     private final MessagesHelper messagesHelper;
+    private final Logger logger;
 
     private ShopGuiHandler shopGuiHandler;
 
-    public EffectsGuiHandler(ElytraEssentials plugin, EffectsHandler effectsHandler, DatabaseHandler databaseHandler, FoliaHelper foliaHelper, MessagesHelper messagesHelper) {
+    public EffectsGuiHandler(ElytraEssentials plugin, EffectsHandler effectsHandler, DatabaseHandler databaseHandler, FoliaHelper foliaHelper,
+                             MessagesHelper messagesHelper, Logger logger) {
         this.plugin = plugin;
         this.effectsHandler = effectsHandler;
         this.databaseHandler = databaseHandler;
         this.foliaHelper = foliaHelper;
         this.messagesHelper = messagesHelper;
+        this.logger = logger;
     }
 
     public void setShopGuiHandler(ShopGuiHandler shopGuiHandler) {
@@ -70,7 +74,7 @@ public class EffectsGuiHandler {
                 });
 
             } catch (SQLException e) {
-                plugin.getLogger().log(Level.SEVERE, "Failed to open owned effects GUI for " + player.getName(), e);
+                logger.log(Level.SEVERE, "Failed to open owned effects GUI for " + player.getName(), e);
                 foliaHelper.runTaskOnMainThread(() ->
                         messagesHelper.sendPlayerMessage(player, "&cAn error occurred while fetching your effects."));
             }
@@ -116,13 +120,13 @@ public class EffectsGuiHandler {
 
         if (event.isLeftClick()) {
             // Player wants to SELECT a new effect.
-            boolean selectionSuccess = plugin.getEffectsHandler().handleSelection(player, effectKey);
+            boolean selectionSuccess = effectsHandler.handleSelection(player, effectKey);
             if (selectionSuccess) {
                 this.open(player);
             }
         } else if (event.isRightClick()) {
             // Player wants to DESELECT their active effect.
-            boolean deselectionSuccess = plugin.getEffectsHandler().handleDeselection(player, effectKey);
+            boolean deselectionSuccess = effectsHandler.handleDeselection(player, effectKey);
             if (deselectionSuccess) {
                 // Tell the main plugin to refresh the GUI
                 this.open(player);
@@ -131,8 +135,8 @@ public class EffectsGuiHandler {
     }
 
     private void populateOwnedItems(Inventory inv, Player player, List<String> playerOwnedKeys) {
-        Map<String, ElytraEffect> allEffects = plugin.getEffectsHandler().getEffectsRegistry();
-        String activeEffectKey = plugin.getEffectsHandler().getActiveEffect(player.getUniqueId());
+        Map<String, ElytraEffect> allEffects = effectsHandler.getEffectsRegistry();
+        String activeEffectKey = effectsHandler.getActiveEffect(player.getUniqueId());
 
         for (int i = 0; i < playerOwnedKeys.size(); i++) {
             if (i >= Constants.GUI.EFFECTS_ITEM_DISPLAY_LIMIT) break;
@@ -143,7 +147,7 @@ public class EffectsGuiHandler {
             if (templateEffect != null) {
                 ElytraEffect playerSpecificEffect = new ElytraEffect(templateEffect);
                 playerSpecificEffect.setIsActive(effectKey.equals(activeEffectKey));
-                ItemStack item = plugin.getEffectsHandler().createOwnedItem(effectKey, playerSpecificEffect);
+                ItemStack item = effectsHandler.createOwnedItem(effectKey, playerSpecificEffect);
                 inv.setItem(i, item);
             }
         }

@@ -6,8 +6,6 @@ import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.utils.CancellableTask;
 import org.bruno.elytraEssentials.utils.Constants;
 import org.bruno.elytraEssentials.utils.PlayerStats;
-import org.bukkit.Bukkit;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,12 +16,14 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class DatabaseHandler {
     private final ElytraEssentials plugin;
     private final ConfigHandler configHandler;
     private final FoliaHelper foliaHelper;
     private final MessagesHelper messagesHelper;
+    private final Logger logger;
 
     private Connection connection;
 
@@ -38,17 +38,18 @@ public class DatabaseHandler {
 
     private CancellableTask backupTask = null;
 
-    public DatabaseHandler(ElytraEssentials plugin, ConfigHandler configHandler, FoliaHelper foliaHelper, MessagesHelper messagesHelper) {
+    public DatabaseHandler(ElytraEssentials plugin, ConfigHandler configHandler, FoliaHelper foliaHelper, MessagesHelper messagesHelper, Logger logger) {
         this.plugin = plugin;
         this.configHandler = configHandler;
         this.foliaHelper = foliaHelper;
         this.messagesHelper = messagesHelper;
+        this.logger = logger;
 
         setDatabaseVariables();
     }
 
     public void Initialize() throws SQLException {
-        plugin.getLogger().info("Using " + storageType.name() + " for data storage.");
+        logger.info("Using " + storageType.name() + " for data storage.");
 
         if (storageType == StorageType.MYSQL) {
             connection = DriverManager.getConnection(
@@ -65,7 +66,7 @@ public class DatabaseHandler {
             File dbFile = new File(databaseFolder, Constants.Files.SQLITE_DB_NAME);
             connection = DriverManager.getConnection("jdbc:sqlite:" + dbFile.getAbsolutePath());
         }
-        plugin.getLogger().info("Database connection established.");
+        logger.info("Database connection established.");
         InitializeTables();
     }
 
@@ -79,7 +80,7 @@ public class DatabaseHandler {
                 connection.close();
                 messagesHelper.sendDebugMessage(storageType.name() + " database connection closed successfully!");
             } catch (SQLException e) {
-                plugin.getLogger().log(Level.SEVERE, "Failed to close the database connection.", e);
+                logger.log(Level.SEVERE, "Failed to close the database connection.", e);
             }
         }
     }
@@ -89,13 +90,13 @@ public class DatabaseHandler {
         executeTableQuery(Constants.Database.Tables.OWNED_EFFECTS);
         executeTableQuery(Constants.Database.Tables.PLAYER_STATS);
         executeTableQuery(Constants.Database.Tables.PLAYER_ACHIEVEMENTS);
-        plugin.getLogger().info("Database tables verified and initialized successfully.");
+        logger.info("Database tables verified and initialized successfully.");
     }
 
     private void executeTableQuery(String tableName) throws SQLException {
         String query = getCreateTableQuery(tableName);
         if (query == null) {
-            plugin.getLogger().warning("No schema found for table: " + tableName);
+            logger.warning("No schema found for table: " + tableName);
             return;
         }
         try (Statement stmt = connection.createStatement()) {
@@ -127,7 +128,7 @@ public class DatabaseHandler {
         try {
             this.storageType = StorageType.valueOf(typeFromConfig);
         } catch (IllegalArgumentException e) {
-            plugin.getLogger().warning("Invalid storage type '" + typeFromConfig + "' in config.yml. Defaulting to SQLITE.");
+            logger.warning("Invalid storage type '" + typeFromConfig + "' in config.yml. Defaulting to SQLITE.");
             this.storageType = StorageType.SQLITE;
         }
 
@@ -154,7 +155,7 @@ public class DatabaseHandler {
 
         long interval = Constants.Database.Backups.BACKUP_INTERVAL_TICKS;
 
-        plugin.getLogger().info("Starting automatic database backup task...");
+        logger.info("Starting automatic database backup task...");
 
         // This is the new, platform-safe way to schedule the repeating backup.
         this.backupTask = foliaHelper.runTaskTimerGlobal(() -> {
@@ -174,14 +175,14 @@ public class DatabaseHandler {
         File sourceFile = new File(databaseFolder, Constants.Files.SQLITE_DB_NAME);
 
         if (!sourceFile.exists()) {
-            plugin.getLogger().warning("SQLite database file not found. Skipping backup.");
+            logger.warning("SQLite database file not found. Skipping backup.");
             return;
         }
 
         File backupFolder = new File(databaseFolder, Constants.Files.DB_BACKUP_FOLDER);
         if (!backupFolder.exists()) {
             if (!backupFolder.mkdirs()) {
-                plugin.getLogger().severe("Could not create backups folder! Please check file system permissions. Skipping backup.");
+                logger.severe("Could not create backups folder! Please check file system permissions. Skipping backup.");
                 return;
             }
         }
@@ -193,7 +194,7 @@ public class DatabaseHandler {
             if (oldestFile.delete()) {
                 messagesHelper.sendDebugMessage("Deleted oldest backup file: " + oldestFile.getName());
             } else {
-                plugin.getLogger().warning("Could not delete oldest backup file: " + oldestFile.getName());
+                logger.warning("Could not delete oldest backup file: " + oldestFile.getName());
             }
         }
 
@@ -206,7 +207,7 @@ public class DatabaseHandler {
             Files.copy(sourceFile.toPath(), destinationFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
             messagesHelper.sendDebugMessage("Successfully created database backup: " + destinationFile.getName());
         } catch (IOException e) {
-            plugin.getLogger().log(Level.SEVERE, "Could not create SQLite database backup! Check file permissions.", e);
+            logger.log(Level.SEVERE, "Could not create SQLite database backup! Check file permissions.", e);
         }
     }
 

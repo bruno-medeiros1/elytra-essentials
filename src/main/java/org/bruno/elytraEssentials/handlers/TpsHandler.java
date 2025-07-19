@@ -5,10 +5,8 @@ import org.bruno.elytraEssentials.helpers.FoliaHelper;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.utils.CancellableTask;
 import org.bukkit.Bukkit;
-import org.bukkit.scheduler.BukkitTask;
 
 public class TpsHandler {
-    private final ElytraEssentials plugin;
     private final FoliaHelper foliaHelper;
     private final MessagesHelper messagesHelper;
 
@@ -21,7 +19,6 @@ public class TpsHandler {
     private int consecutiveLowTpsSeconds = 0;
 
     public TpsHandler(ElytraEssentials plugin, FoliaHelper foliaHelper, MessagesHelper messagesHelper) {
-        this.plugin = plugin;
         this.foliaHelper = foliaHelper;
         this.messagesHelper = messagesHelper;
     }

@@ -2,8 +2,7 @@ package org.bruno.elytraEssentials.placeholders;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bruno.elytraEssentials.ElytraEssentials;
-import org.bruno.elytraEssentials.handlers.FlightHandler;
-import org.bruno.elytraEssentials.handlers.StatsHandler;
+import org.bruno.elytraEssentials.handlers.*;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.helpers.TimeHelper;
 import org.bruno.elytraEssentials.utils.PlayerStats;
@@ -13,15 +12,21 @@ import org.jetbrains.annotations.NotNull;
 import java.sql.SQLException;
 
 public class ElytraEssentialsPlaceholders extends PlaceholderExpansion {
-
-    private final ElytraEssentials plugin;
-
     private final FlightHandler flightHandler;
+    private final StatsHandler statsHandler;
+    private final EffectsHandler effectsHandler;
+    private final DatabaseHandler databaseHandler;
+    private final ConfigHandler configHandler;
+    private final PluginInfoHandler pluginInfoHandler;
 
-    public ElytraEssentialsPlaceholders(ElytraEssentials plugin, FlightHandler flightHandler) {
-        this.plugin = plugin;
-
+    public ElytraEssentialsPlaceholders(FlightHandler flightHandler, StatsHandler statsHandler,EffectsHandler effectsHandler,
+                                        DatabaseHandler databaseHandler, ConfigHandler configHandler, PluginInfoHandler pluginInfoHandler) {
         this.flightHandler = flightHandler;
+        this.statsHandler = statsHandler;
+        this.effectsHandler = effectsHandler;
+        this.databaseHandler = databaseHandler;
+        this.configHandler = configHandler;
+        this.pluginInfoHandler = pluginInfoHandler;
     }
 
     @Override
@@ -36,7 +41,7 @@ public class ElytraEssentialsPlaceholders extends PlaceholderExpansion {
 
     @Override
     public @NotNull String getVersion() {
-        return plugin.getDescription().getVersion();
+        return pluginInfoHandler.getCurrentVersion();
     }
 
     @Override
@@ -52,7 +57,7 @@ public class ElytraEssentialsPlaceholders extends PlaceholderExpansion {
 
         // Flight Time Placeholders
         if (identifier.equalsIgnoreCase("flight_time") || identifier.equalsIgnoreCase("flight_time_formatted")) {
-            if (!plugin.getConfigHandlerInstance().getIsTimeLimitEnabled()) {
+            if (!configHandler.getIsTimeLimitEnabled()) {
                 return "Disabled";
             }
             if (PermissionsHelper.PlayerBypassTimeLimit(player)) {
@@ -67,7 +72,7 @@ public class ElytraEssentialsPlaceholders extends PlaceholderExpansion {
         }
 
         // We get the stats once and use them for all stat-related placeholders
-        PlayerStats stats = plugin.getStatsHandler().getStats(player);
+        var stats = statsHandler.getStats(player);
         if (stats == null) return "";
 
         switch (identifier.toLowerCase()) {
@@ -99,16 +104,16 @@ public class ElytraEssentialsPlaceholders extends PlaceholderExpansion {
             case "saves":
                 return String.valueOf(stats.getPluginSaves());
             case "active_effect":
-                String activeEffect = plugin.getEffectsHandler().getActiveEffect(player.getUniqueId());
+                String activeEffect = effectsHandler.getActiveEffect(player.getUniqueId());
                 return (activeEffect != null) ? activeEffect : "None";
             case "effects_owned":
                 try {
-                    return String.valueOf(plugin.getDatabaseHandler().GetOwnedEffectKeys(player.getUniqueId()).size());
+                    return String.valueOf(databaseHandler.GetOwnedEffectKeys(player.getUniqueId()).size());
                 } catch (SQLException e) {
                     return "Error";
                 }
             case "effects_total":
-                return String.valueOf(plugin.getEffectsHandler().getEffectsRegistry().size());
+                return String.valueOf(effectsHandler.getEffectsRegistry().size());
         }
 
         return null; // Let PlaceholderAPI know the placeholder was not found

@@ -9,6 +9,7 @@ import org.bruno.elytraEssentials.utils.PlayerStats;
 import org.bruno.elytraEssentials.utils.StatType;
 import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.FireworkMeta;
@@ -19,14 +20,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class AchievementsHandler {
 
-    private final ElytraEssentials plugin; // Needed for logger and custom file access
+    private final ElytraEssentials plugin;
     private final DatabaseHandler databaseHandler;
     private final StatsHandler statsHandler;
     private final FoliaHelper foliaHelper;
     private final MessagesHelper messagesHelper;
+    private final FileConfiguration fileConfiguration;
+    private final Logger logger;
 
     private final Map<String, Achievement> achievements = new HashMap<>();
     private CancellableTask checkTask;
@@ -35,12 +39,15 @@ public class AchievementsHandler {
                               Material displayItem,
                               String message, List<String> commands, List<String> rewards, boolean broadcast) {}
 
-    public AchievementsHandler(ElytraEssentials plugin, DatabaseHandler databaseHandler, StatsHandler statsHandler, FoliaHelper foliaHelper, MessagesHelper messagesHelper) {
+    public AchievementsHandler(ElytraEssentials plugin, DatabaseHandler databaseHandler, StatsHandler statsHandler, FoliaHelper foliaHelper, MessagesHelper messagesHelper,
+                               FileConfiguration fileConfiguration, Logger logger) {
         this.plugin = plugin;
         this.databaseHandler = databaseHandler;
         this.statsHandler = statsHandler;
         this.foliaHelper = foliaHelper;
         this.messagesHelper = messagesHelper;
+        this.fileConfiguration = fileConfiguration;
+        this.logger = logger;
 
         loadAchievements();
     }
@@ -50,29 +57,29 @@ public class AchievementsHandler {
      */
     public void loadAchievements() {
         achievements.clear();
-        ConfigurationSection achievementsSection = plugin.getAchievementsFileConfiguration().getConfigurationSection("achievements");
+        ConfigurationSection achievementsSection = fileConfiguration.getConfigurationSection("achievements");
         if (achievementsSection == null) {
-            plugin.getLogger().warning("No 'achievements' section found in achievements.yml.");
+            logger.warning("No 'achievements' section found in achievements.yml.");
             return;
         }
 
         for (String key : achievementsSection.getKeys(false)) {
             String path = "achievements." + key;
             try {
-                StatType type = StatType.valueOf(plugin.getAchievementsFileConfiguration().getString(path + ".type", "UNKNOWN").toUpperCase());
-                String name = plugin.getAchievementsFileConfiguration().getString(path + ".name", "Unnamed Achievement");
-                double value = plugin.getAchievementsFileConfiguration().getDouble(path + ".value");
-                String description = plugin.getAchievementsFileConfiguration().getString(path + ".description", "&7No description provided.");
-                Material displayItem = Material.matchMaterial(plugin.getAchievementsFileConfiguration().getString(path + ".display-item", "BARRIER"));
+                StatType type = StatType.valueOf(fileConfiguration.getString(path + ".type", "UNKNOWN").toUpperCase());
+                String name = fileConfiguration.getString(path + ".name", "Unnamed Achievement");
+                double value = fileConfiguration.getDouble(path + ".value");
+                String description = fileConfiguration.getString(path + ".description", "&7No description provided.");
+                Material displayItem = Material.matchMaterial(fileConfiguration.getString(path + ".display-item", "BARRIER"));
 
-                String message = plugin.getAchievementsFileConfiguration().getString(path + ".message", "");
-                List<String> commands = plugin.getAchievementsFileConfiguration().getStringList(path + ".commands");
-                List<String> rewards = plugin.getAchievementsFileConfiguration().getStringList(path + ".rewards");
-                boolean broadcast = plugin.getAchievementsFileConfiguration().getBoolean(path + ".broadcast", true);
+                String message = fileConfiguration.getString(path + ".message", "");
+                List<String> commands = fileConfiguration.getStringList(path + ".commands");
+                List<String> rewards = fileConfiguration.getStringList(path + ".rewards");
+                boolean broadcast = fileConfiguration.getBoolean(path + ".broadcast", true);
 
                 achievements.put(key, new Achievement(key, name, type, value, description, displayItem, message, commands, rewards, broadcast));
             } catch (Exception e) {
-                plugin.getLogger().log(Level.WARNING, "Failed to load achievement '" + key + "'. Please check its format in achievements.yml.", e);
+                logger.log(Level.WARNING, "Failed to load achievement '" + key + "'. Please check its format in achievements.yml.", e);
             }
         }
     }
@@ -126,7 +133,7 @@ public class AchievementsHandler {
                     awardAchievement(player, achievement);
                 }
             } catch (SQLException e) {
-                plugin.getLogger().log(Level.SEVERE, "Database error while checking achievements for " + player.getName(), e);
+                logger.log(Level.SEVERE, "Database error while checking achievements for " + player.getName(), e);
             }
         }
     }
@@ -143,7 +150,7 @@ public class AchievementsHandler {
                     String formattedCommand = command.replace("{player}", player.getName());
                     Bukkit.dispatchCommand(Bukkit.getConsoleSender(), formattedCommand);
                 } catch (Exception e) {
-                    plugin.getLogger().warning("Failed to execute achievement command: '" + command + "'. Error: " + e.getMessage());
+                    logger.warning("Failed to execute achievement command: '" + command + "'. Error: " + e.getMessage());
                 }
             }
 

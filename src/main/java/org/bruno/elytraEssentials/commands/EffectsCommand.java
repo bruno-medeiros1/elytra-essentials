@@ -16,19 +16,19 @@ import org.bukkit.entity.Player;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class EffectsCommand implements ISubCommand {
-    private final ElytraEssentials plugin;
-
+    private final Logger logger;
     private final EffectsGuiHandler effectsGuiHandler;
     private final EffectsHandler effectsHandler;
     private final DatabaseHandler databaseHandler;
     private final FoliaHelper foliaHelper;
     private final MessagesHelper messagesHelper;
 
-    public EffectsCommand(ElytraEssentials plugin, EffectsGuiHandler guiHandler, EffectsHandler effectsHandler, DatabaseHandler dbHandler, FoliaHelper fHelper, MessagesHelper msgHelper) {
-        this.plugin = plugin;
-
+    public EffectsCommand(Logger logger, EffectsGuiHandler guiHandler, EffectsHandler effectsHandler, DatabaseHandler dbHandler, FoliaHelper fHelper,
+                          MessagesHelper msgHelper) {
+        this.logger = logger;
         this.effectsGuiHandler = guiHandler;
         this.effectsHandler = effectsHandler;
         this.databaseHandler = dbHandler;
@@ -140,7 +140,7 @@ public class EffectsCommand implements ISubCommand {
                 foliaHelper.runTaskOnMainThread(() ->
                         messagesHelper.sendCommandSenderMessage(sender,"&cA database error occurred.")
                 );
-                plugin.getLogger().log(Level.SEVERE, "Failed to give effect to " + target.getName(), e);
+                logger.log(Level.SEVERE, "Failed to give effect to " + target.getName(), e);
             }
         });
     }
@@ -189,7 +189,7 @@ public class EffectsCommand implements ISubCommand {
                 foliaHelper.runTaskOnMainThread(() ->
                         messagesHelper.sendCommandSenderMessage(sender,"&cA database error occurred.")
                 );
-                plugin.getLogger().log(Level.SEVERE, "Failed to remove effect from " + target.getName(), e);
+                logger.log(Level.SEVERE, "Failed to remove effect from " + target.getName(), e);
             }
         });
     }
@@ -221,7 +221,7 @@ public class EffectsCommand implements ISubCommand {
                 foliaHelper.runTaskOnMainThread(() ->
                         messagesHelper.sendCommandSenderMessage(sender,"&cA database error occurred while fetching owned effects.")
                 );
-                plugin.getLogger().log(Level.SEVERE, "Failed to list effects for " + target.getName(), e);
+                logger.log(Level.SEVERE, "Failed to list effects for " + target.getName(), e);
                 return;
             }
 
@@ -231,10 +231,10 @@ public class EffectsCommand implements ISubCommand {
                 if (targetPlayer != null) {
                     if (PermissionsHelper.hasAllEffectsPermission(targetPlayer)) {
                         // If they have the wildcard, add all registered effects.
-                        allOwnedEffects.addAll(plugin.getEffectsHandler().getEffectsRegistry().keySet());
+                        allOwnedEffects.addAll(effectsHandler.getEffectsRegistry().keySet());
                     } else {
                         // Otherwise, check for each individual permission.
-                        for (Map.Entry<String, ElytraEffect> entry : plugin.getEffectsHandler().getEffectsRegistry().entrySet()) {
+                        for (Map.Entry<String, ElytraEffect> entry : effectsHandler.getEffectsRegistry().entrySet()) {
                             if (targetPlayer.hasPermission(entry.getValue().getPermission())) {
                                 allOwnedEffects.add(entry.getKey());
                             }

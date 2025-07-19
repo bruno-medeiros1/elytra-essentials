@@ -7,7 +7,6 @@ import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bruno.elytraEssentials.utils.Constants;
-import org.bukkit.ChatColor;
 import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -76,14 +75,14 @@ public class HelpCommand implements ISubCommand {
             try {
                 page = Integer.parseInt(args[0]);
                 if (page < 1 || page > totalPages) {
-                    sender.sendMessage(ChatColor.RED + "Invalid page number.");
+                    sender.sendMessage("§cInvalid page number.");
                     return true;
                 }
                 if (sender instanceof Player)
                     ((Player) sender).playSound(((Player) sender).getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 0.8f, 1.0f);
 
             } catch (NumberFormatException e) {
-                sender.sendMessage(ChatColor.RED + "Invalid page number. Please use a number.");
+                sender.sendMessage("§cInvalid page number. Please use a number.");
                 return true;
             }
         }

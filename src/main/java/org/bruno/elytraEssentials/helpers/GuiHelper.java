@@ -19,6 +19,7 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -144,7 +145,6 @@ public final class GuiHelper {
         }
         catch (Exception e) {
             // Fallback to a default item if the texture fails to load
-            Bukkit.getLogger().warning("Failed to create custom head texture: " + e.getMessage());
             return createGuiItem(Material.BARRIER, name, lore);
         }
         catch (Throwable e){

@@ -22,6 +22,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.logging.Logger;
 
 /**
  * A helper class responsible for all logic related to creating,
@@ -35,14 +36,16 @@ public class ArmoredElytraHelper {
     private final NamespacedKey previewItemKey;
     private final NamespacedKey durabilityKey;
     private final NamespacedKey maxDurabilityKey;
+    private final Logger logger;
 
-    public ArmoredElytraHelper(ElytraEssentials plugin) {
+    public ArmoredElytraHelper(ElytraEssentials plugin, Logger logger) {
         this.plugin = plugin;
         this.armoredElytraKey = new NamespacedKey(plugin, Constants.NBT.ARMORED_ELYTRA_TAG);
         this.materialKey = new NamespacedKey(plugin, Constants.NBT.ARMOR_MATERIAL_TAG);
         this.previewItemKey = new NamespacedKey(plugin, Constants.NBT.PREVIEW_ITEM_TAG);
         this.durabilityKey = new NamespacedKey(plugin, Constants.NBT.ARMOR_DURABILITY_TAG);
         this.maxDurabilityKey = new NamespacedKey(plugin, Constants.NBT.MAX_ARMOR_DURABILITY_TAG);
+        this.logger = logger;
     }
 
     public ItemStack createArmoredElytra(ItemStack elytra, ItemStack chestplate, Player player) {
@@ -240,7 +243,7 @@ public class ArmoredElytraHelper {
             //  Fallback for versions that do not have the 'generic.armor' attribute (1.21.3+)
             AttributeInstance attributeInstance = player.getAttribute(Attribute.ARMOR);
             if (attributeInstance == null) {
-                plugin.getLogger().warning("Player does not have 'armor' attribute instance. Report this to the plugin author!");
+                logger.warning("Player does not have 'armor' attribute instance. Report this to the plugin author!");
                 return null;
             }
             return attributeInstance;
@@ -255,7 +258,7 @@ public class ArmoredElytraHelper {
         if (attribute == null) {
             AttributeInstance attributeInstance = player.getAttribute(Attribute.ARMOR_TOUGHNESS);
             if (attributeInstance == null) {
-                plugin.getLogger().warning("Player does not have 'armor_toughness' attribute instance. Report this to the plugin author!");
+                logger.warning("Player does not have 'armor_toughness' attribute instance. Report this to the plugin author!");
                 return null;
             }
             return attributeInstance;
@@ -409,11 +412,11 @@ public class ArmoredElytraHelper {
                         .getConstructor(UUID.class, String.class, double.class, AttributeModifier.Operation.class)
                         .newInstance(uuid, name, amount, op);
             } catch (Exception ex) {
-                plugin.getLogger().severe("Failed to create AttributeModifier: " + ex.getMessage() + "Report this to the plugin author!");
+                logger.severe("Failed to create AttributeModifier: " + ex.getMessage() + "Report this to the plugin author!");
                 return null;
             }
         } catch (Exception e) {
-            plugin.getLogger().severe("Failed to create AttributeModifier: " + e.getMessage() + "Report this to the plugin author!");
+            logger.severe("Failed to create AttributeModifier: " + e.getMessage() + "Report this to the plugin author!");
             return null;
         }
     }

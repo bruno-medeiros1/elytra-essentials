@@ -16,14 +16,13 @@ import org.bukkit.entity.Player;
  * A centralized utility class for sending all formatted player and console messages.
  */
 public class MessagesHelper {
-
-    private final ElytraEssentials plugin;
+    private final ServerVersion serverVersion;
 
     private String pluginPrefix;
     private boolean debugEnabled = false;
 
-    public MessagesHelper(ElytraEssentials plugin) {
-        this.plugin = plugin;
+    public MessagesHelper(ElytraEssentials plugin, ServerVersion serverVersion) {
+        this.serverVersion = serverVersion;
     }
 
     /**
@@ -57,9 +56,8 @@ public class MessagesHelper {
      */
     public void sendActionBarMessage(Player player, String message) {
         String coloredMessage = ColorHelper.parse(message);
-        ServerVersion version = plugin.getServerVersion();
 
-        if (version == ServerVersion.V_1_21) {
+        if (serverVersion == ServerVersion.V_1_21) {
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacy(coloredMessage));
         } else {
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(coloredMessage));

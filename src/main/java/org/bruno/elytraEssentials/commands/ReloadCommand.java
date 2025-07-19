@@ -1,6 +1,9 @@
 package org.bruno.elytraEssentials.commands;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
+import org.bruno.elytraEssentials.handlers.DatabaseHandler;
+import org.bruno.elytraEssentials.handlers.MessagesHandler;
+import org.bruno.elytraEssentials.handlers.StatsHandler;
 import org.bruno.elytraEssentials.helpers.ColorHelper;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
@@ -10,38 +13,49 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ReloadCommand implements ISubCommand {
 
     private final ElytraEssentials plugin;
 
     private final MessagesHelper messagesHelper;
+    private final StatsHandler statsHandler;
+    private final DatabaseHandler databaseHandler;
+    private final MessagesHandler messagesHandler;
+    private final Logger logger;
 
-    public ReloadCommand(ElytraEssentials plugin, MessagesHelper messagesHelper) {
+    public ReloadCommand(ElytraEssentials plugin, MessagesHelper messagesHelper, StatsHandler statsHandler, DatabaseHandler databaseHandler,
+                         MessagesHandler messagesHandler, Logger logger) {
         this.plugin = plugin;
         this.messagesHelper = messagesHelper;
+        this.statsHandler = statsHandler;
+        this.databaseHandler = databaseHandler;
+        this.messagesHandler = messagesHandler;
+        this.logger = logger;
     }
 
+    //  TODO: Review reload
     @Override
     public boolean Execute(CommandSender sender, String[] args) {
         if (!PermissionsHelper.hasReloadPermission(sender)) {
-            this.messagesHelper.sendCommandSenderMessage(sender, ColorHelper.parse(plugin.getMessagesHandlerInstance().getNoPermissionMessage()));
+            this.messagesHelper.sendCommandSenderMessage(sender, ColorHelper.parse(messagesHandler.getNoPermissionMessage()));
             return true;
         }
 
-        this.messagesHelper.sendCommandSenderMessage(sender, ColorHelper.parse(plugin.getMessagesHandlerInstance().getReloadStartMessage()));
+        this.messagesHelper.sendCommandSenderMessage(sender, ColorHelper.parse(messagesHandler.getReloadStartMessage()));
 
         // Start the Reload Process
         try {
             plugin.shutdown();
-            plugin.getDatabaseHandler().Disconnect();
+            databaseHandler.Disconnect();
 
             plugin.reloadConfig();
 
             plugin.setupHandlers();
 
             // Validate the flight time for online players.
-            plugin.getLogger().info("Reloading data for all online players...");
+            logger.info("Reloading data for all online players...");
             //plugin.getElytraFlightListener().reloadOnlinePlayerFlightTimes();
 
             // Re-assign the config variables for the ElytraFlightListener
@@ -51,13 +65,13 @@ public class ReloadCommand implements ISubCommand {
 
             // Reload the main stats for all online players.
             for (Player player : Bukkit.getOnlinePlayers()) {
-                plugin.getStatsHandler().loadPlayerStats(player);
+                statsHandler.loadPlayerStats(player);
             }
 
-            this.messagesHelper.sendCommandSenderMessage(sender, plugin.getMessagesHandlerInstance().getReloadSuccessMessage());
+            this.messagesHelper.sendCommandSenderMessage(sender, messagesHandler.getReloadSuccessMessage());
         } catch (Exception e) {
             this.messagesHelper.sendCommandSenderMessage(sender, "&cAn error occurred during reload. The server may be in an unstable state. Please check the console.");
-            plugin.getLogger().log(Level.SEVERE, "A critical error occurred during plugin reload.", e);
+            logger.log(Level.SEVERE, "A critical error occurred during plugin reload.", e);
         }
 
         return true;

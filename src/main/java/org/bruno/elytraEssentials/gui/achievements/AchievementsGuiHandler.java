@@ -3,6 +3,7 @@ package org.bruno.elytraEssentials.gui.achievements;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.handlers.AchievementsHandler;
 import org.bruno.elytraEssentials.handlers.DatabaseHandler;
+import org.bruno.elytraEssentials.handlers.StatsHandler;
 import org.bruno.elytraEssentials.helpers.ColorHelper;
 import org.bruno.elytraEssentials.helpers.FoliaHelper;
 import org.bruno.elytraEssentials.helpers.GuiHelper;
@@ -23,13 +24,15 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class AchievementsGuiHandler {
-    private final ElytraEssentials plugin;
-
+    private final Logger logger;
     private final DatabaseHandler databaseHandler;
     private final FoliaHelper foliaHelper;
     private final MessagesHelper messagesHelper;
+    private final AchievementsHandler achievementsHandler;
+    private final StatsHandler statsHandler;
 
     private static class PlayerGuiState {
         int page;
@@ -53,11 +56,14 @@ public class AchievementsGuiHandler {
     );
 
 
-    public AchievementsGuiHandler(ElytraEssentials plugin, DatabaseHandler databaseHandler, FoliaHelper foliaHelper, MessagesHelper messagesHelper) {
-        this.plugin = plugin;
+    public AchievementsGuiHandler(Logger logger, DatabaseHandler databaseHandler, FoliaHelper foliaHelper, MessagesHelper messagesHelper,
+                                  AchievementsHandler achievementsHandler, StatsHandler statsHandler) {
+        this.logger = logger;
         this.databaseHandler = databaseHandler;
         this.foliaHelper = foliaHelper;
         this.messagesHelper = messagesHelper;
+        this.achievementsHandler = achievementsHandler;
+        this.statsHandler = statsHandler;
     }
 
     /**
@@ -79,7 +85,7 @@ public class AchievementsGuiHandler {
                     player.openInventory(gui);
                 });
             } catch (SQLException e) {
-                plugin.getLogger().log(Level.SEVERE, "Failed to fetch achievements for player " + player.getName(), e);
+                logger.log(Level.SEVERE, "Failed to fetch achievements for player " + player.getName(), e);
                 foliaHelper.runTaskOnMainThread(() ->
                         messagesHelper.sendPlayerMessage(player,"&cCould not load your achievement data."));
             }
@@ -108,7 +114,7 @@ public class AchievementsGuiHandler {
                 }
                 break;
             case Constants.GUI.ACHIEVEMENTS_NEXT_PAGE_SLOT:
-                long totalItems = plugin.getAchievementsHandler().getAllAchievements().stream()
+                long totalItems = achievementsHandler.getAllAchievements().stream()
                         .filter(ach -> currentState.filter == StatType.UNKNOWN || ach.type() == currentState.filter)
                         .count();
                 int totalPages = (int) Math.ceil((double) totalItems / Constants.GUI.ACHIEVEMENTS_ITEMS_PER_PAGE);
@@ -142,8 +148,6 @@ public class AchievementsGuiHandler {
     }
 
     private void populateItems(Inventory gui, Player player, int page, StatType filter) {
-        AchievementsHandler achievementsHandler = plugin.getAchievementsHandler();
-
         //  Filtering Logic
         List<AchievementsHandler.Achievement> achievementsToDisplay = achievementsHandler.getAllAchievements().stream()
                 .filter(ach -> filter == StatType.UNKNOWN || ach.type() == filter)
@@ -152,10 +156,10 @@ public class AchievementsGuiHandler {
 
         Set<String> unlockedAchievements;
         try {
-            unlockedAchievements = plugin.getDatabaseHandler().getUnlockedAchievementIds(player.getUniqueId());
+            unlockedAchievements = databaseHandler.getUnlockedAchievementIds(player.getUniqueId());
         } catch (SQLException e) {
             messagesHelper.sendPlayerMessage(player,"&cCould not load your achievement data.");
-            plugin.getLogger().log(Level.SEVERE, "Failed to fetch achievements for player " + player.getName(), e);
+            logger.log(Level.SEVERE, "Failed to fetch achievements for player " + player.getName(), e);
             return;
         }
 
@@ -206,7 +210,7 @@ public class AchievementsGuiHandler {
             if (isUnlocked) {
                 lore.add("§a✔ Completed!");
             } else {
-                double playerValue = plugin.getStatsHandler().getStatValue(player, achievement.type());
+                double playerValue = statsHandler.getStatValue(player, achievement.type());
                 lore.add("§eYour Progress:");
                 lore.add(createProgressBar(playerValue, achievement.value()));
             }
@@ -251,7 +255,7 @@ public class AchievementsGuiHandler {
 
     private void addControlButtons(Inventory gui, int page, StatType filter) {
         // Calculate total pages based on the FILTERED list
-        long totalItems = plugin.getAchievementsHandler().getAllAchievements().stream()
+        long totalItems = achievementsHandler.getAllAchievements().stream()
                 .filter(ach -> filter == StatType.UNKNOWN || ach.type() == filter)
                 .count();
         int totalPages = (int) Math.ceil((double) totalItems / Constants.GUI.ACHIEVEMENTS_ITEMS_PER_PAGE);

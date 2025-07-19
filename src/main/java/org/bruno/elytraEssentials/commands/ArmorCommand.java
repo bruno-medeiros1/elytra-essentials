@@ -7,6 +7,8 @@ import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.chat.hover.content.Text;
 import net.milkbowl.vault.economy.Economy;
 import org.bruno.elytraEssentials.ElytraEssentials;
+import org.bruno.elytraEssentials.handlers.ConfigHandler;
+import org.bruno.elytraEssentials.handlers.MessagesHandler;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
@@ -30,13 +32,18 @@ import java.util.Map;
 
 public class ArmorCommand implements ISubCommand {
     private final ElytraEssentials plugin;
-
+    private final Economy economy;
     private final MessagesHelper messagesHelper;
+    private final ConfigHandler configHandler;
+    private final MessagesHandler messagesHandler;
 
-    public ArmorCommand(ElytraEssentials plugin, MessagesHelper messagesHelper) {
+    public ArmorCommand(ElytraEssentials plugin, MessagesHelper messagesHelper, Economy economy, ConfigHandler configHandler, MessagesHandler messagesHandler) {
         this.plugin = plugin;
 
         this.messagesHelper = messagesHelper;
+        this.economy = economy;
+        this.configHandler = configHandler;
+        this.messagesHandler = messagesHandler;
     }
 
     @Override
@@ -60,7 +67,7 @@ public class ArmorCommand implements ISubCommand {
         }
 
         if (!PermissionsHelper.hasArmorPermission(player)) {
-            messagesHelper.sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getNoPermissionMessage());
+            messagesHelper.sendPlayerMessage(player, messagesHandler.getNoPermissionMessage());
             return;
         }
 
@@ -98,7 +105,7 @@ public class ArmorCommand implements ISubCommand {
         }
 
         if (!PermissionsHelper.hasRepairPermission(player)) {
-            messagesHelper.sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getNoPermissionMessage());
+            messagesHelper.sendPlayerMessage(player, messagesHandler.getNoPermissionMessage());
             return;
         }
 
@@ -153,27 +160,26 @@ public class ArmorCommand implements ISubCommand {
     }
 
     private boolean handleRepairPayment(Player player) {
-        double moneyCost = plugin.getConfigHandlerInstance().getRepairCostMoney();
-        int xpCost = plugin.getConfigHandlerInstance().getRepairCostXpLevels();
+        double moneyCost = configHandler.getRepairCostMoney();
+        int xpCost = configHandler.getRepairCostXpLevels();
 
         // Check requirements first
         if (moneyCost > 0) {
-            Economy economy = plugin.getEconomy();
             if (economy == null) return true;
             if (!economy.has(player, moneyCost)) {
-                messagesHelper.sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getNotEnoughMoney());
+                messagesHelper.sendPlayerMessage(player, messagesHandler.getNotEnoughMoney());
                 return false;
             }
         }
         if (xpCost > 0) {
             if (player.getLevel() < xpCost) {
-                messagesHelper.sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getNotEnoughXP());
+                messagesHelper.sendPlayerMessage(player, messagesHandler.getNotEnoughXP());
                 return false;
             }
         }
 
         // Deduct costs
-        if (moneyCost > 0) plugin.getEconomy().withdrawPlayer(player, moneyCost);
+        if (moneyCost > 0) economy.withdrawPlayer(player, moneyCost);
         if (xpCost > 0) player.setLevel(player.getLevel() - xpCost);
 
         return true;
@@ -232,8 +238,8 @@ public class ArmorCommand implements ISubCommand {
         // Build the "Armor Plating" line with an interactive button if needed
         TextComponent platingTitle = new TextComponent(TextComponent.fromLegacyText(secondaryColor + arrow + textColor + "Armor Plating "));
         if (currentDurability < maxDurability) {
-            double repairMoneyCost = plugin.getConfigHandlerInstance().getRepairCostMoney();
-            int repairXpCost = plugin.getConfigHandlerInstance().getRepairCostXpLevels();
+            double repairMoneyCost = configHandler.getRepairCostMoney();
+            int repairXpCost = configHandler.getRepairCostXpLevels();
 
             TextComponent repairButton = new TextComponent("§b[Repair]");
             repairButton.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/ee armor repair"));

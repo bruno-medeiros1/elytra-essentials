@@ -25,7 +25,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class CombatTagHandler {
-    private final ElytraEssentials plugin;
     private final ConfigHandler configHandler;
     private final MessagesHelper messagesHelper;
     private final FoliaHelper foliaHelper;
@@ -36,7 +35,6 @@ public class CombatTagHandler {
     private CancellableTask countdownTask;
 
     public CombatTagHandler(ElytraEssentials plugin, ConfigHandler configHandler, MessagesHelper messagesHelper, FoliaHelper foliaHelper) {
-        this.plugin = plugin;
         this.configHandler = configHandler;
         this.messagesHelper = messagesHelper;
         this.foliaHelper = foliaHelper;
@@ -67,7 +65,7 @@ public class CombatTagHandler {
                 long remainingMs = expiryTime - System.currentTimeMillis();
                 if (remainingMs > 0) {
                     // Update the BossBar
-                    double progress = (double) remainingMs / (plugin.getConfigHandlerInstance().getCombatTagCooldown() * 1000L);
+                    double progress = (double) remainingMs / (configHandler.getCombatTagCooldown() * 1000L);
                     int remainingSeconds = (int) Math.ceil(remainingMs / 1000.0);
 
                     bossBar.setProgress(Math.max(0, Math.min(1, progress)));
@@ -98,7 +96,7 @@ public class CombatTagHandler {
         if (!(event.getEntity() instanceof Player player) || !configHandler.getIsCombatTagEnabled() || !player.isGliding()) return;
         if (PermissionsHelper.PlayerBypassCombatTag(player)) return;
 
-        boolean playerDamageOnly = plugin.getConfigHandlerInstance().getIsCombatTagPlayerDamageOnlyEnabled();
+        boolean playerDamageOnly = configHandler.getIsCombatTagPlayerDamageOnlyEnabled();
         boolean damageSourceIsValid = false;
 
         if (playerDamageOnly) {
@@ -160,10 +158,10 @@ public class CombatTagHandler {
 
         player.setGliding(false);
 
-        long durationMs = plugin.getConfigHandlerInstance().getCombatTagCooldown() * 1000L;
+        long durationMs = configHandler.getCombatTagCooldown() * 1000L;
         combatTaggedPlayers.put(player.getUniqueId(), System.currentTimeMillis() + durationMs);
 
-        if (plugin.getConfigHandlerInstance().getIsCombatTagPreventFallDamageEnabled()) {
+        if (configHandler.getIsCombatTagPreventFallDamageEnabled()) {
             fallDamageProtection.add(player.getUniqueId());
         }
 

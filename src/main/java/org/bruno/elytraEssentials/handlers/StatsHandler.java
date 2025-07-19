@@ -1,12 +1,10 @@
 package org.bruno.elytraEssentials.handlers;
 
-import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.helpers.*;
 import org.bruno.elytraEssentials.utils.CancellableTask;
 import org.bruno.elytraEssentials.utils.PlayerStats;
 import org.bruno.elytraEssentials.utils.StatType;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -15,6 +13,7 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class StatsHandler {
 
@@ -23,7 +22,7 @@ public class StatsHandler {
 
     private final DatabaseHandler databaseHandler;
     private final FoliaHelper foliaHelper;
-    private final ElytraEssentials plugin;
+    private final Logger logger;
     private final MessagesHelper messagesHelper;
     private final EffectsHandler effectsHandler;
 
@@ -33,8 +32,8 @@ public class StatsHandler {
     private CancellableTask task;
 
     // Constructor updated with new dependencies
-    public StatsHandler(ElytraEssentials plugin, DatabaseHandler databaseHandler, FoliaHelper foliaHelper, MessagesHelper messagesHelper, EffectsHandler effectsHandler) {
-        this.plugin = plugin;
+    public StatsHandler(Logger logger, DatabaseHandler databaseHandler, FoliaHelper foliaHelper, MessagesHelper messagesHelper, EffectsHandler effectsHandler) {
+        this.logger = logger;
         this.databaseHandler = databaseHandler;
         this.foliaHelper = foliaHelper;
         this.messagesHelper = messagesHelper;
@@ -71,7 +70,7 @@ public class StatsHandler {
                 });
 
             } catch (SQLException e) {
-                plugin.getLogger().log(Level.SEVERE, "Could not fetch stats for " + target.getName(), e);
+                logger.log(Level.SEVERE, "Could not fetch stats for " + target.getName(), e);
                 foliaHelper.runTaskOnMainThread(() ->
                         messagesHelper.sendCommandSenderMessage(sender, "&cAn error occurred while fetching stats."));
             }
@@ -114,14 +113,14 @@ public class StatsHandler {
             if (storedEffect != null) activeEffect = storedEffect;
         } catch (SQLException e) {
             messagesHelper.sendCommandSenderMessage(sender,"&cCould not load effect data...");
-            plugin.getLogger().log(Level.SEVERE, "Could not load effect data: ", e);
+            logger.log(Level.SEVERE, "Could not load effect data: ", e);
         }
 
         // Formatting and Sending Message
-        var primary = ChatColor.GOLD;
-        var secondary = ChatColor.YELLOW;
-        var text = ChatColor.GRAY;
-        var value = ChatColor.WHITE;
+        var primary = "§6";
+        var secondary = "§e";
+        var text = "§7";
+        var value = "§f";
         var arrow = "» ";
 
         sender.sendMessage(primary + "§m----------------------------------------------------");
@@ -150,7 +149,7 @@ public class StatsHandler {
                 PlayerStats stats = databaseHandler.getPlayerStats(player.getUniqueId());
                 statsCache.put(player.getUniqueId(), stats);
             } catch (SQLException e) {
-                plugin.getLogger().log(Level.SEVERE, "Could not load stats for player " + player.getName(), e);
+                logger.log(Level.SEVERE, "Could not load stats for player " + player.getName(), e);
             }
         });
     }
@@ -164,7 +163,7 @@ public class StatsHandler {
                 try {
                     databaseHandler.savePlayerStats(stats);
                 } catch (SQLException e) {
-                    plugin.getLogger().log(Level.SEVERE, "Could not save stats for player " + player.getName(), e);
+                    logger.log(Level.SEVERE, "Could not save stats for player " + player.getName(), e);
                 }
             });
         }
@@ -180,7 +179,7 @@ public class StatsHandler {
                     try {
                         databaseHandler.savePlayerStats(stats);
                     } catch (SQLException e) {
-                        plugin.getLogger().log(Level.SEVERE, "Failed to save stats for " + player.getName() + " during async save-all.", e);
+                        logger.log(Level.SEVERE, "Failed to save stats for " + player.getName() + " during async save-all.", e);
                     }
                 }
             }
@@ -283,7 +282,7 @@ public class StatsHandler {
                 List<String> formattedMessages = new ArrayList<>();
 
                 if (topData.isEmpty()) {
-                    formattedMessages.add(ChatColor.GRAY + "No statistics available for this category yet.");
+                    formattedMessages.add("§7No statistics available for this category yet.");
                 } else {
                     int rank = 1;
                     for (Map.Entry<UUID, Double> entry : topData.entrySet()) {
@@ -314,7 +313,7 @@ public class StatsHandler {
                 });
 
             } catch (SQLException e) {
-                plugin.getLogger().log(Level.SEVERE, "An error occurred while fetching the leaderboard.", e);
+                logger.log(Level.SEVERE, "An error occurred while fetching the leaderboard.", e);
                 foliaHelper.runTaskOnMainThread(() ->
                         messagesHelper.sendCommandSenderMessage(sender, "&cAn error occurred while fetching the leaderboard."));
             }

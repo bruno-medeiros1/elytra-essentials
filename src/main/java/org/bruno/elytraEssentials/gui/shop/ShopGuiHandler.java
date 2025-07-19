@@ -22,19 +22,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
 
 public class ShopGuiHandler {
     private final ElytraEssentials plugin;
     private final EffectsHandler effectsHandler;
     private final EffectsGuiHandler effectsGuiHandler;
+    private final Logger logger;
 
     // Use a ConcurrentHashMap for thread safety, essential on Folia
     private final Map<UUID, Integer> playerPages = new ConcurrentHashMap<>();
 
-    public ShopGuiHandler(ElytraEssentials plugin, EffectsHandler effectsHandler, EffectsGuiHandler effectsGuiHandler) {
+    public ShopGuiHandler(ElytraEssentials plugin, EffectsHandler effectsHandler, EffectsGuiHandler effectsGuiHandler, Logger logger) {
         this.plugin = plugin;
         this.effectsHandler = effectsHandler;
         this.effectsGuiHandler = effectsGuiHandler;
+        this.logger = logger;
     }
 
     /**
@@ -56,7 +59,7 @@ public class ShopGuiHandler {
         List<Map.Entry<String, ElytraEffect>> effectsList = new ArrayList<>(effectsHandler.getEffectsRegistry().entrySet());
 
         if (effectsList.isEmpty()) {
-            plugin.getLogger().warning("There are no effects created. Shop will not work");
+            logger.warning("There are no effects created. Shop will not work");
             return;
         }
 
@@ -159,7 +162,7 @@ public class ShopGuiHandler {
                 PersistentDataType.STRING
         );
 
-        boolean purchaseSuccess = plugin.getEffectsHandler().handlePurchase(player, effectKey, permission);
+        boolean purchaseSuccess = effectsHandler.handlePurchase(player, effectKey, permission);
 
         // If the purchase was successful, refresh the GUI to update the item's lore
         if (purchaseSuccess) {

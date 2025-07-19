@@ -6,9 +6,11 @@ import org.bukkit.configuration.file.FileConfiguration;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class ConfigHandler {
     private final FileConfiguration fileConfiguration;
+    private final Logger logger;
 
     // General section
     private boolean isDebugModeEnabled;
@@ -62,8 +64,10 @@ public class ConfigHandler {
     private boolean isCombatTagPreventFallDamageEnabled;
     private boolean isCombatTagPlayerDamageOnlyEnabled;
 
-    public ConfigHandler(FileConfiguration fileConfiguration) {
+    public ConfigHandler(FileConfiguration fileConfiguration, Logger logger) {
         this.fileConfiguration = fileConfiguration;
+        this.logger = logger;
+
         SetConfigVariables();
     }
 
@@ -90,12 +94,12 @@ public class ConfigHandler {
                     double worldSpeedLimit = perWorldSpeedLimitSection.getDouble(worldName, this.defaultSpeedLimit);
                     this.perWorldSpeedLimits.put(worldName, worldSpeedLimit);
                 } catch (Exception e) {
-                    Bukkit.getLogger().info("Invalid speed limit for world '" + worldName + "' in config.yml. Using default speed limit.");
+                    logger.info("Invalid speed limit for world '" + worldName + "' in config.yml. Using default speed limit.");
                     this.perWorldSpeedLimits.put(worldName, this.defaultSpeedLimit);
                 }
             }
         } else {
-            Bukkit.getLogger().info("No per-world speed limits defined in config.yml. Using default values.");
+            logger.info("No per-world speed limits defined in config.yml. Using default values.");
         }
 
         this.isTimeLimitEnabled = this.fileConfiguration.getBoolean("flight.time-limit.enabled", false);

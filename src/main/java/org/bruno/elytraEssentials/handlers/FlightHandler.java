@@ -23,6 +23,7 @@ import org.bukkit.util.Vector;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class FlightHandler {
     private static final int TICKS_IN_ONE_SECOND = 20;
@@ -31,14 +32,15 @@ public class FlightHandler {
     private static final long DEPLOY_COOLDOWN_MS = 5000;
     private static final int DEPLOY_MIN_FALL_DISTANCE = 5;
 
-    private final ElytraEssentials plugin;
-
+    private final Logger logger;
     private final ConfigHandler configHandler;
     private final EffectsHandler effectsHandler;
     private final BoostHandler boostHandler;
     private final FoliaHelper foliaHelper;
     private final MessagesHelper messagesHelper;
     private final DatabaseHandler databaseHandler;
+    private final StatsHandler statsHandler;
+    private final MessagesHandler messagesHandler;
 
     private final Map<UUID, Integer> flightTimeData = new HashMap<>();
     private final Map<UUID, BossBar> flightBossBars = new HashMap<>();
@@ -50,16 +52,17 @@ public class FlightHandler {
     private CancellableTask globalFlightTask;
     private final Map<UUID, CancellableTask> activeFlightTasks = new HashMap<>();
 
-    public FlightHandler(ElytraEssentials plugin, ConfigHandler configHandler, EffectsHandler effectsHandler, BoostHandler boostHandler,  FoliaHelper foliaHelper,
-                         MessagesHelper messagesHelper, DatabaseHandler databaseHandler) {
-        this.plugin = plugin;
-
+    public FlightHandler(Logger logger, ConfigHandler configHandler, EffectsHandler effectsHandler, BoostHandler boostHandler, FoliaHelper foliaHelper,
+                         MessagesHelper messagesHelper, DatabaseHandler databaseHandler, StatsHandler statsHandler, MessagesHandler messagesHandler) {
+        this.logger = logger;
         this.configHandler = configHandler;
         this.effectsHandler = effectsHandler;
         this.boostHandler = boostHandler;
         this.foliaHelper = foliaHelper;
         this.messagesHelper = messagesHelper;
         this.databaseHandler = databaseHandler;
+        this.statsHandler = statsHandler;
+        this.messagesHandler = messagesHandler;
     }
 
     public void start() {
@@ -92,10 +95,10 @@ public class FlightHandler {
     public void loadPlayerData(Player player) {
         if (!configHandler.getIsTimeLimitEnabled()) return;
         try {
-            int storedTime = plugin.getDatabaseHandler().GetPlayerFlightTime(player.getUniqueId());
+            int storedTime = databaseHandler.GetPlayerFlightTime(player.getUniqueId());
             flightTimeData.put(player.getUniqueId(), storedTime);
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Failed to load flight time for " + player.getName(), e);
+            logger.log(Level.SEVERE, "Failed to load flight time for " + player.getName(), e);
         }
     }
 
@@ -139,7 +142,7 @@ public class FlightHandler {
 
     public void handleGlideStart(Player player) {
         if (configHandler.getIsGlobalFlightDisabled() || (configHandler.getDisabledWorlds() != null && configHandler.getDisabledWorlds().contains(player.getWorld().getName()))) {
-            String msg = configHandler.getIsGlobalFlightDisabled() ? plugin.getMessagesHandlerInstance().getElytraUsageDisabledMessage() : plugin.getMessagesHandlerInstance().getElytraUsageWorldDisabledMessage();
+            String msg = configHandler.getIsGlobalFlightDisabled() ? messagesHandler.getElytraUsageDisabledMessage() : messagesHandler.getElytraUsageWorldDisabledMessage();
             messagesHelper.sendPlayerMessage(player, msg);
             player.setGliding(false);
             return;
@@ -155,12 +158,12 @@ public class FlightHandler {
     }
 
     public void handleGlideEnd(Player player) {
-        PlayerStats stats = plugin.getStatsHandler().getStats(player);
+        PlayerStats stats = statsHandler.getStats(player);
         double flightDistance = currentFlightDistances.getOrDefault(player.getUniqueId(), 0.0);
 
         if (flightDistance > stats.getLongestFlight()) {
             stats.setLongestFlight(flightDistance);
-            String message = plugin.getMessagesHandlerInstance().getNewPRLongestFlightMessage().replace("{0}", String.format("%.0f", flightDistance));
+            String message = messagesHandler.getNewPRLongestFlightMessage().replace("{0}", String.format("%.0f", flightDistance));
             messagesHelper.sendPlayerMessage(player, message);
             player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.2f);
         }
@@ -217,7 +220,7 @@ public class FlightHandler {
             if (target != null && target.isOnline()) {
                 foliaHelper.runTaskOnMainThread(() -> {
                     flightTimeData.put(playerId, newFlightTime);
-                    String message = plugin.getMessagesHandlerInstance().getElytraFlightTimeAdded().replace("{0}", TimeHelper.formatFlightTime(finalAmount));
+                    String message = messagesHandler.getElytraFlightTimeAdded().replace("{0}", TimeHelper.formatFlightTime(finalAmount));
                     messagesHelper.sendPlayerMessage(target, message);
                 });
             }
@@ -241,7 +244,7 @@ public class FlightHandler {
             if (target != null && target.isOnline()) {
                 foliaHelper.runTaskOnMainThread(() -> {
                     flightTimeData.put(playerId, newFlightTime);
-                    String message = plugin.getMessagesHandlerInstance().getElytraFlightTimeRemoved().replace("{0}", TimeHelper.formatFlightTime(actualAmountRemoved));
+                    String message = messagesHandler.getElytraFlightTimeRemoved().replace("{0}", TimeHelper.formatFlightTime(actualAmountRemoved));
                     messagesHelper.sendPlayerMessage(target, message);
                 });
             }
@@ -265,7 +268,7 @@ public class FlightHandler {
             if (target != null && target.isOnline()) {
                 foliaHelper.runTaskOnMainThread(() -> {
                     flightTimeData.put(playerId, finalAmount);
-                    String message = plugin.getMessagesHandlerInstance().getElytraFlightTimeSet().replace("{0}", TimeHelper.formatFlightTime(finalAmount));
+                    String message = messagesHandler.getElytraFlightTimeSet().replace("{0}", TimeHelper.formatFlightTime(finalAmount));
                     messagesHelper.sendPlayerMessage(target, message);
                 });
             }
@@ -289,7 +292,7 @@ public class FlightHandler {
                     foliaHelper.runTaskOnMainThread(() -> {
                         flightTimeData.put(playerId, 0);
                         initialFlightTime.put(playerId, 0);
-                        messagesHelper.sendPlayerMessage(onlineTarget, plugin.getMessagesHandlerInstance().getElytraFlightTimeCleared());
+                        messagesHelper.sendPlayerMessage(onlineTarget, messagesHandler.getElytraFlightTimeCleared());
                     });
                 }
             }
@@ -304,7 +307,7 @@ public class FlightHandler {
     }
 
     private void handleSqlException(CommandSender sender, String action, UUID targetId, SQLException e) {
-        plugin.getLogger().log(Level.SEVERE, "Failed to " + action + " for " + targetId, e);
+        logger.log(Level.SEVERE, "Failed to " + action + " for " + targetId, e);
         foliaHelper.runTaskOnMainThread(() ->
                 messagesHelper.sendCommandSenderMessage(sender, "&cA database error occurred. Please check the console."));
     }
@@ -330,7 +333,7 @@ public class FlightHandler {
             player.setGliding(false);
             noFallDamagePlayers.add(player.getUniqueId());
             foliaHelper.runTaskLater(player, () -> noFallDamagePlayers.remove(player.getUniqueId()), 40L);
-            messagesHelper.sendActionBarMessage(player, plugin.getMessagesHandlerInstance().getElytraFlightTimeExpired());
+            messagesHelper.sendActionBarMessage(player, messagesHandler.getElytraFlightTimeExpired());
             if (!foliaHelper.isFolia()) removeBossBar(player);
             return;
         }
@@ -367,11 +370,11 @@ public class FlightHandler {
         // Determine which message format to use
         String format;
         if (boostHandler.isSuperBoostActive(player.getUniqueId())) {
-            format = plugin.getMessagesHandlerInstance().getSpeedoMeterSuperBoost();
+            format = messagesHandler.getSpeedoMeterSuperBoost();
         } else if (boostHandler.isBoostActive(player.getUniqueId())) {
-            format = plugin.getMessagesHandlerInstance().getSpeedoMeterBoost();
+            format = messagesHandler.getSpeedoMeterBoost();
         } else {
-            format = plugin.getMessagesHandlerInstance().getSpeedoMeterNormal();
+            format = messagesHandler.getSpeedoMeterNormal();
         }
 
         String color = calculateSpeedColor(finalSpeed);
@@ -396,7 +399,7 @@ public class FlightHandler {
     private void handleDistanceTracking(Player player, PlayerMoveEvent event) {
         if (event.getFrom().distanceSquared(event.getTo()) == 0) return; // Ignore tiny movements
 
-        PlayerStats stats = plugin.getStatsHandler().getStats(player);
+        PlayerStats stats = statsHandler.getStats(player);
         double distanceMoved = event.getFrom().distance(event.getTo());
 
         stats.addDistance(distanceMoved);
@@ -431,7 +434,7 @@ public class FlightHandler {
                 deployCooldowns.put(player.getUniqueId(), System.currentTimeMillis() + DEPLOY_COOLDOWN_MS);
 
                 player.playSound(player.getLocation(), Sound.ITEM_TOTEM_USE, 0.8f, 0.8f);
-                messagesHelper.sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getEmergencyDeploySuccess());
+                messagesHelper.sendPlayerMessage(player, messagesHandler.getEmergencyDeploySuccess());
                 break;
             }
         }
@@ -458,9 +461,9 @@ public class FlightHandler {
         Integer time = flightTimeData.get(playerId);
         if (time != null) {
             try {
-                plugin.getDatabaseHandler().SetPlayerFlightTime(playerId, time);
+                databaseHandler.SetPlayerFlightTime(playerId, time);
             } catch (SQLException e) {
-                plugin.getLogger().log(Level.SEVERE, "Failed to save flight time for " + playerId, e);
+                logger.log(Level.SEVERE, "Failed to save flight time for " + playerId, e);
             }
         }
     }
@@ -469,14 +472,14 @@ public class FlightHandler {
         if (!configHandler.getIsTimeLimitEnabled() || flightBossBars.containsKey(player.getUniqueId())) return;
 
         if (PermissionsHelper.PlayerBypassTimeLimit(player)) {
-            String message = plugin.getMessagesHandlerInstance().getElytraFlightTimeBypass();
+            String message = messagesHandler.getElytraFlightTimeBypass();
             BossBar bossBar = Bukkit.createBossBar(ColorHelper.parse(message), BarColor.YELLOW, BarStyle.SOLID);
             bossBar.addPlayer(player);
             flightBossBars.put(player.getUniqueId(), bossBar);
         } else {
             int flightTime = flightTimeData.getOrDefault(player.getUniqueId(), 0);
             if (flightTime > 0) {
-                String message = plugin.getMessagesHandlerInstance().getElytraTimeLimitMessage()
+                String message = messagesHandler.getElytraTimeLimitMessage()
                         .replace("{0}", TimeHelper.formatFlightTime(flightTime));
                 BossBar bossBar = Bukkit.createBossBar(ColorHelper.parse(message), BarColor.GREEN, BarStyle.SOLID);
                 bossBar.addPlayer(player);
@@ -498,7 +501,7 @@ public class FlightHandler {
         bossBar.setProgress(progress);
 
         // Update the title with the formatted time
-        String title = plugin.getMessagesHandlerInstance().getElytraTimeLimitMessage()
+        String title = messagesHandler.getElytraTimeLimitMessage()
                 .replace("{0}", TimeHelper.formatFlightTime(currentFlightTime));
         bossBar.setTitle(ColorHelper.parse(title));
 

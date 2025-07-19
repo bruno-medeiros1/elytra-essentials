@@ -1,6 +1,8 @@
 package org.bruno.elytraEssentials.commands;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
+import org.bruno.elytraEssentials.handlers.DatabaseHandler;
+import org.bruno.elytraEssentials.handlers.MessagesHandler;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
@@ -18,27 +20,33 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class ImportDbCommand implements ISubCommand {
 
     private final ElytraEssentials plugin;
-
+    private final Logger logger;
     private final MessagesHelper messagesHelper;
+    private final DatabaseHandler databaseHandler;
+    private final MessagesHandler messagesHandler;
 
-    public ImportDbCommand(ElytraEssentials plugin, MessagesHelper messagesHelper) {
+    public ImportDbCommand(ElytraEssentials plugin, Logger logger, MessagesHelper messagesHelper, DatabaseHandler databaseHandler, MessagesHandler messagesHandler) {
         this.plugin = plugin;
+        this.logger = logger;
         this.messagesHelper = messagesHelper;
+        this.databaseHandler = databaseHandler;
+        this.messagesHandler = messagesHandler;
     }
 
     @Override
     public boolean Execute(CommandSender sender, String[] args) {
         if (!PermissionsHelper.hasImportDbPermission(sender)) {
-            messagesHelper.sendCommandSenderMessage(sender, plugin.getMessagesHandlerInstance().getNoPermissionMessage());
+            messagesHelper.sendCommandSenderMessage(sender, messagesHandler.getNoPermissionMessage());
             return true;
         }
 
-        if (!plugin.getDatabaseHandler().getStorageType().equalsIgnoreCase("SQLITE")) {
+        if (!databaseHandler.getStorageType().equalsIgnoreCase("SQLITE")) {
             messagesHelper.sendCommandSenderMessage(sender,"&cThis command can only be used with the SQLite storage type.");
             return true;
         }
@@ -70,15 +78,15 @@ public class ImportDbCommand implements ISubCommand {
         }
 
         // Start the Import Process
-        plugin.getLogger().warning("Starting database import from backup: " + backupFileName);
+        logger.warning("Starting database import from backup: " + backupFileName);
         messagesHelper.sendCommandSenderMessage(sender,"&eStarting import process... Kicking all players.");
 
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.kickPlayer("Server is restoring a data backup. Please reconnect in a moment.");
         }
 
-        plugin.getLogger().info("All players kicked. Shutting down plugin services...");
-        plugin.getDatabaseHandler().Disconnect();
+        logger.info("All players kicked. Shutting down plugin services...");
+        databaseHandler.Disconnect();
         plugin.shutdown();
 
         File databaseFolder = new File(plugin.getDataFolder(), Constants.Files.DB_FOLDER);
@@ -94,16 +102,16 @@ public class ImportDbCommand implements ISubCommand {
                 if (!testConnection.isValid(2)) {
                     throw new SQLException("Import verification failed: Backup file is corrupted or invalid.");
                 }
-                plugin.getLogger().info("Backup file verified successfully.");
+                logger.info("Backup file verified successfully.");
             } catch (SQLException e) {
                 messagesHelper.sendCommandSenderMessage(sender,"&cImport failed! The selected backup file appears to be corrupted. No changes were made.");
-                plugin.getLogger().log(Level.SEVERE, "Could not verify the integrity of the backup file '" + backupFileName + "'. Aborting import.", e);
+                logger.log(Level.SEVERE, "Could not verify the integrity of the backup file '" + backupFileName + "'. Aborting import.", e);
 
                 if (!tempDbFile.delete()) {
-                    plugin.getLogger().warning("Could not delete temporary database file: " + tempDbFile.getName());
+                    logger.warning("Could not delete temporary database file: " + tempDbFile.getName());
                 }
 
-                plugin.getDatabaseHandler().Initialize(); // Reconnect to the original database
+                databaseHandler.Initialize(); // Reconnect to the original database
                 plugin.startAllPluginTasks();
                 return true;
             }
@@ -117,24 +125,24 @@ public class ImportDbCommand implements ISubCommand {
             if (!tempDbFile.renameTo(liveDbFile)) {
                 throw new IOException("Could not rename temporary database file to the live database file. Aborting...");
             }
-            plugin.getLogger().info("Successfully restored backup file to live database.");
+            logger.info("Successfully restored backup file to live database.");
 
         } catch (IOException | SQLException e) {
             messagesHelper.sendCommandSenderMessage(sender,"&cA critical file error occurred. Check the console for details.");
-            plugin.getLogger().log(Level.SEVERE, "Failed to perform database file swap during import.", e);
+            logger.log(Level.SEVERE, "Failed to perform database file swap during import.", e);
             return true;
         }
 
         try {
-            plugin.getLogger().info("Re-initializing plugin services...");
-            plugin.getDatabaseHandler().Initialize();
+            logger.info("Re-initializing plugin services...");
+            databaseHandler.Initialize();
             plugin.startAllPluginTasks();
 
             messagesHelper.sendCommandSenderMessage(sender,"&aDatabase import successful! Players can now reconnect.");
-            plugin.getLogger().info("Database import complete.");
+            logger.info("Database import complete.");
         } catch (SQLException e) {
             messagesHelper.sendCommandSenderMessage(sender,"&cImport failed during re-initialization. The server may need a restart. Check console.");
-            plugin.getLogger().log(Level.SEVERE, "Failed to re-initialize services after database import.", e);
+            logger.log(Level.SEVERE, "Failed to re-initialize services after database import.", e);
         }
 
         return true;
@@ -144,7 +152,7 @@ public class ImportDbCommand implements ISubCommand {
     public List<String> getSubcommandCompletions(CommandSender sender, String[] args) {
         if (args.length == 2) {
             // Suggest backup file names
-            List<String> backupFiles = plugin.getDatabaseHandler().getBackupFileNames();
+            List<String> backupFiles = databaseHandler.getBackupFileNames();
             return backupFiles.stream()
                     .filter(name -> name.toLowerCase().startsWith(args[1].toLowerCase()))
                     .collect(Collectors.toList());

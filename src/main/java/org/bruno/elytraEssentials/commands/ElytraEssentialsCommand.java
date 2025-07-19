@@ -11,22 +11,20 @@ import org.bukkit.command.CommandSender;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.bukkit.command.TabCompleter;
 import org.jetbrains.annotations.NotNull;
 
 public class ElytraEssentialsCommand implements CommandExecutor, TabCompleter {
-
-    private final ElytraEssentials plugin;
-
+    private final Logger logger;
     private final MessagesHelper messagesHelper;
 
     private final Map<String, ISubCommand> subCommands = new HashMap<>();
 
-    public ElytraEssentialsCommand(ElytraEssentials plugin, MessagesHelper messagesHelper) {
-        this.plugin = plugin;
-
+    public ElytraEssentialsCommand(Logger logger, MessagesHelper messagesHelper) {
+        this.logger = logger;
         this.messagesHelper = messagesHelper;
     }
 
@@ -40,7 +38,7 @@ public class ElytraEssentialsCommand implements CommandExecutor, TabCompleter {
             try {
                 subCommands.get("help").Execute(sender, new String[0]);
             } catch (SQLException e) {
-                plugin.getLogger().log(Level.SEVERE, "A database error occurred while executing command /ee help'" + "' for " + sender.getName(), e);
+                logger.log(Level.SEVERE, "A database error occurred while executing command /ee help'" + "' for " + sender.getName(), e);
                 messagesHelper.sendCommandSenderMessage(sender,"&cAn unexpected database error occurred. Please contact an administrator.");
                 return true;
             }
@@ -60,11 +58,11 @@ public class ElytraEssentialsCommand implements CommandExecutor, TabCompleter {
             String[] subCommandArgs = Arrays.copyOfRange(args, 1, args.length);
             return commandHandler.Execute(sender, subCommandArgs);
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "A database error occurred while executing command '" + subCommandName + "' for " + sender.getName(), e);
+            logger.log(Level.SEVERE, "A database error occurred while executing command '" + subCommandName + "' for " + sender.getName(), e);
             messagesHelper.sendCommandSenderMessage(sender,"&cAn unexpected database error occurred. Please contact an administrator.");
             return true;
         } catch (Exception e) {
-            plugin.getLogger().log(Level.SEVERE, "An unexpected error occurred while executing command '" + subCommandName + "' for " + sender.getName(), e);
+            logger.log(Level.SEVERE, "An unexpected error occurred while executing command '" + subCommandName + "' for " + sender.getName(), e);
             messagesHelper.sendCommandSenderMessage(sender,"&cAn unexpected error occurred. Please contact an administrator.");
             return true;
         }

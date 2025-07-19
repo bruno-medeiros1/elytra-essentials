@@ -30,7 +30,10 @@ public class BoostHandler {
     private final ElytraEssentials plugin;
     private final FoliaHelper foliaHelper;
     private final MessagesHelper messagesHelper;
-
+    private final ServerVersion serverVersion;
+    private final StatsHandler statsHandler;
+    private final ConfigHandler configHandler;
+    private final MessagesHandler messagesHandler;
     private FlightHandler flightHandler;
 
     private final Map<UUID, Long> cooldowns = new ConcurrentHashMap<>();
@@ -40,11 +43,16 @@ public class BoostHandler {
     private final Map<UUID, CancellableTask> chargingTasks = new ConcurrentHashMap<>();
     private final Map<UUID, BossBar> chargeBossBars = new ConcurrentHashMap<>();
 
-    public BoostHandler(ElytraEssentials plugin, FoliaHelper foliaHelper, MessagesHelper messagesHelper) {
+    public BoostHandler(ElytraEssentials plugin, FoliaHelper foliaHelper, MessagesHelper messagesHelper, ServerVersion serverVersion, StatsHandler statsHandler,
+                        ConfigHandler configHandler, MessagesHandler messagesHandler) {
         this.plugin = plugin;
 
         this.foliaHelper = foliaHelper;
         this.messagesHelper = messagesHelper;
+        this.serverVersion = serverVersion;
+        this.statsHandler = statsHandler;
+        this.configHandler = configHandler;
+        this.messagesHandler = messagesHandler;
     }
 
     public void setFlightHandler(FlightHandler flightHandler) {
@@ -81,16 +89,16 @@ public class BoostHandler {
 
 
     private void handleInAirBoost(Player player) {
-        if (!plugin.getConfigHandlerInstance().getIsBoostEnabled()) return;
+        if (!configHandler.getIsBoostEnabled()) return;
         if (!PermissionsHelper.hasElytraBoostPermission(player) && !PermissionsHelper.hasElytraSuperBoostPermission(player)) return;
 
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
-        Material configuredMaterial = Material.valueOf(plugin.getConfigHandlerInstance().getBoostItem());
+        Material configuredMaterial = Material.valueOf(configHandler.getBoostItem());
         if (itemInHand.getType() != configuredMaterial) return;
 
         if (isOnCooldown(player)) return;
 
-        PlayerStats stats = plugin.getStatsHandler().getStats(player);
+        PlayerStats stats = statsHandler.getStats(player);
         double boostMultiplier;
         boolean isSuperBoost = player.isSneaking();
 
@@ -122,7 +130,7 @@ public class BoostHandler {
     }
 
     private void handleChargedJump(Player player) {
-        if (!plugin.getConfigHandlerInstance().getIsBoostEnabled() || !plugin.getConfigHandlerInstance().getIsChargedJumpEnabled()) return;
+        if (!configHandler.getIsBoostEnabled() || !configHandler.getIsChargedJumpEnabled()) return;
         if (chargingTasks.containsKey(player.getUniqueId())) return; // Already charging
 
         ItemStack chestplate = player.getInventory().getChestplate();
@@ -137,7 +145,7 @@ public class BoostHandler {
 
         //  Item Check
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
-        Material configuredMaterial = Material.valueOf(plugin.getConfigHandlerInstance().getBoostItem());
+        Material configuredMaterial = Material.valueOf(configHandler.getBoostItem());
         if (itemInHand.getType() != configuredMaterial) {
             return;
         }
@@ -147,7 +155,7 @@ public class BoostHandler {
             return;
         }
 
-        double chargeTimeSeconds = plugin.getConfigHandlerInstance().getChargeTime();
+        double chargeTimeSeconds = configHandler.getChargeTime();
         if (chargeTimeSeconds <= 0) {
             return;
         }
@@ -193,7 +201,7 @@ public class BoostHandler {
             if (currentTick  >= totalTicksToCharge) {
                 messagesHelper.sendTitleMessage(player, "&r", "&#FFD700LAUNCH!", 5, 20, 10);
 
-                double jumpStrength = plugin.getConfigHandlerInstance().getJumpStrength();
+                double jumpStrength = configHandler.getJumpStrength();
                 player.setVelocity(player.getVelocity().add(new Vector(0, jumpStrength, 0)));
 
                 // Use Folia-safe delayed task
@@ -206,7 +214,7 @@ public class BoostHandler {
 
                 player.getWorld().playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.2f, 1.0f);
 
-                if (plugin.getServerVersion().ordinal() == ServerVersion.V_1_21.ordinal() ) {
+                if (serverVersion.ordinal() == ServerVersion.V_1_21.ordinal() ) {
                     player.getWorld().spawnParticle(Particle.EXPLOSION, player.getLocation(), 1);
                     player.getWorld().spawnParticle(Particle.FIREWORK, player.getLocation(), 30, 0.5, 0.5, 0.5, 0.1);
                 }
@@ -283,7 +291,7 @@ public class BoostHandler {
      */
     private boolean isOnCooldown(Player player) {
         long effectiveCooldownMs;
-        int configuredCooldownMs = plugin.getConfigHandlerInstance().getBoostCooldown();
+        int configuredCooldownMs = configHandler.getBoostCooldown();
 
         if (PermissionsHelper.PlayerBypassBoostCooldown(player)) {
             // Players with bypass permission are still subject to the minimum anti-spam delay.
@@ -310,7 +318,7 @@ public class BoostHandler {
                     // Ensure we don't show "0 seconds".
                     int remainingSeconds = Math.max(1, (int) Math.ceil(remainingMs / 1000.0));
 
-                    String messageTemplate = plugin.getMessagesHandlerInstance().getBoostCooldown();
+                    String messageTemplate = messagesHandler.getBoostCooldown();
                     String message = messageTemplate.replace("{0}", String.valueOf(remainingSeconds));
                     messagesHelper.sendPlayerMessage(player, message);
 
