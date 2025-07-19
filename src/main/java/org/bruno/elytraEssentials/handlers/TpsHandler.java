@@ -1,6 +1,5 @@
 package org.bruno.elytraEssentials.handlers;
 
-import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.helpers.FoliaHelper;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.utils.CancellableTask;
@@ -18,7 +17,7 @@ public class TpsHandler {
     private CancellableTask task;
     private int consecutiveLowTpsSeconds = 0;
 
-    public TpsHandler(ElytraEssentials plugin, FoliaHelper foliaHelper, MessagesHelper messagesHelper) {
+    public TpsHandler(FoliaHelper foliaHelper, MessagesHelper messagesHelper) {
         this.foliaHelper = foliaHelper;
         this.messagesHelper = messagesHelper;
     }
@@ -26,8 +25,8 @@ public class TpsHandler {
     public void start() {
         if (this.task != null) return;
 
-        // Run this check once per second (20 ticks), not every tick.
-        this.task = foliaHelper.runTaskTimerGlobal(this::runTpsCheck, 100L, 20L);
+        // Run this check once per second (20 ticks), after 1min.
+        this.task = foliaHelper.runTaskTimerGlobal(this::runTpsCheck, 1200L, 20L);
     }
 
     public void cancel() {

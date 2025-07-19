@@ -33,7 +33,6 @@ public class ConfigHandler {
     private boolean isRecoveryEnabled;
     private int recoveryAmount;
     private int recoveryInterval;
-    private boolean isNotifyOnRecoveryEnabled;
 
     //  Database section
     private String storageType;
@@ -108,7 +107,6 @@ public class ConfigHandler {
         this.isRecoveryEnabled = this.fileConfiguration.getBoolean("flight.time-limit.recovery.enabled", true);
         this.recoveryAmount = this.fileConfiguration.getInt("flight.time-limit.recovery.amount", 10);
         this.recoveryInterval = this.fileConfiguration.getInt("flight.time-limit.recovery.interval", 60);
-        this.isNotifyOnRecoveryEnabled = this.fileConfiguration.getBoolean("flight.time-limit.recovery.notify", true);
 
         this.storageType = this.fileConfiguration.getString("storage.type", "SQLITE");
         this.host = this.fileConfiguration.getString("storage.mysql.host", "localhost");
@@ -163,7 +161,6 @@ public class ConfigHandler {
     public final boolean getIsRecoveryEnabled() { return this.isRecoveryEnabled; }
     public final int getRecoveryAmount() { return this.recoveryAmount; }
     public final int getRecoveryInterval() { return this.recoveryInterval; }
-    public final boolean getIsNotifyOnRecoveryEnabled() { return this.isNotifyOnRecoveryEnabled; }
 
     public String getStorageType() { return this.storageType; }
     public String getHost() { return this.host; }

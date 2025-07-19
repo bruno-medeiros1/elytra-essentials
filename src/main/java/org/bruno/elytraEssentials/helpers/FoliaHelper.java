@@ -66,7 +66,8 @@ public final class FoliaHelper {
      */
     public CancellableTask runTaskTimerForEntity(Entity entity, Runnable task, long delay, long period) {
         if (isFolia) {
-            return new CancellableTask(entity.getScheduler().runAtFixedRate(plugin, scheduledTask -> task.run(), null, delay, period));
+            long foliaDelay = Math.max(1, delay);
+            return new CancellableTask(entity.getScheduler().runAtFixedRate(plugin, scheduledTask -> task.run(), null, foliaDelay, period));
         } else {
             return new CancellableTask(plugin.getServer().getScheduler().runTaskTimer(plugin, task, delay, period));
         }
@@ -101,7 +102,9 @@ public final class FoliaHelper {
      */
     public CancellableTask runTaskTimerGlobal(Runnable task, long delay, long period) {
         if (isFolia) {
-            return new CancellableTask(plugin.getServer().getGlobalRegionScheduler().runAtFixedRate(plugin, scheduledTask -> task.run(), delay, period));
+            // Requires the delay for repeating tasks to be > 0.
+            long foliaDelay = Math.max(1, delay);
+            return new CancellableTask(plugin.getServer().getGlobalRegionScheduler().runAtFixedRate(plugin, scheduledTask -> task.run(), foliaDelay, period));
         } else {
             return new CancellableTask(plugin.getServer().getScheduler().runTaskTimer(plugin, task, delay, period));
         }

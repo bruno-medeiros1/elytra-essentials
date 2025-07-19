@@ -68,14 +68,7 @@ public class RecoveryHandler
 
             if (timeToAdd <= 0) continue;
 
-            flightHandler.addFlightTime(playerId, timeToAdd, player); // Assuming addFlightTime can be used by the player themselves
-
-            if (configHandler.getIsNotifyOnRecoveryEnabled()) {
-                player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 0.5f);
-
-                String message = messagesHandler.getElytraFlightTimeRecovery().replace("{0}", TimeHelper.formatFlightTime(timeToAdd));
-                messagesHelper.sendPlayerMessage(player, message);
-            }
+            flightHandler.addFlightTime(playerId, timeToAdd, player);
         }
     }
 }

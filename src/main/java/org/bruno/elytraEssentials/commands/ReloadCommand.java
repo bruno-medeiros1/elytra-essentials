@@ -47,12 +47,12 @@ public class ReloadCommand implements ISubCommand {
 
         // Start the Reload Process
         try {
-            plugin.shutdown();
+            plugin.shutdownAllPluginTasks();
             databaseHandler.Disconnect();
 
             plugin.reloadConfig();
 
-            plugin.setupHandlers();
+            //plugin.();
 
             // Validate the flight time for online players.
             logger.info("Reloading data for all online players...");

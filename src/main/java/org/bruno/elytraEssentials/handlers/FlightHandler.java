@@ -132,14 +132,6 @@ public class FlightHandler {
         return flightTimeData.getOrDefault(playerId, 0);
     }
 
-    public void addFlightTime(UUID player, int secondsToAdd) {
-        int currentTime = flightTimeData.getOrDefault(player, 0);
-        flightTimeData.put(player, currentTime + secondsToAdd);
-
-        int currentInitial = initialFlightTime.getOrDefault(player, 0);
-        initialFlightTime.put(player, currentInitial + secondsToAdd);
-    }
-
     public void handleGlideStart(Player player) {
         if (configHandler.getIsGlobalFlightDisabled() || (configHandler.getDisabledWorlds() != null && configHandler.getDisabledWorlds().contains(player.getWorld().getName()))) {
             String msg = configHandler.getIsGlobalFlightDisabled() ? messagesHandler.getElytraUsageDisabledMessage() : messagesHandler.getElytraUsageWorldDisabledMessage();
@@ -193,7 +185,15 @@ public class FlightHandler {
 
     public void addFlightTime(UUID playerId, int secondsToAdd, CommandSender feedbackRecipient) {
         try {
-            int currentFlightTime = databaseHandler.GetPlayerFlightTime(playerId);
+            int currentFlightTime;
+            Player target = Bukkit.getPlayer(playerId);
+
+            if (target != null && target.isOnline()) {
+                currentFlightTime = this.flightTimeData.getOrDefault(playerId, 0);
+            } else {
+                currentFlightTime = databaseHandler.GetPlayerFlightTime(playerId);
+            }
+
             int maxTimeLimit = configHandler.getMaxTimeLimit();
 
             // These variables can be modified
@@ -216,15 +216,17 @@ public class FlightHandler {
             databaseHandler.SetPlayerFlightTime(playerId, newFlightTime);
 
             // Update the live cache and notify the player if they are online
-            Player target = Bukkit.getPlayer(playerId);
             if (target != null && target.isOnline()) {
                 foliaHelper.runTaskOnMainThread(() -> {
                     flightTimeData.put(playerId, newFlightTime);
+
+                    // we add the time to this as well to keep the progress bar ratio correct.
+                    initialFlightTime.computeIfPresent(playerId, (key, currentInitial) -> currentInitial + finalAmount);
+
                     String message = messagesHandler.getElytraFlightTimeAdded().replace("{0}", TimeHelper.formatFlightTime(finalAmount));
                     messagesHelper.sendPlayerMessage(target, message);
                 });
             }
-            foliaHelper.runTaskOnMainThread(() -> messagesHelper.sendCommandSenderMessage(feedbackRecipient, "&aAdded " + TimeHelper.formatFlightTime(finalAmount) + " of flight time to " + Bukkit.getOfflinePlayer(playerId).getName() + "."));
         } catch (SQLException e) {
             handleSqlException(feedbackRecipient, "add flight time", playerId, e);
         }
@@ -326,7 +328,13 @@ public class FlightHandler {
     }
 
     private void updatePlayerFlight(Player player) {
-        if (!player.isOnline()) { if (foliaHelper.isFolia()) stopTrackingPlayer(player); removeBossBar(player); return; }
+        if (!player.isOnline()) {
+            if (foliaHelper.isFolia()) {
+                stopTrackingPlayer(player);
+            }
+            removeBossBar(player);
+            return;
+        }
 
         int currentFlightTime = flightTimeData.getOrDefault(player.getUniqueId(), 0);
         if (currentFlightTime <= 0) {
@@ -342,8 +350,10 @@ public class FlightHandler {
     }
 
     private void startTrackingPlayer(Player player) {
-        if (activeFlightTasks.containsKey(player.getUniqueId()) || PermissionsHelper.PlayerBypassTimeLimit(player)) return;
-        CancellableTask task = foliaHelper.runTaskTimerForEntity(player, () -> updatePlayerFlight(player), 20L, 20L);
+        if (activeFlightTasks.containsKey(player.getUniqueId()) || PermissionsHelper.PlayerBypassTimeLimit(player))
+            return;
+
+        CancellableTask task = foliaHelper.runTaskTimerForEntity(player, () -> updatePlayerFlight(player), 0L, 20L);
         activeFlightTasks.put(player.getUniqueId(), task);
     }
 

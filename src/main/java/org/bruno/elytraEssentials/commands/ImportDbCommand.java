@@ -87,7 +87,7 @@ public class ImportDbCommand implements ISubCommand {
 
         logger.info("All players kicked. Shutting down plugin services...");
         databaseHandler.Disconnect();
-        plugin.shutdown();
+        plugin.shutdownAllPluginTasks();
 
         File databaseFolder = new File(plugin.getDataFolder(), Constants.Files.DB_FOLDER);
         File liveDbFile = new File(databaseFolder, Constants.Files.SQLITE_DB_NAME);

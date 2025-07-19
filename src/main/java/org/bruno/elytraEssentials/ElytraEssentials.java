@@ -39,7 +39,6 @@ import java.util.Objects;
 import java.util.logging.Level;
 
 public final class ElytraEssentials extends JavaPlugin {
-    // Handlers
     private ConfigHandler configHandler;
     private DatabaseHandler databaseHandler;
     private EffectsHandler effectsHandler;
@@ -58,21 +57,17 @@ public final class ElytraEssentials extends JavaPlugin {
     private CombatTagHandler combatTagHandler;
     private PluginInfoHandler pluginInfoHandler;
     private UpdaterHandler updaterHandler;
-
-    // Helpers
     private MessagesHandler messagesHandler;
+
     private MessagesHelper messagesHelper;
     private FileHelper fileHelper;
     private ArmoredElytraHelper armoredElytraHelper;
     private FoliaHelper foliaHelper;
 
-    // Integrations
     private Economy economy = null;
     private ElytraEssentialsPlaceholders elytraStatsExpansion;
 
     private ServerVersion serverVersion;
-    public boolean isNewerVersionAvailable = false;
-    public String latestVersion;
 
     @Override
     public void onLoad() {
@@ -82,25 +77,25 @@ public final class ElytraEssentials extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        if (!setupHelpers()) return;
-        if (!setupHandlers()) return;
-        if (!setupEconomy()) return;
+        try {
+            setupComponents();
+            setupListeners();
+            setupCommands();
 
-        setupCommands();
-        setupListeners();
-        registerPlaceholders();
-        startAllPluginTasks();
+            registerPlaceholders();
+            startAllPluginTasks();
+            setupIntegrations();
 
-        new Metrics(this, Constants.Integrations.BSTATS_ID);
-        updaterHandler.performCheck();
-
-        messagesHelper.sendConsoleMessage("&aPlugin v" + pluginInfoHandler.getCurrentVersion() + " has been enabled successfully!");
+            messagesHelper.sendConsoleMessage("&aPlugin v" + pluginInfoHandler.getCurrentVersion() + " has been enabled successfully!");
+        } catch (Exception e) {
+            getLogger().log(Level.SEVERE, "A critical error occurred during plugin startup. Disabling ElytraEssentials.", e);
+            getServer().getPluginManager().disablePlugin(this);
+        }
     }
 
     @Override
     public void onDisable() {
-        shutdown();
-
+        shutdownAllPluginTasks();
         if (databaseHandler != null) {
             databaseHandler.Disconnect();
         }
@@ -109,63 +104,55 @@ public final class ElytraEssentials extends JavaPlugin {
         getLogger().info("ElytraEssentials has been disabled.");
     }
 
-    public boolean setupHelpers(){
-        try {
-            this.foliaHelper = new FoliaHelper(this);
-            this.fileHelper = new FileHelper(this, getLogger());
-            this.messagesHelper = new MessagesHelper(this, this.serverVersion);
-            this.armoredElytraHelper = new ArmoredElytraHelper(this, getLogger());
+    private void setupComponents() throws Exception {
+        // --- STAGE 1: CORE HELPERS & CONFIG ---
+        saveDefaultConfig();
+        this.serverVersion = ServerVersion.getCurrent();
+        this.foliaHelper = new FoliaHelper(this);
+        this.fileHelper = new FileHelper(this, getLogger());
+        this.messagesHelper = new MessagesHelper(this, this.serverVersion);
+        this.armoredElytraHelper = new ArmoredElytraHelper(this, getLogger());
 
-            return true;
-        } catch (Exception e) {
-            getLogger().log(Level.SEVERE, "Failed to initialize helpers. Disabling plugin.", e);
-            getServer().getPluginManager().disablePlugin(this);
-            return false;
-        }
+        this.pluginInfoHandler = new PluginInfoHandler(this.getPluginMeta());
+        this.configHandler = new ConfigHandler(this.getConfig(), getLogger());
+        this.messagesHandler = new MessagesHandler(this.fileHelper.getMessagesConfig());
+        messagesHelper.setPrefix(messagesHandler.getPrefixMessage());
+        messagesHelper.setDebugMode(configHandler.getIsDebugModeEnabled());
+
+        // --- STAGE 2: DATABASE ---
+        this.databaseHandler = new DatabaseHandler(this, configHandler, foliaHelper, messagesHelper, getLogger());
+        databaseHandler.Initialize();
+
+        // --- STAGE 3: CORE LOGIC HANDLERS ---
+        this.tpsHandler = new TpsHandler( foliaHelper, messagesHelper);
+        this.effectsHandler = new EffectsHandler(this, fileHelper.getShopConfig(), foliaHelper, databaseHandler, messagesHelper, serverVersion, economy, tpsHandler, messagesHandler, getLogger());
+        this.statsHandler = new StatsHandler(getLogger(), databaseHandler, foliaHelper, messagesHelper, effectsHandler);
+        this.achievementsHandler = new AchievementsHandler(this, databaseHandler, statsHandler, foliaHelper, messagesHelper, fileHelper.getAchievementsConfig(), getLogger());
+
+        this.boostHandler = new BoostHandler(this, this.foliaHelper, this.messagesHelper, this.serverVersion, this.statsHandler, this.configHandler, this.messagesHandler);
+        this.flightHandler = new FlightHandler(getLogger(), this.configHandler, this.effectsHandler, this.boostHandler, this.foliaHelper, this.messagesHelper, this.databaseHandler, this.statsHandler, this.messagesHandler);
+        this.boostHandler.setFlightHandler(this.flightHandler);
+
+        this.recoveryHandler = new RecoveryHandler(flightHandler, messagesHelper, messagesHandler, configHandler, foliaHelper);
+        this.combatTagHandler = new CombatTagHandler(this, configHandler, messagesHelper, foliaHelper);
+        this.elytraEquipHandler = new ElytraEquipHandler(configHandler, messagesHelper, foliaHelper);
+        this.armoredElytraHandler = new ArmoredElytraHandler(this, configHandler, foliaHelper, armoredElytraHelper, messagesHelper);
+
+        // --- STAGE 4: GUI HANDLERS ---
+        this.effectsGuiHandler = new EffectsGuiHandler(this, this.effectsHandler, this.databaseHandler, this.foliaHelper, this.messagesHelper, getLogger());
+        this.shopGuiHandler = new ShopGuiHandler(this, this.effectsHandler, this.effectsGuiHandler, getLogger());
+        this.effectsGuiHandler.setShopGuiHandler(this.shopGuiHandler);
+        this.forgeGuiHandler = new ForgeGuiHandler(this.configHandler, this.armoredElytraHelper, this.foliaHelper);
+        this.achievementsGuiHandler = new AchievementsGuiHandler(getLogger(), databaseHandler, foliaHelper, messagesHelper, achievementsHandler, statsHandler);
+
+        // --- STAGE 5: META HANDLERS ---
+        this.updaterHandler = new UpdaterHandler(getLogger(), foliaHelper, configHandler, pluginInfoHandler);
     }
 
-    public boolean setupHandlers() {
-        try {
-            this.pluginInfoHandler = new PluginInfoHandler(this.getPluginMeta());
-
-            this.configHandler = new ConfigHandler(this.getConfig(), getLogger());
-            this.messagesHelper.setDebugMode(this.configHandler.getIsDebugModeEnabled());
-
-            this.databaseHandler = new DatabaseHandler(this, this.configHandler, this.foliaHelper, this.messagesHelper, getLogger());
-            databaseHandler.Initialize();
-
-            this.messagesHandler = new MessagesHandler(this.fileHelper.getMessagesConfig());
-            this.messagesHelper.setPrefix(this.messagesHandler.getPrefixMessage());
-
-            this.effectsHandler = new EffectsHandler(this, this.fileHelper.getShopConfig(), this.foliaHelper, this.databaseHandler, this.messagesHelper, this.serverVersion, this.economy, this.tpsHandler, this.messagesHandler, getLogger());
-            this.tpsHandler = new TpsHandler(this, this.foliaHelper, this.messagesHelper);
-            this.recoveryHandler = new RecoveryHandler(this.flightHandler, this.messagesHelper, this.messagesHandler, this.configHandler, this.foliaHelper);
-            this.statsHandler = new StatsHandler(getLogger(), this.databaseHandler, this.foliaHelper, messagesHelper, effectsHandler);
-            this.achievementsHandler = new AchievementsHandler(this, this.databaseHandler, this.statsHandler, this.foliaHelper, this.messagesHelper, this.fileHelper.getAchievementsConfig(), getLogger());
-
-            this.boostHandler = new BoostHandler(this, this.foliaHelper, this.messagesHelper, this.serverVersion, this.statsHandler, this.configHandler, this.messagesHandler);
-            this.flightHandler = new FlightHandler(getLogger(), this.configHandler, this.effectsHandler, this.boostHandler, this.foliaHelper, this.messagesHelper, this.databaseHandler, this.statsHandler, this.messagesHandler);
-            this.boostHandler.setFlightHandler(this.flightHandler);
-
-            this.armoredElytraHandler = new ArmoredElytraHandler(this, this.configHandler, this.foliaHelper, this.armoredElytraHelper, this.messagesHelper);
-            this.forgeGuiHandler = new ForgeGuiHandler(this.configHandler, this.armoredElytraHelper, this.foliaHelper);
-            this.achievementsGuiHandler = new AchievementsGuiHandler(getLogger(), this.databaseHandler, this.foliaHelper, this.messagesHelper, this.achievementsHandler, this.statsHandler);
-            this.elytraEquipHandler = new ElytraEquipHandler(this.configHandler, this.messagesHelper, this.foliaHelper);
-
-            this.effectsGuiHandler = new EffectsGuiHandler(this, this.effectsHandler, this.databaseHandler, this.foliaHelper, this.messagesHelper, getLogger());
-            this.shopGuiHandler = new ShopGuiHandler(this, this.effectsHandler, this.effectsGuiHandler, getLogger());
-            this.effectsGuiHandler.setShopGuiHandler(this.shopGuiHandler);
-
-            this.combatTagHandler = new CombatTagHandler(this, this.configHandler, this.messagesHelper, this.foliaHelper);
-
-            this.updaterHandler = new UpdaterHandler(getLogger(), this.foliaHelper, this.configHandler, this.pluginInfoHandler);
-
-            return true;
-        } catch (Exception e) {
-            getLogger().log(Level.SEVERE, "Failed to initialize core handlers. Disabling plugin.", e);
-            getServer().getPluginManager().disablePlugin(this);
-            return false;
-        }
+    private void setupIntegrations() {
+        setupEconomy();
+        new Metrics(this, Constants.Integrations.BSTATS_ID);
+        updaterHandler.performCheck();
     }
 
     private void setupListeners() {
@@ -175,7 +162,7 @@ public final class ElytraEssentials extends JavaPlugin {
         var elytraFlightListener = new ElytraFlightListener(this.flightHandler, this.statsHandler, this.effectsHandler);
         var elytraBoostListener = new BoostListener(this.boostHandler);
         var elytraEquipListener = new ElytraEquipListener(this.elytraEquipHandler);
-        var elytraUpdaterListener = new ElytraUpdaterListener(this, this.messagesHelper, this.latestVersion, this.configHandler);
+        var elytraUpdaterListener = new ElytraUpdaterListener(this, this.messagesHelper, this.pluginInfoHandler.getLatestVersion(), this.configHandler, this.pluginInfoHandler);
         var armoredElytraListener = new ArmoredElytraListener(this.armoredElytraHandler, this.configHandler);
         var combatTagListener = new CombatTagListener(this.combatTagHandler);
         var damageListener = new DamageListener(this.flightHandler, this.statsHandler, this.armoredElytraHandler);
@@ -225,19 +212,18 @@ public final class ElytraEssentials extends JavaPlugin {
         Objects.requireNonNull(getCommand("ee")).setTabCompleter(mainCommand);
     }
 
-    private boolean setupEconomy() {
+    private void setupEconomy() {
         if (getServer().getPluginManager().getPlugin("Vault") == null) {
-            getLogger().warning("Vault not found! Economy features will be disabled.");
-            return true; // Don't disable the whole plugin, just the feature
+            getLogger().warning("Vault not found! All economy features will be disabled.");
+            return;
         }
         RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
         if (rsp == null) {
-            getLogger().warning("No Vault economy provider found. Economy features will be disabled.");
-            return true;
+            getLogger().warning("Vault found, but no economy plugin is hooked into it. Economy features will be disabled.");
+            return;
         }
         economy = rsp.getProvider();
-        getLogger().info("Successfully hooked into Vault.");
-        return true;
+        getLogger().info("Successfully hooked into Vault & found economy provider: " + rsp.getProvider().getName());
     }
 
     private void registerPlaceholders() {
@@ -256,7 +242,7 @@ public final class ElytraEssentials extends JavaPlugin {
         }
     }
 
-    public void shutdown(){
+    public void shutdownAllPluginTasks(){
         if (recoveryHandler != null)
             recoveryHandler.shutdown();
 

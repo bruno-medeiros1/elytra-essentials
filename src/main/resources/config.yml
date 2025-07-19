@@ -102,9 +102,6 @@ flight:
       # The interval (in seconds) at which to add the amount.
       interval: 60 # [Default: 60 seconds]
 
-      # Notify players when flight time is recovered.
-      notify: true # [Default: true]
-
   boost:
     enabled: true # [Default: true]
 
