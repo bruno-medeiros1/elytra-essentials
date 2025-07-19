@@ -1,43 +1,52 @@
 package org.bruno.elytraEssentials.commands;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
-import org.bruno.elytraEssentials.utils.Constants;
-import org.bruno.elytraEssentials.gui.EffectsHolder;
-import org.bruno.elytraEssentials.helpers.GuiHelper;
+import org.bruno.elytraEssentials.handlers.DatabaseHandler;
+import org.bruno.elytraEssentials.handlers.EffectsHandler;
+import org.bruno.elytraEssentials.gui.effects.EffectsGuiHandler;
+import org.bruno.elytraEssentials.helpers.FoliaHelper;
+import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bruno.elytraEssentials.utils.ElytraEffect;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 public class EffectsCommand implements ISubCommand {
     private final ElytraEssentials plugin;
 
-    public EffectsCommand(ElytraEssentials plugin) {
+    private final EffectsGuiHandler effectsGuiHandler;
+    private final EffectsHandler effectsHandler;
+    private final DatabaseHandler databaseHandler;
+    private final FoliaHelper foliaHelper;
+    private final MessagesHelper messagesHelper;
+
+    public EffectsCommand(ElytraEssentials plugin, EffectsGuiHandler guiHandler, EffectsHandler effectsHandler, DatabaseHandler dbHandler, FoliaHelper fHelper, MessagesHelper msgHelper) {
         this.plugin = plugin;
+
+        this.effectsGuiHandler = guiHandler;
+        this.effectsHandler = effectsHandler;
+        this.databaseHandler = dbHandler;
+        this.foliaHelper = fHelper;
+        this.messagesHelper = msgHelper;
     }
 
     @Override
     public boolean Execute(CommandSender sender, String[] args) {
         if (args.length == 0) {
-            if (!(sender instanceof Player player)) {
-                plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cThis command can only be run by a player.");
-                return true;
-            }
+            if (!(sender instanceof Player player)) { /* ... */ return true; }
+
             if (!PermissionsHelper.hasEffectsPermission(player)) {
-                plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getNoPermissionMessage());
+                messagesHelper.sendPlayerMessage(player, "&cYou do not have permission to use effects.");
                 return true;
             }
-            openOwnedEffects(player);
+
+            effectsGuiHandler.open(player);
             return true;
         }
 
@@ -56,325 +65,195 @@ public class EffectsCommand implements ISubCommand {
                 handleList(sender, args);
                 break;
             default:
-                plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cUnknown subcommand. Usage: /ee effects <clear, give, remove, list>");
+                messagesHelper.sendCommandSenderMessage(sender,"&cUnknown subcommand. Usage: /ee effects <clear, give, remove, list>");
                 break;
         }
         return true;
     }
 
-
     private void handleClear(CommandSender sender, String[] args) {
         if (!(sender instanceof Player player)) {
-            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cThis command can only be run by a player.");
+            messagesHelper.sendCommandSenderMessage(sender,"&cThis command can only be run by a player.");
             return;
         }
         if (!PermissionsHelper.hasClearEffectsCommandPermission(player)) {
-            plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getNoPermissionMessage());
+            messagesHelper.sendPlayerMessage(player, "&cYou do not have permission to clear effects.");
             return;
         }
 
-        String activeEffectKey = plugin.getEffectsHandler().getActiveEffect(player.getUniqueId());
+        String activeEffectKey = effectsHandler.getActiveEffect(player.getUniqueId());
         if (activeEffectKey == null) {
-            plugin.getMessagesHelper().sendPlayerMessage(player,"&cYou do not have an active effect to clear.");
+            messagesHelper.sendPlayerMessage(player,"&cYou do not have an active effect to clear.");
             return;
         }
-        plugin.getEffectsHandler().handleDeselection(player, activeEffectKey);
+        effectsHandler.handleDeselection(player, activeEffectKey);
     }
 
     private void handleGive(CommandSender sender, String[] args) {
         if (!PermissionsHelper.hasGiveEffectPermission(sender)) {
-            plugin.getMessagesHelper().sendCommandSenderMessage(sender, plugin.getMessagesHandlerInstance().getNoPermissionMessage());
+            messagesHelper.sendCommandSenderMessage(sender, "&cYou do not have permission to give effects.");
             return;
         }
         if (args.length < 3) {
-            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cUsage: /ee effects give <player> <effect>");
+            messagesHelper.sendCommandSenderMessage(sender,"&cUsage: /ee effects give <player> <effect>");
             return;
         }
 
         OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
         if (!target.hasPlayedBefore() && !target.isOnline()) {
-            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cPlayer '" + args[1] + "' not found.");
+            messagesHelper.sendCommandSenderMessage(sender,"&cPlayer '" + args[1] + "' not found.");
             return;
         }
 
         String effectKey = args[2].toUpperCase();
-        if (!plugin.getEffectsHandler().getEffectsRegistry().containsKey(effectKey)) {
-            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cEffect '" + effectKey + "' not found.");
+        if (!effectsHandler.getEffectsRegistry().containsKey(effectKey)) {
+            messagesHelper.sendCommandSenderMessage(sender,"&cEffect '" + effectKey + "' not found.");
             return;
         }
 
         if (target.isOnline() && PermissionsHelper.hasAllEffectsPermission(target.getPlayer())) {
-            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&e" + target.getName() + " has access to all effects via permissions.");
+            messagesHelper.sendCommandSenderMessage(sender,"&e" + target.getName() + " has access to all effects via permissions.");
             return;
         }
 
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                try {
-                    List<String> ownedKeys = plugin.getDatabaseHandler().GetOwnedEffectKeys(target.getUniqueId());
-                    if (ownedKeys.contains(effectKey)) {
-                        new BukkitRunnable() {
-                            @Override
-                            public void run() {
-                                plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&c" + target.getName() + " already owns this effect.");
-                            }
-                        }.runTask(plugin);
-                        return;
-                    }
-
-                    plugin.getDatabaseHandler().AddOwnedEffect(target.getUniqueId(), effectKey);
-                    new BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&aSuccessfully gave the " + effectKey + " effect to " + target.getName() + ".");
-                        }
-                    }.runTask(plugin);
-
-                } catch (SQLException e) {
-                    new BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cA database error occurred.");
-                        }
-                    }.runTask(plugin);
-                    plugin.getLogger().log(Level.SEVERE, "Failed to give effect to " + target.getName(), e);
+        // Use the Folia-safe async task
+        foliaHelper.runAsyncTask(() -> {
+            try {
+                List<String> ownedKeys = databaseHandler.GetOwnedEffectKeys(target.getUniqueId());
+                if (ownedKeys.contains(effectKey)) {
+                    // Return to the main thread to send the message
+                    foliaHelper.runTaskOnMainThread(() ->
+                            messagesHelper.sendCommandSenderMessage(sender,"&c" + target.getName() + " already owns this effect.")
+                    );
+                    return;
                 }
+
+                databaseHandler.AddOwnedEffect(target.getUniqueId(), effectKey);
+
+                // Return to the main thread to send the message
+                foliaHelper.runTaskOnMainThread(() ->
+                        messagesHelper.sendCommandSenderMessage(sender,"&aSuccessfully gave the " + effectKey + " effect to " + target.getName() + ".")
+                );
+
+            } catch (SQLException e) {
+                // Return to the main thread to send the error message
+                foliaHelper.runTaskOnMainThread(() ->
+                        messagesHelper.sendCommandSenderMessage(sender,"&cA database error occurred.")
+                );
+                plugin.getLogger().log(Level.SEVERE, "Failed to give effect to " + target.getName(), e);
             }
-        }.runTaskAsynchronously(plugin);
+        });
     }
 
     private void handleRemove(CommandSender sender, String[] args) {
         if (!PermissionsHelper.hasRemoveEffectPermission(sender)) {
-            plugin.getMessagesHelper().sendCommandSenderMessage(sender, plugin.getMessagesHandlerInstance().getNoPermissionMessage());
+            messagesHelper.sendCommandSenderMessage(sender, "&cYou do not have permission to remove effects.");
             return;
         }
         if (args.length < 3) {
-            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cUsage: /ee effects remove <player> <effect>");
+            messagesHelper.sendCommandSenderMessage(sender,"&cUsage: /ee effects remove <player> <effect>");
             return;
         }
 
         OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
         if (!target.hasPlayedBefore() && !target.isOnline()) {
-            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cPlayer '" + args[1] + "' not found.");
+            messagesHelper.sendCommandSenderMessage(sender,"&cPlayer '" + args[1] + "' not found.");
             return;
         }
 
         String effectKey = args[2].toUpperCase();
 
         if (target.isOnline() && PermissionsHelper.hasAllEffectsPermission(target.getPlayer())) {
-            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&eCannot remove effects from a player who has wildcard permissions.");
+            messagesHelper.sendCommandSenderMessage(sender,"&eCannot remove effects from a player who has wildcard permissions.");
             return;
         }
 
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                try {
-                    List<String> ownedKeys = plugin.getDatabaseHandler().GetOwnedEffectKeys(target.getUniqueId());
-                    if (!ownedKeys.contains(effectKey)) {
-                        new BukkitRunnable() {
-                            @Override
-                            public void run() {
-                                plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&c" + target.getName() + " does not own this effect.");
-                            }
-                        }.runTask(plugin);
-                        return;
-                    }
-
-                    plugin.getDatabaseHandler().removeOwnedEffect(target.getUniqueId(), effectKey);
-                    new BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&aSuccessfully removed the " + effectKey + " effect from " + target.getName() + ".");
-                        }
-                    }.runTask(plugin);
-
-                } catch (SQLException e) {
-                    new BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cA database error occurred.");
-                        }
-                    }.runTask(plugin);
-                    plugin.getLogger().log(Level.SEVERE, "Failed to remove effect from " + target.getName(), e);
+        // Use the Folia-safe async task
+        foliaHelper.runAsyncTask(() -> {
+            try {
+                List<String> ownedKeys = databaseHandler.GetOwnedEffectKeys(target.getUniqueId());
+                if (!ownedKeys.contains(effectKey)) {
+                    foliaHelper.runTaskOnMainThread(() ->
+                            messagesHelper.sendCommandSenderMessage(sender,"&c" + target.getName() + " does not own this effect.")
+                    );
+                    return;
                 }
+
+                databaseHandler.removeOwnedEffect(target.getUniqueId(), effectKey);
+
+                foliaHelper.runTaskOnMainThread(() ->
+                        messagesHelper.sendCommandSenderMessage(sender,"&aSuccessfully removed the " + effectKey + " effect from " + target.getName() + ".")
+                );
+
+            } catch (SQLException e) {
+                foliaHelper.runTaskOnMainThread(() ->
+                        messagesHelper.sendCommandSenderMessage(sender,"&cA database error occurred.")
+                );
+                plugin.getLogger().log(Level.SEVERE, "Failed to remove effect from " + target.getName(), e);
             }
-        }.runTaskAsynchronously(plugin);
+        });
     }
 
     private void handleList(CommandSender sender, String[] args) {
         if (!PermissionsHelper.hasListEffectsPermission(sender)) {
-            plugin.getMessagesHelper().sendCommandSenderMessage(sender,plugin.getMessagesHandlerInstance().getNoPermissionMessage());
+            messagesHelper.sendCommandSenderMessage(sender, "&cYou do not have permission to list effects.");
             return;
         }
         if (args.length < 2) {
-            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cUsage: /ee effects list <player>");
+            messagesHelper.sendCommandSenderMessage(sender,"&cUsage: /ee effects list <player>");
             return;
         }
 
         OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
         if (!target.hasPlayedBefore() && !target.isOnline()) {
-            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cPlayer '" + args[1] + "' not found.");
+            messagesHelper.sendCommandSenderMessage(sender,"&cPlayer '" + args[1] + "' not found.");
             return;
         }
 
-        plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&eFetching owned effects for " + target.getName() + "...");
+        messagesHelper.sendCommandSenderMessage(sender,"&eFetching owned effects for " + target.getName() + "...");
 
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                Set<String> allOwnedEffects;
+        // Use the Folia-safe async task
+        foliaHelper.runAsyncTask(() -> {
+            Set<String> allOwnedEffects;
+            try {
+                allOwnedEffects = new HashSet<>(databaseHandler.GetOwnedEffectKeys(target.getUniqueId()));
+            } catch (SQLException e) {
+                foliaHelper.runTaskOnMainThread(() ->
+                        messagesHelper.sendCommandSenderMessage(sender,"&cA database error occurred while fetching owned effects.")
+                );
+                plugin.getLogger().log(Level.SEVERE, "Failed to list effects for " + target.getName(), e);
+                return;
+            }
 
-                try {
-                    // Get effects from the database
-                    allOwnedEffects = new HashSet<>(plugin.getDatabaseHandler().GetOwnedEffectKeys(target.getUniqueId()));
-                } catch (SQLException e) {
-                    plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cA database error occurred while fetching owned effects.");
-                    plugin.getLogger().log(Level.SEVERE, "Failed to list effects for " + target.getName(), e);
-                    return;
-                }
-
-                // If the player is online, check their permissions
-                if (target.isOnline()) {
-                    Player targetPlayer = target.getPlayer();
-                    if (targetPlayer != null) {
-                        if (PermissionsHelper.hasAllEffectsPermission(targetPlayer)) {
-                            // If they have the wildcard, add all registered effects.
-                            allOwnedEffects.addAll(plugin.getEffectsHandler().getEffectsRegistry().keySet());
-                        } else {
-                            // Otherwise, check for each individual permission.
-                            for (Map.Entry<String, ElytraEffect> entry : plugin.getEffectsHandler().getEffectsRegistry().entrySet()) {
-                                if (targetPlayer.hasPermission(entry.getValue().getPermission())) {
-                                    allOwnedEffects.add(entry.getKey());
-                                }
+            // Permission checks are safe to do async
+            if (target.isOnline()) {
+                Player targetPlayer = target.getPlayer();
+                if (targetPlayer != null) {
+                    if (PermissionsHelper.hasAllEffectsPermission(targetPlayer)) {
+                        // If they have the wildcard, add all registered effects.
+                        allOwnedEffects.addAll(plugin.getEffectsHandler().getEffectsRegistry().keySet());
+                    } else {
+                        // Otherwise, check for each individual permission.
+                        for (Map.Entry<String, ElytraEffect> entry : plugin.getEffectsHandler().getEffectsRegistry().entrySet()) {
+                            if (targetPlayer.hasPermission(entry.getValue().getPermission())) {
+                                allOwnedEffects.add(entry.getKey());
                             }
                         }
                     }
                 }
+            }
 
-                // Switch back to the main thread to send the message
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        sender.sendMessage(ChatColor.GOLD + "--- " + target.getName() + "'s Owned Effects ---");
-                        if (allOwnedEffects.isEmpty()) {
-                            sender.sendMessage(ChatColor.GRAY + "This player does not have access to any effects.");
-                        } else {
-                            for (String key : allOwnedEffects) {
-                                sender.sendMessage(ChatColor.YELLOW + " - " + key);
-                            }
-                        }
+            // Switch back to the main thread to send the final message list
+            foliaHelper.runTaskOnMainThread(() -> {
+                sender.sendMessage("§6--- " + target.getName() + "'s Owned Effects ---");
+                if (allOwnedEffects.isEmpty()) {
+                    sender.sendMessage("§7This player does not have access to any effects.");
+                } else {
+                    for (String key : allOwnedEffects) {
+                        sender.sendMessage("§e - " + key);
                     }
-                }.runTask(plugin);
-            }
-        }.runTaskAsynchronously(plugin);
-    }
-
-    public void openOwnedEffects(Player player) {
-        Inventory ownedEffects = Bukkit.createInventory(new EffectsHolder(), Constants.GUI.EFFECTS_INVENTORY_SIZE, Constants.GUI.EFFECTS_INVENTORY_NAME);
-
-        Set<String> keysToDisplay;
-        try {
-            // Get effects from the database
-            keysToDisplay = new HashSet<>(plugin.getDatabaseHandler().GetOwnedEffectKeys(player.getUniqueId()));
-        } catch (SQLException e) {
-            plugin.getMessagesHelper().sendPlayerMessage(player,"&cAn error occurred while fetching your effects.");
-            plugin.getLogger().log(Level.SEVERE, "Failed to open owned effects GUI for " + player.getName(), e);
-            return;
-        }
-
-        // Add effects from permissions
-        if (PermissionsHelper.hasAllEffectsPermission(player)) {
-            for (Map.Entry<String, ElytraEffect> entry : plugin.getEffectsHandler().getEffectsRegistry().entrySet()) {
-                if (entry.getValue() != null) {
-                    keysToDisplay.add(entry.getKey());
                 }
-            }
-        } else {
-            for (Map.Entry<String, ElytraEffect> entry : plugin.getEffectsHandler().getEffectsRegistry().entrySet()) {
-                if (entry.getValue() != null && player.hasPermission(entry.getValue().getPermission())) {
-                    keysToDisplay.add(entry.getKey());
-                }
-            }
-        }
-
-        addControlButtons(ownedEffects);
-
-        if (keysToDisplay.isEmpty()) {
-            ItemStack item = plugin.getEffectsHandler().createEmptyItemStack();
-            ownedEffects.setItem(13, item);
-        } else {
-            populateOwnedItems(ownedEffects, player, new ArrayList<>(keysToDisplay));
-        }
-
-        player.openInventory(ownedEffects);
-    }
-
-    private void populateOwnedItems(Inventory inv, Player player, List<String> playerOwnedKeys) {
-        Map<String, ElytraEffect> allEffects = plugin.getEffectsHandler().getEffectsRegistry();
-        String activeEffectKey = plugin.getEffectsHandler().getActiveEffect(player.getUniqueId());
-
-        for (int i = 0; i < playerOwnedKeys.size(); i++) {
-            if (i >= Constants.GUI.EFFECTS_ITEM_DISPLAY_LIMIT) break;
-
-            String effectKey = playerOwnedKeys.get(i);
-            ElytraEffect templateEffect = allEffects.get(effectKey);
-
-            if (templateEffect != null) {
-                ElytraEffect playerSpecificEffect = new ElytraEffect(templateEffect);
-                playerSpecificEffect.setIsActive(effectKey.equals(activeEffectKey));
-                ItemStack item = plugin.getEffectsHandler().createOwnedItem(effectKey, playerSpecificEffect);
-                inv.setItem(i, item);
-            }
-        }
-    }
-
-    private void addControlButtons(Inventory inv) {
-        inv.setItem(Constants.GUI.EFFECTS_SHOP_SLOT, GuiHelper.createGuiItem(Material.CHEST, "§aShop", "§7Click here to buy more effects."));
-        inv.setItem(Constants.GUI.EFFECTS_PREVIOUS_PAGE_SLOT, GuiHelper.createPreviousPageButton(false));
-        inv.setItem(Constants.GUI.EFFECTS_PAGE_INFO_SLOT, GuiHelper.createPageInfoItem(1, 1));
-        inv.setItem(Constants.GUI.EFFECTS_NEXT_PAGE_SLOT, GuiHelper.createNextPageButton(false));
-        inv.setItem(Constants.GUI.EFFECTS_CLOSE_SLOT, GuiHelper.createCloseButton());
-    }
-
-    @Override
-    public List<String> getSubcommandCompletions(CommandSender sender, String[] args) {
-        if (args.length == 2) {
-            if (!(sender instanceof Player player))
-                return List.of();
-
-            List<String> actions = new ArrayList<>();
-            if (PermissionsHelper.hasClearEffectsCommandPermission(player)) actions.add("clear");
-            if (PermissionsHelper.hasGiveEffectPermission(player)) actions.add("give");
-            if (PermissionsHelper.hasRemoveEffectPermission(player)) actions.add("remove");
-            if (PermissionsHelper.hasListEffectsPermission(player)) actions.add("list");
-
-            return actions.stream()
-                    .filter(s -> s.toLowerCase().startsWith(args[1].toLowerCase()))
-                    .collect(Collectors.toList());
-        }
-
-        if (args.length == 3) {
-            String action = args[1].toLowerCase();
-            if (action.equals("give") || action.equals("remove") || action.equals("list")) {
-                return Bukkit.getOnlinePlayers().stream()
-                        .map(Player::getName)
-                        .filter(name -> name.toLowerCase().startsWith(args[2].toLowerCase()))
-                        .collect(Collectors.toList());
-            }
-        }
-
-        if (args.length == 4) {
-            String action = args[1].toLowerCase();
-            if (action.equals("give") || action.equals("remove")) {
-                return plugin.getEffectsHandler().getEffectsRegistry().keySet().stream()
-                        .map(String::toLowerCase)
-                        .filter(key -> key.startsWith(args[3].toLowerCase()))
-                        .collect(Collectors.toList());
-            }
-        }
-
-        return List.of();
+            });
+        });
     }
 }

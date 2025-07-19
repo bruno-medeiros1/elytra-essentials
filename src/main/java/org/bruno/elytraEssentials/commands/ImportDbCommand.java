@@ -1,6 +1,7 @@
 package org.bruno.elytraEssentials.commands;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
+import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bruno.elytraEssentials.utils.Constants;
@@ -23,19 +24,22 @@ public class ImportDbCommand implements ISubCommand {
 
     private final ElytraEssentials plugin;
 
-    public ImportDbCommand(ElytraEssentials plugin) {
+    private final MessagesHelper messagesHelper;
+
+    public ImportDbCommand(ElytraEssentials plugin, MessagesHelper messagesHelper) {
         this.plugin = plugin;
+        this.messagesHelper = messagesHelper;
     }
 
     @Override
     public boolean Execute(CommandSender sender, String[] args) {
         if (!PermissionsHelper.hasImportDbPermission(sender)) {
-            plugin.getMessagesHelper().sendCommandSenderMessage(sender, plugin.getMessagesHandlerInstance().getNoPermissionMessage());
+            messagesHelper.sendCommandSenderMessage(sender, plugin.getMessagesHandlerInstance().getNoPermissionMessage());
             return true;
         }
 
         if (!plugin.getDatabaseHandler().getStorageType().equalsIgnoreCase("SQLITE")) {
-            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cThis command can only be used with the SQLite storage type.");
+            messagesHelper.sendCommandSenderMessage(sender,"&cThis command can only be used with the SQLite storage type.");
             return true;
         }
 
@@ -50,7 +54,7 @@ public class ImportDbCommand implements ISubCommand {
         File backupFile = new File(plugin.getDataFolder(), Constants.Files.DB_FOLDER + "/" + Constants.Files.DB_BACKUP_FOLDER + "/" + backupFileName);
 
         if (!backupFile.exists()) {
-            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cError: Backup file '" + backupFileName + "' not found.");
+            messagesHelper.sendCommandSenderMessage(sender,"&cError: Backup file '" + backupFileName + "' not found.");
             return true;
         }
 
@@ -67,7 +71,7 @@ public class ImportDbCommand implements ISubCommand {
 
         // Start the Import Process
         plugin.getLogger().warning("Starting database import from backup: " + backupFileName);
-        plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&eStarting import process... Kicking all players.");
+        messagesHelper.sendCommandSenderMessage(sender,"&eStarting import process... Kicking all players.");
 
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.kickPlayer("Server is restoring a data backup. Please reconnect in a moment.");
@@ -75,7 +79,7 @@ public class ImportDbCommand implements ISubCommand {
 
         plugin.getLogger().info("All players kicked. Shutting down plugin services...");
         plugin.getDatabaseHandler().Disconnect();
-        plugin.cancelAllPluginTasks();
+        plugin.shutdown();
 
         File databaseFolder = new File(plugin.getDataFolder(), Constants.Files.DB_FOLDER);
         File liveDbFile = new File(databaseFolder, Constants.Files.SQLITE_DB_NAME);
@@ -92,7 +96,7 @@ public class ImportDbCommand implements ISubCommand {
                 }
                 plugin.getLogger().info("Backup file verified successfully.");
             } catch (SQLException e) {
-                plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cImport failed! The selected backup file appears to be corrupted. No changes were made.");
+                messagesHelper.sendCommandSenderMessage(sender,"&cImport failed! The selected backup file appears to be corrupted. No changes were made.");
                 plugin.getLogger().log(Level.SEVERE, "Could not verify the integrity of the backup file '" + backupFileName + "'. Aborting import.", e);
 
                 if (!tempDbFile.delete()) {
@@ -116,7 +120,7 @@ public class ImportDbCommand implements ISubCommand {
             plugin.getLogger().info("Successfully restored backup file to live database.");
 
         } catch (IOException | SQLException e) {
-            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cA critical file error occurred. Check the console for details.");
+            messagesHelper.sendCommandSenderMessage(sender,"&cA critical file error occurred. Check the console for details.");
             plugin.getLogger().log(Level.SEVERE, "Failed to perform database file swap during import.", e);
             return true;
         }
@@ -126,10 +130,10 @@ public class ImportDbCommand implements ISubCommand {
             plugin.getDatabaseHandler().Initialize();
             plugin.startAllPluginTasks();
 
-            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&aDatabase import successful! Players can now reconnect.");
+            messagesHelper.sendCommandSenderMessage(sender,"&aDatabase import successful! Players can now reconnect.");
             plugin.getLogger().info("Database import complete.");
         } catch (SQLException e) {
-            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cImport failed during re-initialization. The server may need a restart. Check console.");
+            messagesHelper.sendCommandSenderMessage(sender,"&cImport failed during re-initialization. The server may need a restart. Check console.");
             plugin.getLogger().log(Level.SEVERE, "Failed to re-initialize services after database import.", e);
         }
 

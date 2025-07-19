@@ -1,6 +1,7 @@
 package org.bruno.elytraEssentials.commands;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
+import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bukkit.command.Command;
@@ -18,10 +19,15 @@ import org.jetbrains.annotations.NotNull;
 public class ElytraEssentialsCommand implements CommandExecutor, TabCompleter {
 
     private final ElytraEssentials plugin;
+
+    private final MessagesHelper messagesHelper;
+
     private final Map<String, ISubCommand> subCommands = new HashMap<>();
 
-    public ElytraEssentialsCommand(ElytraEssentials plugin) {
+    public ElytraEssentialsCommand(ElytraEssentials plugin, MessagesHelper messagesHelper) {
         this.plugin = plugin;
+
+        this.messagesHelper = messagesHelper;
     }
 
     public void registerSubCommand(String name, ISubCommand command) {
@@ -35,7 +41,7 @@ public class ElytraEssentialsCommand implements CommandExecutor, TabCompleter {
                 subCommands.get("help").Execute(sender, new String[0]);
             } catch (SQLException e) {
                 plugin.getLogger().log(Level.SEVERE, "A database error occurred while executing command /ee help'" + "' for " + sender.getName(), e);
-                plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cAn unexpected database error occurred. Please contact an administrator.");
+                messagesHelper.sendCommandSenderMessage(sender,"&cAn unexpected database error occurred. Please contact an administrator.");
                 return true;
             }
             return true;
@@ -45,7 +51,7 @@ public class ElytraEssentialsCommand implements CommandExecutor, TabCompleter {
         ISubCommand commandHandler = subCommands.get(subCommandName);
 
         if (commandHandler == null) {
-            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cUnknown subcommand. Use /ee help for available commands.");
+            messagesHelper.sendCommandSenderMessage(sender,"&cUnknown subcommand. Use /ee help for available commands.");
             return true;
         }
 
@@ -55,11 +61,11 @@ public class ElytraEssentialsCommand implements CommandExecutor, TabCompleter {
             return commandHandler.Execute(sender, subCommandArgs);
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "A database error occurred while executing command '" + subCommandName + "' for " + sender.getName(), e);
-            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cAn unexpected database error occurred. Please contact an administrator.");
+            messagesHelper.sendCommandSenderMessage(sender,"&cAn unexpected database error occurred. Please contact an administrator.");
             return true;
         } catch (Exception e) {
             plugin.getLogger().log(Level.SEVERE, "An unexpected error occurred while executing command '" + subCommandName + "' for " + sender.getName(), e);
-            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cAn unexpected error occurred. Please contact an administrator.");
+            messagesHelper.sendCommandSenderMessage(sender,"&cAn unexpected error occurred. Please contact an administrator.");
             return true;
         }
     }

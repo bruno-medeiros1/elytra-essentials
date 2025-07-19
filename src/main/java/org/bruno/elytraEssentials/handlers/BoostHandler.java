@@ -1,7 +1,10 @@
-package org.bruno.elytraEssentials.listeners;
+package org.bruno.elytraEssentials.handlers;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
+import org.bruno.elytraEssentials.helpers.FoliaHelper;
+import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
+import org.bruno.elytraEssentials.utils.CancellableTask;
 import org.bruno.elytraEssentials.utils.PlayerStats;
 import org.bruno.elytraEssentials.utils.ServerVersion;
 import org.bukkit.*;
@@ -9,58 +12,54 @@ import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
-import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
-public class ElytraBoostListener implements Listener {
+public class BoostHandler {
     private static final long MINIMUM_SPAM_DELAY_MS = 50; // The absolute minimum cooldown
     private static final double BOOST_MULTIPLIER = 0.5;
     private static final double SUPER_BOOST_MULTIPLIER = 1.0;
 
     private final ElytraEssentials plugin;
-    private final HashMap<UUID, Long> cooldowns = new HashMap<>();
-    private final HashMap<UUID, Long> cooldownMessageSent = new HashMap<>();
+    private final FoliaHelper foliaHelper;
+    private final MessagesHelper messagesHelper;
 
-    private final HashMap<UUID, Long> superBoostMessageExpirations = new HashMap<>();
-    private final HashMap<UUID, Long> boostMessageExpirations = new HashMap<>();
+    private FlightHandler flightHandler;
 
-    private final HashMap<UUID, BukkitTask> chargingTasks = new HashMap<>();
-    private final HashMap<UUID, BossBar> chargeBossBars = new HashMap<>();
+    private final Map<UUID, Long> cooldowns = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> cooldownMessageSent = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> superBoostMessageExpirations = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> boostMessageExpirations = new ConcurrentHashMap<>();
+    private final Map<UUID, CancellableTask> chargingTasks = new ConcurrentHashMap<>();
+    private final Map<UUID, BossBar> chargeBossBars = new ConcurrentHashMap<>();
 
-    public ElytraBoostListener(ElytraEssentials plugin) {
+    public BoostHandler(ElytraEssentials plugin, FoliaHelper foliaHelper, MessagesHelper messagesHelper) {
         this.plugin = plugin;
+
+        this.foliaHelper = foliaHelper;
+        this.messagesHelper = messagesHelper;
     }
 
-    @EventHandler
-    public void onRightClick(PlayerInteractEvent event) {
-        if (event.getHand() == EquipmentSlot.OFF_HAND) return;
+    public void setFlightHandler(FlightHandler flightHandler) {
+        this.flightHandler = flightHandler;
+    }
 
-        Action action = event.getAction();
-        if (action != Action.RIGHT_CLICK_AIR && action != Action.RIGHT_CLICK_BLOCK) return;
-
-        Player player = event.getPlayer();
-
-        if (player.isGliding()) {
+    public void handleInteract(Player player, boolean isGliding, boolean isSneaking, boolean isOnGround) {
+        if (isGliding) {
             handleInAirBoost(player);
-        } else if (player.isSneaking() && player.isOnGround()) {
+        } else if (isSneaking && isOnGround) {
             handleChargedJump(player);
         }
     }
 
-    @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) {
+    public void handlePlayerQuit(PlayerQuitEvent event) {
         // Clean up all maps when a player leaves
         UUID playerId = event.getPlayer().getUniqueId();
         cooldowns.remove(playerId);
@@ -70,8 +69,7 @@ public class ElytraBoostListener implements Listener {
         cancelCharge(event.getPlayer()); // Cancel any active charge
     }
 
-    @EventHandler
-    public void onPlayerToggleSneak(PlayerToggleSneakEvent event) {
+    public void handleToggleSneak(PlayerToggleSneakEvent event) {
         Player player = event.getPlayer();
 
         // Cancel the charge if a player stops sneaking
@@ -80,6 +78,7 @@ public class ElytraBoostListener implements Listener {
             cancelCharge(player);
         }
     }
+
 
     private void handleInAirBoost(Player player) {
         if (!plugin.getConfigHandlerInstance().getIsBoostEnabled()) return;
@@ -160,86 +159,75 @@ public class ElytraBoostListener implements Listener {
         bossBar.addPlayer(player);
         chargeBossBars.put(player.getUniqueId(), bossBar);
 
-        BukkitTask task = new BukkitRunnable() {
-            private long ticksElapsed = 0;
+        var ticksElapsed = new AtomicLong(0); // Use AtomicLong for thread-safe incrementing
 
-            @Override
-            public void run() {
-                ItemStack currentItem = player.getInventory().getItemInMainHand();
-                if (!player.isOnline() || !player.isSneaking() || !player.isOnGround() || currentItem.getType() != configuredMaterial) {
-                    cancelCharge(player);
-                    return;
-                }
-
-                ticksElapsed++;
-                double progress = (double) ticksElapsed / totalTicksToCharge;
-                bossBar.setProgress(Math.min(1.0, progress));
-
-                int percentage = (int) (progress * 100);
-                bossBar.setTitle("§aCharging Jump... §2" + percentage + "%");
-
-                if (progress > 0.75) {
-                    bossBar.setTitle("§cCharging Jump... §4" + percentage + "%");
-                    bossBar.setColor(BarColor.RED);
-                } else if (progress > 0.4) {
-                    bossBar.setTitle("§eCharging Jump... §6" + percentage + "%");
-                    bossBar.setColor(BarColor.YELLOW);
-                }
-
-                // Play the charge-up effect if the player has an active effect
-                playChargeUpEffect(player, ticksElapsed, totalTicksToCharge);
-
-                if (ticksElapsed % 4 == 0) {
-                    player.playSound(player.getLocation(), Sound.BLOCK_TRIPWIRE_CLICK_ON, 0.5f, 1.5f);
-                }
-
-                if (ticksElapsed >= totalTicksToCharge) {
-                    plugin.getMessagesHelper().sendTitleMessage(player, "&r", "&#FFD700LAUNCH!", 5, 20, 10);
-
-                    double jumpStrength = plugin.getConfigHandlerInstance().getJumpStrength();
-                    player.setVelocity(player.getVelocity().add(new Vector(0, jumpStrength, 0)));
-
-                    //  Schedule the glide to activate with a 2-tick delay.
-                    new BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            if (player.isOnline() && !player.isOnGround()) {
-                                player.setGliding(true);
-
-                                // Makes sure we trigger the glide start event
-                                ElytraFlightListener flightListener = plugin.getElytraFlightListener();
-                                if (flightListener != null) {
-                                    flightListener.handleGlideStart(player);
-                                }
-                            }
-                        }
-                    }.runTaskLater(plugin, 2L);
-
-                    player.getWorld().playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.2f, 1.0f);
-
-                    if (plugin.getServerVersion().ordinal() == ServerVersion.V_1_21.ordinal() ) {
-                        player.getWorld().spawnParticle(Particle.EXPLOSION, player.getLocation(), 1);
-                        player.getWorld().spawnParticle(Particle.FIREWORK, player.getLocation(), 30, 0.5, 0.5, 0.5, 0.1);
-                    }
-                    else {
-                        // For versions before 1.20 and below, use the old explosion particle
-                        Particle particle = Particle.valueOf("EXPLOSION_NORMAL");
-                        player.getWorld().spawnParticle(particle, player.getLocation(), 1);
-
-                        Particle particle2 = Particle.valueOf("FIREWORKS_SPARK");
-                        player.getWorld().spawnParticle(particle2, player.getLocation(), 30, 0.5, 0.5, 0.5, 0.1);
-                    }
-
-                    cancelCharge(player);
-                }
+        CancellableTask task = foliaHelper.runTaskTimerForEntity(player, () -> {
+            ItemStack currentItem = player.getInventory().getItemInMainHand();
+            if (!player.isOnline() || !player.isSneaking() || !player.isOnGround() || currentItem.getType() != configuredMaterial) {
+                cancelCharge(player);
+                return;
             }
-        }.runTaskTimer(plugin, 0L, 1L);
+
+            long currentTick = ticksElapsed.incrementAndGet(); // Safely increment the counter
+            double progress = (double) currentTick  / totalTicksToCharge;
+            bossBar.setProgress(Math.min(1.0, progress));
+
+            int percentage = (int) (progress * 100);
+            bossBar.setTitle("§aCharging Jump... §2" + percentage + "%");
+
+            if (progress > 0.75) {
+                bossBar.setTitle("§cCharging Jump... §4" + percentage + "%");
+                bossBar.setColor(BarColor.RED);
+            } else if (progress > 0.4) {
+                bossBar.setTitle("§eCharging Jump... §6" + percentage + "%");
+                bossBar.setColor(BarColor.YELLOW);
+            }
+
+            // Play the charge-up effect if the player has an active effect
+            playChargeUpEffect(player, currentTick , totalTicksToCharge);
+
+            if (currentTick  % 4 == 0) {
+                player.playSound(player.getLocation(), Sound.BLOCK_TRIPWIRE_CLICK_ON, 0.5f, 1.5f);
+            }
+
+            if (currentTick  >= totalTicksToCharge) {
+                messagesHelper.sendTitleMessage(player, "&r", "&#FFD700LAUNCH!", 5, 20, 10);
+
+                double jumpStrength = plugin.getConfigHandlerInstance().getJumpStrength();
+                player.setVelocity(player.getVelocity().add(new Vector(0, jumpStrength, 0)));
+
+                // Use Folia-safe delayed task
+                foliaHelper.runTaskLater(player, () -> {
+                    if (player.isOnline() && !player.isOnGround()) {
+                        player.setGliding(true);
+                        flightHandler.handleGlideStart(player);
+                    }
+                }, 2L);
+
+                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.2f, 1.0f);
+
+                if (plugin.getServerVersion().ordinal() == ServerVersion.V_1_21.ordinal() ) {
+                    player.getWorld().spawnParticle(Particle.EXPLOSION, player.getLocation(), 1);
+                    player.getWorld().spawnParticle(Particle.FIREWORK, player.getLocation(), 30, 0.5, 0.5, 0.5, 0.1);
+                }
+                else {
+                    // For versions before 1.20 and below, use the old explosion particle
+                    Particle particle = Particle.valueOf("EXPLOSION_NORMAL");
+                    player.getWorld().spawnParticle(particle, player.getLocation(), 1);
+
+                    Particle particle2 = Particle.valueOf("FIREWORKS_SPARK");
+                    player.getWorld().spawnParticle(particle2, player.getLocation(), 30, 0.5, 0.5, 0.5, 0.1);
+                }
+
+                cancelCharge(player);
+            }
+        }, 1L, 1L);
 
         chargingTasks.put(player.getUniqueId(), task);
     }
 
     private void cancelCharge(Player player) {
-        BukkitTask task = chargingTasks.remove(player.getUniqueId());
+        CancellableTask task = chargingTasks.remove(player.getUniqueId());
         if (task != null) {
             task.cancel();
         }
@@ -324,7 +312,7 @@ public class ElytraBoostListener implements Listener {
 
                     String messageTemplate = plugin.getMessagesHandlerInstance().getBoostCooldown();
                     String message = messageTemplate.replace("{0}", String.valueOf(remainingSeconds));
-                    plugin.getMessagesHelper().sendPlayerMessage(player, message);
+                    messagesHelper.sendPlayerMessage(player, message);
 
                     // Record that we've sent a message for this specific cooldown instance.
                     cooldownMessageSent.put(player.getUniqueId(), lastBoostTime);

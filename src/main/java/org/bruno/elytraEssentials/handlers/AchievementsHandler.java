@@ -1,8 +1,10 @@
 package org.bruno.elytraEssentials.handlers;
 
-
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.helpers.ColorHelper;
+import org.bruno.elytraEssentials.helpers.FoliaHelper;
+import org.bruno.elytraEssentials.helpers.MessagesHelper;
+import org.bruno.elytraEssentials.utils.CancellableTask;
 import org.bruno.elytraEssentials.utils.PlayerStats;
 import org.bruno.elytraEssentials.utils.StatType;
 import org.bukkit.*;
@@ -10,8 +12,6 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.FireworkMeta;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.sql.SQLException;
 import java.util.Collection;
@@ -22,17 +22,26 @@ import java.util.logging.Level;
 
 public class AchievementsHandler {
 
-    private final ElytraEssentials plugin;
-    private final Map<String, Achievement> achievements = new HashMap<>();
-    private BukkitTask checkTask;
+    private final ElytraEssentials plugin; // Needed for logger and custom file access
+    private final DatabaseHandler databaseHandler;
+    private final StatsHandler statsHandler;
+    private final FoliaHelper foliaHelper;
+    private final MessagesHelper messagesHelper;
 
-    // A simple record to hold the data for a single achievement
+    private final Map<String, Achievement> achievements = new HashMap<>();
+    private CancellableTask checkTask;
+
     public record Achievement(String id, String name, StatType type, double value, String description,
                               Material displayItem,
                               String message, List<String> commands, List<String> rewards, boolean broadcast) {}
 
-    public AchievementsHandler(ElytraEssentials plugin) {
+    public AchievementsHandler(ElytraEssentials plugin, DatabaseHandler databaseHandler, StatsHandler statsHandler, FoliaHelper foliaHelper, MessagesHelper messagesHelper) {
         this.plugin = plugin;
+        this.databaseHandler = databaseHandler;
+        this.statsHandler = statsHandler;
+        this.foliaHelper = foliaHelper;
+        this.messagesHelper = messagesHelper;
+
         loadAchievements();
     }
 
@@ -72,51 +81,50 @@ public class AchievementsHandler {
      * Starts the repeating task that checks for new achievements for online players.
      */
     public void start() {
-        if (checkTask != null && !checkTask.isCancelled()) {
-            return;
-        }
-        // Run the check asynchronously every minute to avoid impacting performance.
-        this.checkTask = new BukkitRunnable() {
-            @Override
-            public void run() {
+        if (checkTask != null) return;
+
+        // Use the Folia-safe global timer to run our check every minute.
+        this.checkTask = foliaHelper.runTaskTimerGlobal(() -> {
+            // The check itself involves database calls, so run it asynchronously.
+            foliaHelper.runAsyncTask(() -> {
                 for (Player player : Bukkit.getOnlinePlayers()) {
                     checkAndAwardAchievements(player);
                 }
-            }
-        }.runTaskTimerAsynchronously(plugin, 20L * 60, 20L * 60); // Delay 1 min, repeat every 1 min
+            });
+        }, 20L * 60, 20L * 60); // Delay 1 min, repeat every 1 min
     }
 
     /**
-     * Stops the achievement checking task.
+     * Stops the achievement checking task. Renamed for consistency.
      */
-    public void cancel() {
+    public void shutdown() {
         if (checkTask != null) {
             checkTask.cancel();
+            checkTask = null;
         }
+    }
+
+    public Collection<Achievement> getAllAchievements() {
+        return achievements.values();
     }
 
     /**
      * The core logic. Checks a player's stats against all achievements and awards them if necessary.
      */
     private void checkAndAwardAchievements(Player player) {
-        PlayerStats stats = plugin.getStatsHandler().getStats(player);
-        if (stats == null) return; // Stats not loaded yet
+        PlayerStats stats = statsHandler.getStats(player);
+        if (stats == null) return;
 
         for (Achievement achievement : achievements.values()) {
             try {
-                // Check if the player already has this achievement
-                if (plugin.getDatabaseHandler().hasAchievement(player.getUniqueId(), achievement.id())) {
-                    continue; // Skip to the next achievement
+                if (databaseHandler.hasAchievement(player.getUniqueId(), achievement.id())) {
+                    continue;
                 }
 
-                // Get the player's current value for the relevant stat
                 double playerValue = getStatValue(stats, achievement.type());
-
-                // Check if the player has met the requirement
                 if (playerValue >= achievement.value()) {
                     awardAchievement(player, achievement);
                 }
-
             } catch (SQLException e) {
                 plugin.getLogger().log(Level.SEVERE, "Database error while checking achievements for " + player.getName(), e);
             }
@@ -125,50 +133,45 @@ public class AchievementsHandler {
 
     private void awardAchievement(Player player, Achievement achievement) throws SQLException {
         // Save the achievement to the database so they don't get it again.
-        plugin.getDatabaseHandler().addAchievement(player.getUniqueId(), achievement.id());
+        databaseHandler.addAchievement(player.getUniqueId(), achievement.id());
 
-        // Schedule the rewards to run on the main server thread.
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                // Execute reward commands from the console.
-                for (String command : achievement.commands()) {
-                    try {
-                        String formattedCommand = command.replace("{player}", player.getName());
-                        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), formattedCommand);
-                    } catch (Exception e) {
-                        plugin.getLogger().warning("Failed to execute achievement command: '" + command + "'. Error: " + e.getMessage());
-                    }
-                }
-
-                player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
-
-                // Spawn a celebratory firework
-                Firework firework = player.getWorld().spawn(player.getLocation(), Firework.class);
-                FireworkMeta fireworkMeta = firework.getFireworkMeta();
-
-                fireworkMeta.addEffect(FireworkEffect.builder()
-                        .with(FireworkEffect.Type.BALL_LARGE)
-                        .withColor(Color.LIME, Color.YELLOW, Color.AQUA, Color.RED, Color.FUCHSIA)
-                        .withFade(Color.WHITE)
-                        .withFlicker()
-                        .withTrail()
-                        .build());
-                fireworkMeta.setPower(0);
-                firework.setFireworkMeta(fireworkMeta);
-
-                //  Send Message
-                if (!achievement.message().isEmpty()) {
-                    String formattedMessage = ColorHelper.parse(achievement.message()).replace("{player}", player.getName());
-
-                    if (achievement.broadcast()) {
-                        Bukkit.broadcastMessage(formattedMessage);
-                    } else {
-                        plugin.getMessagesHelper().sendPlayerMessage(player, "&eYou have completed the &6" + achievement.name + " &eachievement!");
-                    }
+        // Schedule the rewards (fireworks, sounds, commands) to run on the main server thread.
+        foliaHelper.runTask(player, () -> {
+            // Execute reward commands from the console.
+            for (String command : achievement.commands()) {
+                try {
+                    String formattedCommand = command.replace("{player}", player.getName());
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), formattedCommand);
+                } catch (Exception e) {
+                    plugin.getLogger().warning("Failed to execute achievement command: '" + command + "'. Error: " + e.getMessage());
                 }
             }
-        }.runTask(plugin);
+
+            player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
+
+            // Spawn a celebratory firework
+            Firework firework = player.getWorld().spawn(player.getLocation(), Firework.class);
+            FireworkMeta fireworkMeta = firework.getFireworkMeta();
+            fireworkMeta.addEffect(FireworkEffect.builder()
+                    .with(FireworkEffect.Type.BALL_LARGE)
+                    .withColor(Color.LIME, Color.YELLOW, Color.AQUA, Color.RED, Color.FUCHSIA)
+                    .withFade(Color.WHITE)
+                    .withFlicker()
+                    .withTrail()
+                    .build());
+            fireworkMeta.setPower(0);
+            firework.setFireworkMeta(fireworkMeta);
+
+            // Send Message
+            if (!achievement.message().isEmpty()) {
+                String formattedMessage = ColorHelper.parse(achievement.message()).replace("{player}", player.getName());
+                if (achievement.broadcast()) {
+                    Bukkit.broadcastMessage(formattedMessage);
+                } else {
+                    messagesHelper.sendPlayerMessage(player, "&eYou have completed the &6" + achievement.name + " &eachievement!");
+                }
+            }
+        });
     }
 
     /**
@@ -184,13 +187,5 @@ public class AchievementsHandler {
             case SAVES -> stats.getPluginSaves();
             default -> 0.0;
         };
-    }
-
-    /**
-     * Gets a collection of all loaded achievements.
-     * @return A collection of Achievement records.
-     */
-    public Collection<Achievement> getAllAchievements() {
-        return achievements.values();
     }
 }

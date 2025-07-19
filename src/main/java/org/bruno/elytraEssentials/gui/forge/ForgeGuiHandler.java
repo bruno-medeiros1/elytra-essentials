@@ -1,39 +1,76 @@
-package org.bruno.elytraEssentials.listeners;
+package org.bruno.elytraEssentials.gui.forge;
 
-import org.bruno.elytraEssentials.ElytraEssentials;
+import org.bruno.elytraEssentials.handlers.ConfigHandler;
 import org.bruno.elytraEssentials.helpers.ArmoredElytraHelper;
+import org.bruno.elytraEssentials.helpers.FoliaHelper;
 import org.bruno.elytraEssentials.helpers.GuiHelper;
 import org.bruno.elytraEssentials.utils.Constants;
-import org.bruno.elytraEssentials.gui.ForgeHolder;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
-//  Handle player interactions within the forge menu.
-public class ForgeGuiListener implements Listener {
-
-    private final ElytraEssentials plugin;
+public class ForgeGuiHandler {
+    private final ConfigHandler configHandler;
     private final ArmoredElytraHelper armoredElytraHelper;
-    private final Set<UUID> processedAction = new HashSet<>();
+    private final FoliaHelper foliaHelper;
 
-    public ForgeGuiListener(ElytraEssentials plugin) {
-        this.plugin = plugin;
-        this.armoredElytraHelper = plugin.getArmoredElytraHelper();
+    // Use a thread-safe set for Folia compatibility
+    private final Set<UUID> processedAction = ConcurrentHashMap.newKeySet();
+
+    public ForgeGuiHandler(ConfigHandler configHandler, ArmoredElytraHelper armoredElytraHelper, FoliaHelper foliaHelper) {
+        this.configHandler = configHandler;
+        this.armoredElytraHelper = armoredElytraHelper;
+        this.foliaHelper = foliaHelper;
     }
 
-    @EventHandler
-    public void onInventoryClick(InventoryClickEvent event) {
-        if (!plugin.getConfigHandlerInstance().getIsArmoredElytraEnabled()) return;
+    /**
+     * Creates and opens the forge GUI for a player.
+     * Logic moved from the old ForgeCommand.
+     */
+    public void openForge(Player player) {
+        Inventory forge = Bukkit.createInventory(new ForgeHolder(), Constants.GUI.FORGE_INVENTORY_SIZE, Constants.GUI.FORGE_INVENTORY_NAME);
+
+        ItemStack grayPane = GuiHelper.createGuiItem(Material.BLACK_STAINED_GLASS_PANE, " ");
+
+        // First, fill the entire inventory with the gray filler pane
+        for (int i = 0; i < Constants.GUI.FORGE_INVENTORY_SIZE - 9; i++) {
+            forge.setItem(i, grayPane);
+        }
+
+        // This creates the layout with inputs on the sides and the result in the middle.
+        forge.setItem(Constants.GUI.FORGE_ELYTRA_SLOT, null);
+        forge.setItem(Constants.GUI.FORGE_ARMOR_SLOT, null);
+        forge.setItem(Constants.GUI.FORGE_RESULT_SLOT, null);
+
+        // Place the instructional anvil item at the bottom
+        ItemStack infoAnvil = GuiHelper.createGuiItem(Material.ANVIL,
+                "§eElytra Forging",
+                "§7Place an §aelytra §7in the left slot",
+                "§7and a §achestplate §7in the right slot.",
+                "§7The result will appear in the middle."
+        );
+        forge.setItem(Constants.GUI.FORGE_INFO_ANVIL_SLOT, infoAnvil);
+
+        // Open the GUI for the player
+        player.openInventory(forge);
+    }
+
+    /**
+     * Handles all click events for the forge GUI.
+     * Logic moved from the old ForgeGuiListener.
+     */
+    public void handleClick(InventoryClickEvent event) {
+        event.setCancelled(true);
+
+        if (!configHandler.getIsArmoredElytraEnabled()) return;
 
         Inventory topInventory = GuiHelper.getTopInventory(event);
         if (topInventory.getHolder() == null || !(topInventory.getHolder() instanceof ForgeHolder)) return;
@@ -80,16 +117,12 @@ public class ForgeGuiListener implements Listener {
         }
     }
 
-    @EventHandler
-    public void onInventoryClose(InventoryCloseEvent event) {
-        if (event.getInventory().getHolder() == null || !(event.getInventory().getHolder() instanceof ForgeHolder)) return;
-
-        if (processedAction.remove(event.getPlayer().getUniqueId())) return;
-
-        Player player = (Player) event.getPlayer();
-        Inventory forge = event.getInventory();
-
-        returnAllItems(forge, player);
+    /**
+     * Schedules a result update using the Folia-safe helper.
+     */
+    private void scheduleResultUpdate(Inventory forge, Player player) {
+        // This is now Folia-safe
+        foliaHelper.runTask(player, () -> updateForgeResult(forge, player));
     }
 
     private void returnAllItems(Inventory forge, Player player) {
@@ -128,15 +161,6 @@ public class ForgeGuiListener implements Listener {
         }
     }
 
-    private void scheduleResultUpdate(Inventory forge, Player player) {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                updateForgeResult(forge, player);
-            }
-        }.runTask(plugin);
-    }
-
     private void handleShiftClick(ItemStack clickedItem, Inventory forge) {
         if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
 
@@ -161,7 +185,7 @@ public class ForgeGuiListener implements Listener {
         ItemStack middleSlot = forge.getItem(Constants.GUI.FORGE_RESULT_SLOT);
 
         boolean isRevertible = armoredElytraHelper.isArmoredElytra(middleSlot) && !armoredElytraHelper.isPreviewItem(middleSlot) && isEmpty(elytraSlot) && isEmpty(armorSlot);
-        boolean isCraftable = armoredElytraHelper.isPlainElytra(elytraSlot) && plugin.getArmoredElytraHelper().isChestplate(armorSlot);
+        boolean isCraftable = armoredElytraHelper.isPlainElytra(elytraSlot) && armoredElytraHelper.isChestplate(armorSlot);
 
         if (isRevertible) {
             displayRevertedItems(forge, middleSlot);
@@ -193,8 +217,8 @@ public class ForgeGuiListener implements Listener {
         List<String> lore = new ArrayList<>();
         lore.add("§7Click to complete the process.");
 
-        double moneyCost = plugin.getConfigHandlerInstance().getForgeCostMoney();
-        int xpCost = plugin.getConfigHandlerInstance().getForgeCostXpLevels();
+        double moneyCost = configHandler.getForgeCostMoney();
+        int xpCost = configHandler.getForgeCostXpLevels();
 
         if (moneyCost > 0 || xpCost > 0) {
             lore.add("");

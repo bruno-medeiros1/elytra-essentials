@@ -19,6 +19,8 @@ public final class FileHelper {
 
     public FileHelper(ElytraEssentials plugin) {
         this.plugin = plugin;
+
+        initialize();
     }
 
     /**

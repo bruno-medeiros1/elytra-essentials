@@ -1,6 +1,9 @@
 package org.bruno.elytraEssentials.handlers;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
+import org.bruno.elytraEssentials.helpers.FoliaHelper;
+import org.bruno.elytraEssentials.helpers.MessagesHelper;
+import org.bruno.elytraEssentials.utils.CancellableTask;
 import org.bruno.elytraEssentials.utils.Constants;
 import org.bruno.elytraEssentials.utils.PlayerStats;
 import org.bukkit.Bukkit;
@@ -18,6 +21,10 @@ import java.util.logging.Level;
 
 public class DatabaseHandler {
     private final ElytraEssentials plugin;
+    private final ConfigHandler configHandler;
+    private final FoliaHelper foliaHelper;
+    private final MessagesHelper messagesHelper;
+
     private Connection connection;
 
     private enum StorageType { SQLITE, MYSQL }
@@ -29,10 +36,14 @@ public class DatabaseHandler {
     private String username;
     private String password;
 
-    private BukkitTask backupTask = null;
+    private CancellableTask backupTask = null;
 
-    public DatabaseHandler(ElytraEssentials plugin){
+    public DatabaseHandler(ElytraEssentials plugin, ConfigHandler configHandler, FoliaHelper foliaHelper, MessagesHelper messagesHelper) {
         this.plugin = plugin;
+        this.configHandler = configHandler;
+        this.foliaHelper = foliaHelper;
+        this.messagesHelper = messagesHelper;
+
         setDatabaseVariables();
     }
 
@@ -66,7 +77,7 @@ public class DatabaseHandler {
         if (IsConnected()) {
             try {
                 connection.close();
-                plugin.getMessagesHelper().sendDebugMessage(storageType.name() + " database connection closed successfully!");
+                messagesHelper.sendDebugMessage(storageType.name() + " database connection closed successfully!");
             } catch (SQLException e) {
                 plugin.getLogger().log(Level.SEVERE, "Failed to close the database connection.", e);
             }
@@ -112,7 +123,7 @@ public class DatabaseHandler {
     }
 
     public void setDatabaseVariables() {
-        String typeFromConfig = plugin.getConfigHandlerInstance().getStorageType().toUpperCase();
+        String typeFromConfig = configHandler.getStorageType().toUpperCase();
         try {
             this.storageType = StorageType.valueOf(typeFromConfig);
         } catch (IllegalArgumentException e) {
@@ -121,11 +132,11 @@ public class DatabaseHandler {
         }
 
         if (this.storageType == StorageType.MYSQL) {
-            this.host = plugin.getConfigHandlerInstance().getHost();
-            this.port = plugin.getConfigHandlerInstance().getPort();
-            this.database = plugin.getConfigHandlerInstance().getDatabase();
-            this.username = plugin.getConfigHandlerInstance().getUsername();
-            this.password = plugin.getConfigHandlerInstance().getPassword();
+            this.host = configHandler.getHost();
+            this.port = configHandler.getPort();
+            this.database = configHandler.getDatabase();
+            this.username = configHandler.getUsername();
+            this.password = configHandler.getPassword();
         }
     }
 
@@ -134,15 +145,24 @@ public class DatabaseHandler {
     }
 
     //<editor-fold desc="BACKUPS">
-    public void startAutoBackupTask() {
+    public void start() {
         if (storageType != StorageType.SQLITE) return;
-        if (this.backupTask != null && !this.backupTask.isCancelled()) return;
 
-        long interval = Constants.Database.Backups.BACKUP_INTERVAL_TICKS; // 1 hour
-        this.backupTask = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::backupSQLiteDatabase, interval, interval);
+        // TODO: Add a config option to enable/disable automatic backups
+
+        if (this.backupTask != null) return;
+
+        long interval = Constants.Database.Backups.BACKUP_INTERVAL_TICKS;
+
+        plugin.getLogger().info("Starting automatic database backup task...");
+
+        // This is the new, platform-safe way to schedule the repeating backup.
+        this.backupTask = foliaHelper.runTaskTimerGlobal(() -> {
+            foliaHelper.runAsyncTask(this::backupSQLiteDatabase);
+        }, interval, interval);
     }
 
-    public void cancelBackupTask() {
+    public void shutdown() {
         if (this.backupTask != null) {
             this.backupTask.cancel();
             this.backupTask = null;
@@ -171,7 +191,7 @@ public class DatabaseHandler {
             Arrays.sort(backupFiles, Comparator.comparingLong(File::lastModified));
             File oldestFile = backupFiles[0];
             if (oldestFile.delete()) {
-                plugin.getMessagesHelper().sendDebugMessage("Deleted oldest backup file: " + oldestFile.getName());
+                messagesHelper.sendDebugMessage("Deleted oldest backup file: " + oldestFile.getName());
             } else {
                 plugin.getLogger().warning("Could not delete oldest backup file: " + oldestFile.getName());
             }
@@ -184,7 +204,7 @@ public class DatabaseHandler {
 
         try {
             Files.copy(sourceFile.toPath(), destinationFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            plugin.getMessagesHelper().sendDebugMessage("Successfully created database backup: " + destinationFile.getName());
+            messagesHelper.sendDebugMessage("Successfully created database backup: " + destinationFile.getName());
         } catch (IOException e) {
             plugin.getLogger().log(Level.SEVERE, "Could not create SQLite database backup! Check file permissions.", e);
         }
@@ -523,20 +543,6 @@ public class DatabaseHandler {
             }
 
             stmt.executeUpdate();
-        }
-    }
-
-    public void saveAllData() {
-        try {
-            if (plugin.getStatsHandler() != null) {
-                plugin.getStatsHandler().saveAllOnlinePlayers();
-            }
-            if (plugin.getElytraFlightListener() != null) {
-                plugin.getElytraFlightListener().saveAllFlightTimes();
-            }
-            plugin.getLogger().info("All player data saved successfully.");
-        } catch (Exception e) {
-            plugin.getLogger().log(Level.SEVERE, "A critical error occurred while saving player data.", e);
         }
     }
 

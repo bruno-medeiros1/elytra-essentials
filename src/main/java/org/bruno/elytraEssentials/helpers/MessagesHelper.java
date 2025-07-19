@@ -18,12 +18,12 @@ import org.bukkit.entity.Player;
 public class MessagesHelper {
 
     private final ElytraEssentials plugin;
-    private final String pluginPrefix;
+
+    private String pluginPrefix;
     private boolean debugEnabled = false;
 
     public MessagesHelper(ElytraEssentials plugin) {
         this.plugin = plugin;
-        this.pluginPrefix = plugin.getMessagesHandlerInstance().getPrefixMessage();
     }
 
     /**
@@ -123,5 +123,9 @@ public class MessagesHelper {
      */
     public void setDebugMode(boolean enabled) {
         this.debugEnabled = enabled;
+    }
+
+    public void setPrefix(String prefix) {
+        this.pluginPrefix = ColorHelper.parse(prefix);
     }
 }

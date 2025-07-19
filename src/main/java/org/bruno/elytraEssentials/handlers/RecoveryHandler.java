@@ -1,6 +1,7 @@
 package org.bruno.elytraEssentials.handlers;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
+import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.helpers.TimeHelper;
 import org.bukkit.Bukkit;
@@ -13,13 +14,20 @@ import java.util.UUID;
 public class RecoveryHandler
 {
     private final ElytraEssentials plugin;
+
+    private final FlightHandler flightHandler;
+    private final MessagesHelper messagesHelper;
+
     private BukkitTask task;
 
     private final int recoveryAmount;
     private final boolean isNotifyOnRecoveryEnabled;
 
-    public RecoveryHandler(ElytraEssentials plugin) {
+    public RecoveryHandler(ElytraEssentials plugin, FlightHandler flightHandler, MessagesHelper messagesHelper) {
         this.plugin = plugin;
+
+        this.flightHandler = flightHandler;
+        this.messagesHelper = messagesHelper;
 
         // Load config values once when the handler is created
         this.recoveryAmount = plugin.getConfigHandlerInstance().getRecoveryAmount();
@@ -57,7 +65,7 @@ public class RecoveryHandler
             }
 
             UUID playerId = player.getUniqueId();
-            int currentFlightTime = plugin.getElytraFlightListener().getCurrentFlightTime(playerId);
+            int currentFlightTime = flightHandler.getCurrentFlightTime(playerId);
 
             // If a max time limit is set and the player is already at or above it, skip them.
             if (maxTimeLimit > 0 && currentFlightTime >= maxTimeLimit) {
@@ -76,14 +84,14 @@ public class RecoveryHandler
             }
 
             // Use the new, safer method in the flight listener to add time.
-            plugin.getElytraFlightListener().addFlightTime(playerId, timeToAdd);
+            flightHandler.addFlightTime(playerId, timeToAdd);
 
             // Send notification if enabled.
             if (isNotifyOnRecoveryEnabled) {
                 player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 0.5f);
                 String message = plugin.getMessagesHandlerInstance().getElytraFlightTimeRecovery()
                         .replace("{0}", TimeHelper.formatFlightTime(timeToAdd));
-                plugin.getMessagesHelper().sendPlayerMessage(player, message);
+                messagesHelper.sendPlayerMessage(player, message);
             }
         }
     }

@@ -5,137 +5,46 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.chat.hover.content.Text;
-import org.bruno.elytraEssentials.ElytraEssentials;
+import org.bruno.elytraEssentials.handlers.StatsHandler;
+import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
-import org.bruno.elytraEssentials.helpers.TimeHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 public class TopCommand implements ISubCommand {
-    private final ElytraEssentials plugin;
-    private static final int LEADERBOARD_LIMIT = 5;
+    private final StatsHandler statsHandler;
+    private final MessagesHelper messagesHelper;
 
-    public TopCommand(ElytraEssentials plugin) {
-        this.plugin = plugin;
+    public TopCommand(StatsHandler statsHandler, MessagesHelper messagesHelper) {
+        this.statsHandler = statsHandler;
+        this.messagesHelper = messagesHelper;
     }
 
     @Override
     public boolean Execute(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player || sender instanceof ConsoleCommandSender)) {
-            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cThis command can only be run by players or the console.");
+        if (sender instanceof Player player && !PermissionsHelper.hasTopPermission(player)) {
+            messagesHelper.sendPlayerMessage(player, "&cYou do not have permission to view the leaderboards.");
             return true;
         }
 
-        if (args.length > 1){
-            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cUsage: /ee top <distance,time,longest>");
-            return true;
-        }
-
-        if (sender instanceof Player player){
-            if (!PermissionsHelper.hasTopPermission(player)){
-                plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getNoPermissionMessage());
-                return true;
-            }
-        }
-
-
-        if (args.length < 1) {
+        if (args.length == 0) {
             sendLeaderboardMenu(sender);
             return true;
         }
 
-        String category = args[0].toLowerCase();
-        String dbColumn;
-        String title;
-        String format;
-
-        // Determine which statistic to query based on the argument
-        switch (category) {
-            case "distance":
-                dbColumn = "total_distance";
-                title = "Top Distance Flown";
-                format = "§e#%d §f%s §7- §b%.1f km";
-                break;
-            case "time":
-                dbColumn = "total_time_seconds";
-                title = "Top Flight Time";
-                format = "§e#%d §f%s §7- §b%s";
-                break;
-            case "longest":
-                dbColumn = "longest_flight";
-                title = "Longest Single Flights";
-                format = "§e#%d §f%s §7- §b%.0f blocks";
-                break;
-            default:
-                plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cInvalid category. Use: distance, time, longest");
-                return true;
+        if (args.length > 1){
+            messagesHelper.sendCommandSenderMessage(sender,"&cUsage: /ee top <distance|time|longest>");
+            return true;
         }
 
-        // Run the database query asynchronously to prevent server lag
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                try {
-                    Map<UUID, Double> topData = plugin.getDatabaseHandler().getTopStats(dbColumn, LEADERBOARD_LIMIT);
-                    List<String> formattedMessages = new ArrayList<>();
-
-                    if (topData.isEmpty()) {
-                        formattedMessages.add(ChatColor.GRAY + "No statistics available for this category yet.");
-                    } else {
-                        int rank = 1;
-                        for (Map.Entry<UUID, Double> entry : topData.entrySet()) {
-                            OfflinePlayer player = Bukkit.getOfflinePlayer(entry.getKey());
-                            String playerName = (player.getName() != null) ? player.getName() : "Unknown";
-                            Double value = entry.getValue();
-
-                            String formattedLine = "";
-                            switch (category) {
-                                case "time" ->
-                                        formattedLine = String.format(format, rank, playerName, TimeHelper.formatFlightTime(value.intValue()));
-                                case "distance" ->
-                                        formattedLine = String.format(format, rank, playerName, value / 1000.0);
-                                case "longest" -> formattedLine = String.format(format, rank, playerName, value);
-                            }
-                            if (!formattedLine.isBlank()) {
-                                formattedMessages.add(formattedLine);
-                                rank++;
-                            }
-                        }
-                    }
-
-                    // Send the formatted messages back to the player on the main server thread
-                    new BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            sender.sendMessage("§6--- " + title + " ---");
-                            for (String message : formattedMessages) {
-                                sender.sendMessage(message);
-                            }
-                            sender.sendMessage("§6-------------------------------------");
-                        }
-                    }.runTask(plugin);
-
-                } catch (SQLException e) {
-                    plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cAn error occurred while fetching the leaderboard.");
-                    plugin.getLogger().log(Level.SEVERE, "An error occurred while fetching the leaderboard.", e);
-                }
-            }
-        }.runTaskAsynchronously(plugin);
-
+        // Delegate the complex work to the handler
+        statsHandler.displayTopStats(sender, args[0].toLowerCase());
         return true;
     }
 

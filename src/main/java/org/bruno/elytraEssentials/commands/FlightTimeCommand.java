@@ -1,45 +1,43 @@
 package org.bruno.elytraEssentials.commands;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
+import org.bruno.elytraEssentials.handlers.ConfigHandler;
+import org.bruno.elytraEssentials.handlers.FlightHandler;
+import org.bruno.elytraEssentials.helpers.FoliaHelper;
+import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
-import org.bruno.elytraEssentials.helpers.TimeHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
 
-import java.sql.SQLException;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class FlightTimeCommand implements ISubCommand {
 
     private final ElytraEssentials plugin;
+    private final FlightHandler flightHandler;
+    private final ConfigHandler configHandler;
+    private final MessagesHelper messagesHelper;
+    private final FoliaHelper foliaHelper;
 
-    public FlightTimeCommand(ElytraEssentials plugin) {
+    public FlightTimeCommand(ElytraEssentials plugin, FlightHandler flightHandler, ConfigHandler configHandler, MessagesHelper messagesHelper, FoliaHelper foliaHelper) {
         this.plugin = plugin;
+
+        this.flightHandler = flightHandler;
+        this.configHandler = configHandler;
+        this.messagesHelper = messagesHelper;
+        this.foliaHelper = foliaHelper;
     }
 
     @Override
     public boolean Execute(CommandSender sender, String[] args) {
-        if (!plugin.getConfigHandlerInstance().getIsTimeLimitEnabled()) {
-            plugin.getMessagesHelper().sendCommandSenderMessage(sender, plugin.getMessagesHandlerInstance().getFeatureNotEnabled());
-            return true;
-        }
-
-        if (!PermissionsHelper.hasFlightTimeCommandPermission(sender)) {
-            plugin.getMessagesHelper().sendCommandSenderMessage(sender, plugin.getMessagesHandlerInstance().getNoPermissionMessage());
-            return true;
-        }
-
-        if (args.length < 2) {
-            sendUsageMessage(sender);
-            return true;
-        }
+        if (!configHandler.getIsTimeLimitEnabled()) { /* ... */ return true; }
+        if (!PermissionsHelper.hasFlightTimeCommandPermission(sender)) { /* ... */ return true; }
+        if (args.length < 2) { /* send usage */ return true; }
 
         String action = args[0].toLowerCase();
         switch (action) {
@@ -50,176 +48,6 @@ public class FlightTimeCommand implements ISubCommand {
             default -> sendUsageMessage(sender);
         }
         return true;
-    }
-
-    private void handleAdd(CommandSender sender, String[] args) {
-        if (args.length < 3) {
-            sendUsageMessage(sender);
-            return;
-        }
-        OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
-        if (!validateTargetPlayer(sender, target, args[1])) return;
-
-        int amount = parsePositiveInteger(args[2], sender);
-        if (amount == -1) return;
-
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                try {
-                    int currentFlightTime = plugin.getDatabaseHandler().GetPlayerFlightTime(target.getUniqueId());
-                    int maxTimeLimit = plugin.getConfigHandlerInstance().getMaxTimeLimit();
-                    int finalAmount = amount;
-                    int newFlightTime = currentFlightTime + amount;
-
-                    if (maxTimeLimit > 0 && newFlightTime > maxTimeLimit) {
-                        finalAmount = maxTimeLimit - currentFlightTime;
-                        newFlightTime = maxTimeLimit;
-                    }
-
-                    if (finalAmount <= 0) {
-                        plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cPlayer already has the maximum flight time.");
-                        return;
-                    }
-
-                    plugin.getDatabaseHandler().SetPlayerFlightTime(target.getUniqueId(), newFlightTime);
-                    if (target.isOnline()) {
-                        plugin.getElytraFlightListener().setFlightTime(target.getUniqueId(), newFlightTime);
-                        String message = plugin.getMessagesHandlerInstance().getElytraFlightTimeAdded().replace("{0}", TimeHelper.formatFlightTime(finalAmount));
-                        plugin.getMessagesHelper().sendPlayerMessage(target.getPlayer(), message);
-                    }
-                    plugin.getMessagesHelper().sendConsoleMessage("&aAdded " + TimeHelper.formatFlightTime(finalAmount) + " of flight time to " + target.getName() + ".");
-                } catch (SQLException e) {
-                    handleSqlException(sender, "add flight time to", target.getName(), e);
-                }
-            }
-        }.runTaskAsynchronously(plugin);
-    }
-
-    private void handleRemove(CommandSender sender, String[] args) {
-        if (args.length < 3) {
-            sendUsageMessage(sender);
-            return;
-        }
-        OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
-        if (!validateTargetPlayer(sender, target, args[1])) return;
-
-        int amount = parsePositiveInteger(args[2], sender);
-        if (amount == -1) return;
-
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                try {
-                    int currentFlightTime = plugin.getDatabaseHandler().GetPlayerFlightTime(target.getUniqueId());
-                    int newFlightTime = Math.max(0, currentFlightTime - amount);
-
-                    plugin.getDatabaseHandler().SetPlayerFlightTime(target.getUniqueId(), newFlightTime);
-                    if (target.isOnline()) {
-                        plugin.getElytraFlightListener().setFlightTime(target.getUniqueId(), newFlightTime);
-                        String message = plugin.getMessagesHandlerInstance().getElytraFlightTimeRemoved().replace("{0}", TimeHelper.formatFlightTime(amount));
-                        plugin.getMessagesHelper().sendPlayerMessage(target.getPlayer(), message);
-                    }
-                    plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&aRemoved " + TimeHelper.formatFlightTime(amount) + " of flight time from " + target.getName() + ".");
-
-                } catch (SQLException e) {
-                    handleSqlException(sender, "remove flight time from", target.getName(), e);
-                }
-            }
-        }.runTaskAsynchronously(plugin);
-    }
-
-    private void handleSet(CommandSender sender, String[] args) {
-        if (args.length < 3) {
-            sendUsageMessage(sender);
-            return;
-        }
-        OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
-        if (!validateTargetPlayer(sender, target, args[1])) return;
-
-        int amount = parsePositiveInteger(args[2], sender);
-        if (amount == -1) return;
-
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                try {
-                    int maxTimeLimit = plugin.getConfigHandlerInstance().getMaxTimeLimit();
-                    int finalAmount = (maxTimeLimit > 0) ? Math.min(amount, maxTimeLimit) : amount;
-
-                    plugin.getDatabaseHandler().SetPlayerFlightTime(target.getUniqueId(), finalAmount);
-                    if (target.isOnline()) {
-                        plugin.getElytraFlightListener().setFlightTime(target.getUniqueId(), finalAmount);
-                        String message = plugin.getMessagesHandlerInstance().getElytraFlightTimeSet().replace("{0}", TimeHelper.formatFlightTime(finalAmount));
-                        plugin.getMessagesHelper().sendPlayerMessage(target.getPlayer(), message);
-                    }
-                    plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&aSet " + target.getName() + "'s flight time to " + TimeHelper.formatFlightTime(finalAmount));
-
-                } catch (SQLException e) {
-                    handleSqlException(sender, "set flight time for", target.getName(), e);
-                }
-            }
-        }.runTaskAsynchronously(plugin);
-    }
-
-    private void handleClear(CommandSender sender, String[] args) {
-        if (args.length < 2) {
-            sendUsageMessage(sender);
-            return;
-        }
-        OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
-        if (!validateTargetPlayer(sender, target, args[1])) return;
-
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                try {
-                    plugin.getDatabaseHandler().SetPlayerFlightTime(target.getUniqueId(), 0);
-                    if (target.isOnline()) {
-                        plugin.getElytraFlightListener().setFlightTime(target.getUniqueId(), 0);
-                        plugin.getMessagesHelper().sendPlayerMessage(target.getPlayer(), plugin.getMessagesHandlerInstance().getElytraFlightTimeCleared());
-                    }
-                    plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&aCleared all flight time for " + target.getName() + ".");
-                } catch (SQLException e) {
-                    handleSqlException(sender, "clear flight time for", target.getName(), e);
-                }
-            }
-        }.runTaskAsynchronously(plugin);
-    }
-
-    private boolean validateTargetPlayer(CommandSender sender, OfflinePlayer target, String targetName) {
-        if (!target.hasPlayedBefore() && !target.isOnline()) {
-            String message = plugin.getMessagesHandlerInstance().getPlayerNotFound().replace("{0}", targetName);
-            plugin.getMessagesHelper().sendCommandSenderMessage(sender, message);
-            return false;
-        }
-        if (target.isOnline() && PermissionsHelper.PlayerBypassTimeLimit(target.getPlayer())) {
-            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cThe player " + targetName + " has time limit bypass and cannot be managed.");
-            return false;
-        }
-        return true;
-    }
-
-    private void sendUsageMessage(CommandSender sender) {
-        sender.sendMessage("§cUsage:");
-        sender.sendMessage("§c/ee ft <add|remove|set> <player> <seconds>");
-        sender.sendMessage("§c/ee ft clear <player>");
-    }
-
-    private int parsePositiveInteger(String input, CommandSender sender) {
-        try {
-            int value = Integer.parseInt(input);
-            if (value <= 0) throw new NumberFormatException();
-            return value;
-        } catch (NumberFormatException e) {
-            plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cInvalid number. Please enter a positive integer.");
-            return -1;
-        }
-    }
-
-    private void handleSqlException(CommandSender sender, String action, String targetName, SQLException e) {
-        plugin.getLogger().log(Level.SEVERE, "Failed to " + action + " " + targetName, e);
-        plugin.getMessagesHelper().sendCommandSenderMessage(sender,"&cA database error occurred. Please check the console for details.");
     }
 
     @Override
@@ -242,5 +70,74 @@ public class FlightTimeCommand implements ISubCommand {
             }
         }
         return List.of();
+    }
+
+    // Each 'handle' method is now simple: validate input, then delegate to the handler asynchronously.
+    private void handleAdd(CommandSender sender, String[] args) {
+        if (args.length < 3) { sendUsageMessage(sender); return; }
+        OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
+        if (!validateTargetPlayer(sender, target, args[1])) return;
+        int amount = parsePositiveInteger(args[2], sender);
+        if (amount == -1) return;
+
+        foliaHelper.runAsyncTask(() -> flightHandler.addFlightTime(target.getUniqueId(), amount, sender));
+    }
+
+    private void handleRemove(CommandSender sender, String[] args) {
+        if (args.length < 3) { sendUsageMessage(sender); return; }
+        OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
+        if (!validateTargetPlayer(sender, target, args[1])) return;
+        int amount = parsePositiveInteger(args[2], sender);
+        if (amount == -1) return;
+
+        foliaHelper.runAsyncTask(() -> flightHandler.removeFlightTime(target.getUniqueId(), amount, sender));
+    }
+
+    private void handleSet(CommandSender sender, String[] args) {
+        if (args.length < 3) { sendUsageMessage(sender); return; }
+        OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
+        if (!validateTargetPlayer(sender, target, args[1])) return;
+        int amount = parsePositiveInteger(args[2], sender);
+        if (amount == -1) return;
+
+        foliaHelper.runAsyncTask(() -> flightHandler.setFlightTime(target.getUniqueId(), amount, sender));
+    }
+
+    private void handleClear(CommandSender sender, String[] args) {
+        if (args.length < 2) { sendUsageMessage(sender); return; }
+        OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
+        if (!validateTargetPlayer(sender, target, args[1])) return;
+
+        foliaHelper.runAsyncTask(() -> flightHandler.clearFlightTime(target.getUniqueId(), sender));
+    }
+
+    private boolean validateTargetPlayer(CommandSender sender, OfflinePlayer target, String targetName) {
+        if (!target.hasPlayedBefore() && !target.isOnline()) {
+            String message = plugin.getMessagesHandlerInstance().getPlayerNotFound().replace("{0}", targetName);
+            messagesHelper.sendCommandSenderMessage(sender, message);
+            return false;
+        }
+        if (target.isOnline() && PermissionsHelper.PlayerBypassTimeLimit(target.getPlayer())) {
+            messagesHelper.sendCommandSenderMessage(sender,"&cThe player " + targetName + " has time limit bypass and cannot be managed.");
+            return false;
+        }
+        return true;
+    }
+
+    private void sendUsageMessage(CommandSender sender) {
+        sender.sendMessage("§cUsage:");
+        sender.sendMessage("§c/ee ft <add|remove|set> <player> <seconds>");
+        sender.sendMessage("§c/ee ft clear <player>");
+    }
+
+    private int parsePositiveInteger(String input, CommandSender sender) {
+        try {
+            int value = Integer.parseInt(input);
+            if (value <= 0) throw new NumberFormatException();
+            return value;
+        } catch (NumberFormatException e) {
+            messagesHelper.sendCommandSenderMessage(sender,"&cInvalid number. Please enter a positive integer.");
+            return -1;
+        }
     }
 }

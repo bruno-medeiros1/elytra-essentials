@@ -2,6 +2,7 @@ package org.bruno.elytraEssentials.placeholders;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bruno.elytraEssentials.ElytraEssentials;
+import org.bruno.elytraEssentials.handlers.FlightHandler;
 import org.bruno.elytraEssentials.handlers.StatsHandler;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.helpers.TimeHelper;
@@ -15,8 +16,12 @@ public class ElytraEssentialsPlaceholders extends PlaceholderExpansion {
 
     private final ElytraEssentials plugin;
 
-    public ElytraEssentialsPlaceholders(ElytraEssentials plugin) {
+    private final FlightHandler flightHandler;
+
+    public ElytraEssentialsPlaceholders(ElytraEssentials plugin, FlightHandler flightHandler) {
         this.plugin = plugin;
+
+        this.flightHandler = flightHandler;
     }
 
     @Override
@@ -54,7 +59,7 @@ public class ElytraEssentialsPlaceholders extends PlaceholderExpansion {
                 return "Unlimited";
             }
 
-            int flightTimeLeft = plugin.getElytraFlightListener().getCurrentFlightTime(player.getUniqueId());
+            int flightTimeLeft = flightHandler.getCurrentFlightTime(player.getUniqueId());
 
             return identifier.equalsIgnoreCase("flight_time_formatted")
                     ? TimeHelper.formatFlightTime(flightTimeLeft)

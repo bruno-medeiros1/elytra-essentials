@@ -3,6 +3,8 @@ package org.bruno.elytraEssentials.handlers;
 import net.milkbowl.vault.economy.Economy;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.helpers.ColorHelper;
+import org.bruno.elytraEssentials.helpers.FoliaHelper;
+import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.utils.Constants;
 import org.bruno.elytraEssentials.utils.ElytraEffect;
@@ -24,12 +26,20 @@ import java.util.logging.Level;
 
 public class EffectsHandler {
     private final ElytraEssentials plugin;
+    private final FoliaHelper foliaHelper;
+    private final DatabaseHandler databaseHandler;
+    private final MessagesHelper messagesHelper;
+
     private final Map<String, ElytraEffect> effectsRegistry = new HashMap<>();
 
     private final Map<UUID, String> activePlayerEffects = new HashMap<>();
 
-    public EffectsHandler(ElytraEssentials plugin, FileConfiguration fileConfiguration) {
+    public EffectsHandler(ElytraEssentials plugin, FileConfiguration fileConfiguration, FoliaHelper foliaHelper, DatabaseHandler databaseHandler, MessagesHelper messagesHelper) {
         this.plugin = plugin;
+        this.foliaHelper = foliaHelper;
+        this.databaseHandler = databaseHandler;
+        this.messagesHelper = messagesHelper;
+
         registerEffects();
         loadEffectsConfig(fileConfiguration);
     }
@@ -40,7 +50,7 @@ public class EffectsHandler {
 
             if (PermissionsHelper.hasAllEffectsPermission(player) || player.hasPermission(effectPermission) || ownedEffects.contains(effectKey)) {
                 player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 0.8f);
-                plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getEffectGuiOwned());
+                messagesHelper.sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getEffectGuiOwned());
                 return false;
             }
 
@@ -50,7 +60,7 @@ public class EffectsHandler {
             Economy economy = plugin.getEconomy();
             if (economy != null && !economy.has(player, effect.getPrice())) {
                 player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 0.8f);
-                plugin.getMessagesHelper().sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getNotEnoughMoney());
+                messagesHelper.sendPlayerMessage(player, plugin.getMessagesHandlerInstance().getNotEnoughMoney());
                 return false;
             }
 
@@ -61,7 +71,7 @@ public class EffectsHandler {
 
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 0.8f);
             String message = plugin.getMessagesHandlerInstance().getPurchaseSuccessful().replace("{0}", ColorHelper.parse(effect.getName()));
-            plugin.getMessagesHelper().sendPlayerMessage(player, message);
+            messagesHelper.sendPlayerMessage(player, message);
             return true;
         } catch (SQLException e) {
             handleSqlException(e, player, "&cAn error occurred while processing your purchase.");
@@ -85,7 +95,7 @@ public class EffectsHandler {
 
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 0.8f);
             String message = plugin.getMessagesHandlerInstance().getEffectSelected().replace("{0}", ColorHelper.parse(effectsRegistry.get(effectKey).getName()));
-            plugin.getMessagesHelper().sendPlayerMessage(player, message);
+            messagesHelper.sendPlayerMessage(player, message);
             return true;
         } catch (SQLException e) {
             handleSqlException(e, player, "&cAn error occurred while trying to activate the effect!");
@@ -109,7 +119,7 @@ public class EffectsHandler {
 
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 0.8f);
             String message = plugin.getMessagesHandlerInstance().getEffectDeselected().replace("{0}", ColorHelper.parse(effectsRegistry.get(effectKey).getName()));
-            plugin.getMessagesHelper().sendPlayerMessage(player, message);
+            messagesHelper.sendPlayerMessage(player, message);
             return true;
         } catch (SQLException e) {
             handleSqlException(e, player, "&cAn error occurred while updating your effect.");
@@ -251,19 +261,16 @@ public class EffectsHandler {
     }
 
     public void loadPlayerActiveEffect(Player player) {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                try {
-                    String activeEffectKey = plugin.getDatabaseHandler().getPlayerActiveEffect(player.getUniqueId());
-                    if (activeEffectKey != null) {
-                        setActiveEffect(player.getUniqueId(), activeEffectKey);
-                    }
-                } catch (SQLException e) {
-                    plugin.getLogger().log(Level.SEVERE, "Could not load active effect for " + player.getName(), e);
+        foliaHelper.runAsyncTask(() -> {
+            try {
+                String activeEffect = databaseHandler.getPlayerActiveEffect(player.getUniqueId());
+                if (activeEffect != null) {
+                    setActiveEffect(player.getUniqueId(), activeEffect);
                 }
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Could not load active effect for " + player.getName(), e);
             }
-        }.runTaskAsynchronously(plugin);
+        });
     }
 
     public void clearPlayerActiveEffect(Player player) {
@@ -492,7 +499,7 @@ public class EffectsHandler {
 
     private void handleSqlException(SQLException e, Player player, String message) {
         player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 0.8f);
-        plugin.getMessagesHelper().sendPlayerMessage(player, message);
+        messagesHelper.sendPlayerMessage(player, message);
         plugin.getLogger().log(Level.SEVERE, "A database error occurred for player " + player.getName(), e);
     }
 }

@@ -1,4 +1,4 @@
-package org.bruno.elytraEssentials.gui;
+package org.bruno.elytraEssentials.gui.shop;
 
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
