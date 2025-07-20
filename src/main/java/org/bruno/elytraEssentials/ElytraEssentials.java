@@ -106,7 +106,7 @@ public final class ElytraEssentials extends JavaPlugin {
     }
 
     private void setupComponents() throws Exception {
-        // --- STAGE 1: CORE HELPERS & CONFIG ---
+        // Load configuration files and initialize helpers
         saveDefaultConfig();
         this.serverVersion = ServerVersion.getCurrent();
         this.foliaHelper = new FoliaHelper(this);
@@ -120,11 +120,11 @@ public final class ElytraEssentials extends JavaPlugin {
         messagesHelper.setPrefix(messagesHandler.getPrefixMessage());
         messagesHelper.setDebugMode(configHandler.getIsDebugModeEnabled());
 
-        // --- STAGE 2: DATABASE ---
+        // Database Initialization
         this.databaseHandler = new DatabaseHandler(this, configHandler, foliaHelper, messagesHelper, getLogger());
         databaseHandler.Initialize();
 
-        // --- STAGE 3: CORE LOGIC HANDLERS ---
+        // Handlers Initialization
         this.tpsHandler = new TpsHandler( foliaHelper, messagesHelper);
         this.effectsHandler = new EffectsHandler(this, fileHelper.getShopConfig(), foliaHelper, databaseHandler, messagesHelper, serverVersion, economy, tpsHandler, messagesHandler, getLogger());
         this.statsHandler = new StatsHandler(getLogger(), databaseHandler, foliaHelper, messagesHelper, effectsHandler);
@@ -139,14 +139,12 @@ public final class ElytraEssentials extends JavaPlugin {
         this.elytraEquipHandler = new ElytraEquipHandler(configHandler, messagesHelper, foliaHelper);
         this.armoredElytraHandler = new ArmoredElytraHandler(this, configHandler, foliaHelper, armoredElytraHelper, messagesHelper);
 
-        // --- STAGE 4: GUI HANDLERS ---
         this.effectsGuiHandler = new EffectsGuiHandler(this, this.effectsHandler, this.databaseHandler, this.foliaHelper, this.messagesHelper, getLogger());
         this.shopGuiHandler = new ShopGuiHandler(this, this.effectsHandler, this.effectsGuiHandler, getLogger());
         this.effectsGuiHandler.setShopGuiHandler(this.shopGuiHandler);
         this.forgeGuiHandler = new ForgeGuiHandler(this.configHandler, this.armoredElytraHelper, this.foliaHelper);
         this.achievementsGuiHandler = new AchievementsGuiHandler(getLogger(), databaseHandler, foliaHelper, messagesHelper, achievementsHandler, statsHandler);
 
-        // --- STAGE 5: META HANDLERS ---
         this.updaterHandler = new UpdaterHandler(getLogger(), foliaHelper, configHandler, pluginInfoHandler);
     }
 
@@ -195,7 +193,6 @@ public final class ElytraEssentials extends JavaPlugin {
         var importDbCommand = new ImportDbCommand(this, messagesHandler, this.messagesHelper, this.databaseHandler);
         var achievementsCommand = new AchievementsCommand(this.achievementsGuiHandler, this.messagesHelper);
 
-        // Commands
         ElytraEssentialsCommand mainCommand = new ElytraEssentialsCommand(getLogger(), this.messagesHelper);
         mainCommand.registerSubCommand("help", helpCommand);
         mainCommand.registerSubCommand("reload", reloadCommand);

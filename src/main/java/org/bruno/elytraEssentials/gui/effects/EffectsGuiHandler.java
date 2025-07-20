@@ -7,6 +7,7 @@ import org.bruno.elytraEssentials.handlers.EffectsHandler;
 import org.bruno.elytraEssentials.helpers.FoliaHelper;
 import org.bruno.elytraEssentials.helpers.GuiHelper;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
+import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.utils.Constants;
 import org.bruno.elytraEssentials.utils.ElytraEffect;
 import org.bukkit.Bukkit;
@@ -55,10 +56,26 @@ public class EffectsGuiHandler {
     public void open(Player player) {
         foliaHelper.runAsyncTask(() -> {
             try {
-                // Fetch all owned effect keys from the database and permissions
-                Set<String> ownedKeys = new HashSet<>(databaseHandler.GetOwnedEffectKeys(player.getUniqueId()));
 
-                List<String> keysToDisplay = new ArrayList<>(ownedKeys);
+                // Get the player's owned effects from the database or permissions
+                List<String> playerEffects;
+                if (PermissionsHelper.hasAllEffectsPermission(player)){
+                    playerEffects = new ArrayList<>(effectsHandler.getEffectsRegistry().keySet());
+                }else {
+                    //  Get Owned effects from the database
+                    playerEffects = databaseHandler.getOwnedEffectKeys(player.getUniqueId());
+
+                    if (playerEffects.size() < effectsHandler.getEffectsRegistry().size()){
+                        // check if the player has permission for a specific effect and add it to the list
+                        for (ElytraEffect effect : effectsHandler.getEffectsRegistry().values()) {
+                            if (player.hasPermission(effect.getPermission()) && !playerEffects.contains(effect.getKey())) {
+                                playerEffects.add(effect.getKey());
+                            }
+                        }
+                    }
+                }
+
+                var keysToDisplay = playerEffects;
 
                 // Now that we have the data, switch back to the main thread to create and open the GUI
                 foliaHelper.runTaskOnMainThread(() -> {
@@ -148,6 +165,7 @@ public class EffectsGuiHandler {
                 ElytraEffect playerSpecificEffect = new ElytraEffect(templateEffect);
                 playerSpecificEffect.setIsActive(effectKey.equals(activeEffectKey));
                 ItemStack item = effectsHandler.createOwnedItem(effectKey, playerSpecificEffect);
+                plugin.getLogger().info("item created for effect: " + effectKey);
                 inv.setItem(i, item);
             }
         }

@@ -72,9 +72,6 @@ public final class Constants {
         public static final int ACHIEVEMENTS_CLOSE_SLOT = 53;
     }
 
-    /**
-     * Constants related to all permission nodes used in the plugin.
-     */
     public static final class Permissions {
         // Wildcard Permissions
         public static final String ALL = "elytraessentials.*";
@@ -145,6 +142,34 @@ public final class Constants {
         public static final String SUPER_BOOST = "elytraessentials.elytra.superboost";
         public static final String CHARGED_JUMP = "elytraessentials.elytra.chargedjump";
         public static final String AUTO_DEPLOY = "elytraessentials.elytra.autodeploy";
+    }
+
+    public static final class Effects {
+        public static final String FIRE_TRAIL = "FIRE_TRAIL";
+        public static final String ICE_SHARDS = "ICE_SHARDS";
+        public static final String INKY_VOID = "INKY_VOID";
+        public static final String HEART_TRAIL = "HEART_TRAIL";
+        public static final String SOUL_FIRE = "SOUL_FIRE";
+        public static final String MUSICAL_FLIGHT = "MUSICAL_FLIGHT";
+        public static final String CLOUD_SURFER = "CLOUD_SURFER";
+        public static final String CRITICAL_AURA = "CRITICAL_AURA";
+        public static final String ENDERS_WAKE = "ENDERS_WAKE";
+        public static final String SPORE_BLOOM = "SPORE_BLOOM";
+        public static final String BUBBLE_STREAM = "BUBBLE_STREAM";
+        public static final String DRAGON_BREATH = "DRAGON_BREATH";
+        public static final String DOLPHINS_GRACE = "DOLPHINS_GRACE";
+        public static final String DAMAGE_FLASH = "DAMAGE_FLASH";
+        public static final String WAXED_WINGS = "WAXED_WINGS";
+        public static final String SLIME_TRAIL = "SLIME_TRAIL";
+        public static final String WITCHES_BREW = "WITCHES_BREW";
+        public static final String EXPLOSIVE_TRAIL = "EXPLOSIVE_TRAIL";
+        public static final String SMOKE_SCREEN = "SMOKE_SCREEN";
+        public static final String TOTEM_BLESSING = "TOTEM_BLESSING";
+        public static final String LAVA_DRIP = "LAVA_DRIP";
+        public static final String WATER_TRAIL = "WATER_TRAIL";
+        public static final String ARCANE_TRAIL = "ARCANE_TRAIL";
+        public static final String EMERALD_SPARK = "EMERALD_SPARK";
+        public static final String CHERRY_BLOSSOM = "CHERRY_BLOSSOM";
     }
 
     public static final class Files {

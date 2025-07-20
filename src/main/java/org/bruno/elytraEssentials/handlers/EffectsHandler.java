@@ -57,7 +57,7 @@ public class EffectsHandler {
 
     public boolean handlePurchase(Player player, String effectKey, String effectPermission) {
         try {
-            List<String> ownedEffects = databaseHandler.GetOwnedEffectKeys(player.getUniqueId());
+            List<String> ownedEffects = databaseHandler.getOwnedEffectKeys(player.getUniqueId());
 
             if (PermissionsHelper.hasAllEffectsPermission(player) || player.hasPermission(effectPermission) || ownedEffects.contains(effectKey)) {
                 player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 0.8f);
@@ -122,7 +122,7 @@ public class EffectsHandler {
     public boolean handleDeselection(Player player, String effectKey) {
         try {
             String activeEffect = getActiveEffect(player.getUniqueId());
-            if (activeEffect == null || !effectKey.equals(activeEffect)) return false;
+            if (!effectKey.equals(activeEffect)) return false;
 
             databaseHandler.UpdateOwnedEffect(player.getUniqueId(), effectKey, false);
             setActiveEffect(player.getUniqueId(), null); // Clear from cache
@@ -143,7 +143,7 @@ public class EffectsHandler {
 
         List<String> ownedEffects;
         try {
-            ownedEffects = databaseHandler.GetOwnedEffectKeys(player.getUniqueId());
+            ownedEffects = databaseHandler.getOwnedEffectKeys(player.getUniqueId());
         }
         catch (SQLException e) {
             throw new RuntimeException(e);
@@ -314,80 +314,81 @@ public class EffectsHandler {
     }
 
     private void registerEffects() {
-        // Your existing effects that work on all versions
-        effectsRegistry.put("FIRE_TRAIL", new ElytraEffect(
+        // Effects that work on all versions
+        effectsRegistry.put(Constants.Effects.FIRE_TRAIL, new ElytraEffect(Constants.Effects.FIRE_TRAIL,
                 "Fire Trail", Material.CAMPFIRE, Particle.FLAME,
                 List.of("§7Leave a fiery trail!"), 1000, Constants.Permissions.Effects.FIRE
         ));
-        effectsRegistry.put("ICE_SHARDS", new ElytraEffect(
+        effectsRegistry.put(Constants.Effects.ICE_SHARDS, new ElytraEffect(Constants.Effects.ICE_SHARDS,
                 "Ice Shards", Material.ICE, Particle.SNOWFLAKE,
                 List.of("§7Shards of ice behind you!"), 1500, Constants.Permissions.Effects.ICE
         ));
-        effectsRegistry.put("INKY_VOID", new ElytraEffect(
+        effectsRegistry.put(Constants.Effects.INKY_VOID, new ElytraEffect(Constants.Effects.INKY_VOID,
                 "Inky Void", Material.INK_SAC, Particle.SQUID_INK,
                 List.of("§7Soar with a trail of darkness."), 1750, Constants.Permissions.Effects.VOID
         ));
-        effectsRegistry.put("HEART_TRAIL", new ElytraEffect(
+        effectsRegistry.put(Constants.Effects.HEART_TRAIL, new ElytraEffect(Constants.Effects.HEART_TRAIL,
                 "Heart Trail", Material.POPPY, Particle.HEART,
                 List.of("§7Spread love wherever you fly!"), 1250, Constants.Permissions.Effects.HEART
         ));
 
-        effectsRegistry.put("SOUL_FIRE", new ElytraEffect(
+        effectsRegistry.put(Constants.Effects.SOUL_FIRE, new ElytraEffect(Constants.Effects.SOUL_FIRE,
                 "Soul Fire", Material.SOUL_LANTERN, Particle.SOUL_FIRE_FLAME,
                 List.of("§7A trail of eerie, blue soul fire."), 1800, Constants.Permissions.Effects.SOULFIRE
         ));
 
-        effectsRegistry.put("MUSICAL_FLIGHT", new ElytraEffect(
+        effectsRegistry.put(Constants.Effects.MUSICAL_FLIGHT, new ElytraEffect(Constants.Effects.MUSICAL_FLIGHT,
                 "Musical Flight", Material.JUKEBOX, Particle.NOTE,
                 List.of("§7Leave a trail of musical notes as you fly."), 1300, Constants.Permissions.Effects.NOTE
         ));
 
-        effectsRegistry.put("CLOUD_SURFER", new ElytraEffect(
+        effectsRegistry.put(Constants.Effects.CLOUD_SURFER, new ElytraEffect(Constants.Effects.CLOUD_SURFER,
                 "Cloud Surfer", Material.WHITE_WOOL, Particle.CLOUD,
                 List.of("§7Fly on your own personal cloud."), 800, Constants.Permissions.Effects.CLOUD
         ));
 
-        effectsRegistry.put("CRITICAL_AURA", new ElytraEffect(
+        effectsRegistry.put(Constants.Effects.CRITICAL_AURA, new ElytraEffect(Constants.Effects.CRITICAL_AURA,
                 "Critical Aura", Material.DIAMOND_SWORD, Particle.CRIT,
                 List.of("§7Fly with the power of a critical hit!"), 2100, Constants.Permissions.Effects.CRIT
         ));
 
-        effectsRegistry.put("ENDERS_WAKE", new ElytraEffect(
+        effectsRegistry.put(Constants.Effects.ENDERS_WAKE, new ElytraEffect(Constants.Effects.ENDERS_WAKE,
                 "Ender's Wake", Material.ENDER_EYE, Particle.PORTAL,
                 List.of("§7A swirling vortex of the void follows you."), 2800, Constants.Permissions.Effects.PORTAL
         ));
 
-        effectsRegistry.put("SPORE_BLOOM", new ElytraEffect(
+        effectsRegistry.put(Constants.Effects.SPORE_BLOOM, new ElytraEffect(Constants.Effects.SPORE_BLOOM,
                 "Spore Bloom", Material.SPORE_BLOSSOM, Particle.SPORE_BLOSSOM_AIR,
                 List.of("§7A trail of beautiful, floating spores."), 2800, Constants.Permissions.Effects.SPORE
         ));
 
-        effectsRegistry.put("BUBBLE_STREAM", new ElytraEffect(
+        effectsRegistry.put(Constants.Effects.BUBBLE_STREAM, new ElytraEffect(Constants.Effects.BUBBLE_STREAM,
                 "Bubble Stream", Material.GLASS_BOTTLE, Particle.BUBBLE_POP,
                 List.of("§7A stream of popping bubbles."), 950, Constants.Permissions.Effects.BUBBLE
         ));
 
-        effectsRegistry.put("DRAGON_BREATH", new ElytraEffect(
+        effectsRegistry.put(Constants.Effects.DRAGON_BREATH, new ElytraEffect(Constants.Effects.DRAGON_BREATH,
                 "Dragon Breath", Material.DRAGON_EGG, Particle.DRAGON_BREATH,
                 List.of("§7The spark of dragon breath."), 2400, Constants.Permissions.Effects.DRAGON
         ));
 
-        effectsRegistry.put("DOLPHINS_GRACE", new ElytraEffect(
+        effectsRegistry.put(Constants.Effects.DOLPHINS_GRACE, new ElytraEffect(Constants.Effects.DOLPHINS_GRACE,
                 "Dolphin's Grace", Material.HEART_OF_THE_SEA, Particle.DOLPHIN,
                 List.of("§7Swim through the air with a dolphin's help."), 3200, Constants.Permissions.Effects.DOLPHIN
         ));
 
-        effectsRegistry.put("DAMAGE_FLASH", new ElytraEffect(
+        effectsRegistry.put(Constants.Effects.DAMAGE_FLASH, new ElytraEffect(Constants.Effects.DAMAGE_FLASH,
                 "Damage Flash", Material.REDSTONE, Particle.DAMAGE_INDICATOR,
                 List.of("§7A flash of red damage particles."), 1650, Constants.Permissions.Effects.DAMAGE
         ));
 
-        effectsRegistry.put("WAXED_WINGS", new ElytraEffect(
+        effectsRegistry.put(Constants.Effects.WAXED_WINGS, new ElytraEffect(Constants.Effects.WAXED_WINGS,
                 "Waxed Wings", Material.HONEYCOMB, Particle.WAX_ON,
                 List.of("§7A trail of waxy particles."), 1400, Constants.Permissions.Effects.WAX
         ));
 
-        registerVersionDependentEffect("SLIME_TRAIL", "Slime Trail", Material.SLIME_BALL,
+        // Effects that depend on server version
+        registerVersionDependentEffect(Constants.Effects.SLIME_TRAIL, "§2Slime Trail", Material.SLIME_BALL,
                 Map.of(
                         ServerVersion.V_1_18, "SLIME",
                         ServerVersion.V_1_19, "SLIME",
@@ -396,7 +397,7 @@ public class EffectsHandler {
                 ),
                 List.of("§7Leave a gooey, green trail behind."), 900, Constants.Permissions.Effects.SLIME);
 
-        registerVersionDependentEffect("WITCHS_BREW", "Witch's Brew", Material.BREWING_STAND,
+        registerVersionDependentEffect(Constants.Effects.WITCHES_BREW, "§5Witches Brew", Material.BREWING_STAND,
                 Map.of(
                         ServerVersion.V_1_18, "SPELL_WITCH",
                         ServerVersion.V_1_19, "SPELL_WITCH",
@@ -405,7 +406,7 @@ public class EffectsHandler {
                 ),
                 List.of("§7A swirling, magical concoction follows you."), 2200, Constants.Permissions.Effects.WITCH);
 
-        registerVersionDependentEffect("EXPLOSIVE_TRAIL", "Explosive Trail", Material.TNT,
+        registerVersionDependentEffect(Constants.Effects.EXPLOSIVE_TRAIL, "Explosive Trail", Material.TNT,
                 Map.of(
                         ServerVersion.V_1_18, "EXPLOSION_NORMAL",
                         ServerVersion.V_1_19, "EXPLOSION_NORMAL",
@@ -414,7 +415,7 @@ public class EffectsHandler {
                 ),
                 List.of("§7A trail of small explosions."), 1100, Constants.Permissions.Effects.EXPLOSION);
 
-        registerVersionDependentEffect("SMOKE_SCREEN", "Smoke Screen", Material.BLACK_DYE,
+        registerVersionDependentEffect(Constants.Effects.SMOKE_SCREEN, "Smoke Screen", Material.BLACK_DYE,
                 Map.of(
                         ServerVersion.V_1_18, "SMOKE_LARGE",
                         ServerVersion.V_1_19, "SMOKE_LARGE",
@@ -423,7 +424,7 @@ public class EffectsHandler {
                 ),
                 List.of("§7Create a screen of thick smoke."), 1100, Constants.Permissions.Effects.SMOKE);
 
-        registerVersionDependentEffect("TOTEM_BLESSING", "Totem's Blessing", Material.TOTEM_OF_UNDYING,
+        registerVersionDependentEffect(Constants.Effects.TOTEM_BLESSING, "Totem's Blessing", Material.TOTEM_OF_UNDYING,
                 Map.of(
                         ServerVersion.V_1_18, "TOTEM",
                         ServerVersion.V_1_19, "TOTEM",
@@ -433,7 +434,7 @@ public class EffectsHandler {
                 List.of("§7Fly with the blessing of immortality!"), 3500, Constants.Permissions.Effects.TOTEM);
 
 
-        registerVersionDependentEffect("LAVA_DRIP", "Lava Trail", Material.LAVA_BUCKET,
+        registerVersionDependentEffect(Constants.Effects.LAVA_DRIP, "Lava Trail", Material.LAVA_BUCKET,
                 Map.of(
                         ServerVersion.V_1_18, "DRIP_LAVA",
                         ServerVersion.V_1_19, "DRIP_LAVA",
@@ -442,7 +443,7 @@ public class EffectsHandler {
                 ),
                 List.of("§7Drips of hot magma follow you."), 1900, Constants.Permissions.Effects.LAVADRIP);
 
-        registerVersionDependentEffect("WATER_TRAIL", "Water Trail", Material.WATER_BUCKET,
+        registerVersionDependentEffect(Constants.Effects.WATER_TRAIL, "Water Trail", Material.WATER_BUCKET,
                 Map.of(
                         ServerVersion.V_1_18, "DRIP_WATER",
                         ServerVersion.V_1_19, "DRIP_WATER",
@@ -451,7 +452,7 @@ public class EffectsHandler {
                 ),
                 List.of("§7Trails of water follow you!"), 2000, Constants.Permissions.Effects.WATER);
 
-        registerVersionDependentEffect("ARCANE_TRAIL", "Arcane Trail", Material.ENCHANTING_TABLE,
+        registerVersionDependentEffect(Constants.Effects.ARCANE_TRAIL, "Arcane Trail", Material.ENCHANTING_TABLE,
                 Map.of(
                         ServerVersion.V_1_18, "ENCHANTMENT_TABLE",
                         ServerVersion.V_1_19, "ENCHANTMENT_TABLE",
@@ -460,7 +461,7 @@ public class EffectsHandler {
                 ),
                 List.of("§7Leave a trail of mystical runes."), 2500, Constants.Permissions.Effects.ARCANE);
 
-        registerVersionDependentEffect("EMERALD_SPARK", "Emerald Spark", Material.EMERALD,
+        registerVersionDependentEffect(Constants.Effects.EMERALD_SPARK, "Emerald Spark", Material.EMERALD,
                 Map.of(
                         ServerVersion.V_1_18, "VILLAGER_HAPPY",
                         ServerVersion.V_1_19, "VILLAGER_HAPPY",
@@ -470,8 +471,9 @@ public class EffectsHandler {
                 List.of("§7Show off with a glittering green trail."), 3000, Constants.Permissions.Effects.EMERALD);
 
 
-        if (ServerVersion.getCurrent() == ServerVersion.V_1_20 || ServerVersion.getCurrent() == ServerVersion.V_1_21) {
-            effectsRegistry.put("CHERRY_BLOSSOM", new ElytraEffect(
+        // Effect only available in 1.20 and later
+        if (ServerVersion.getCurrent().ordinal() > ServerVersion.V_1_19.ordinal()) {
+            effectsRegistry.put(Constants.Effects.CHERRY_BLOSSOM, new ElytraEffect(Constants.Effects.CHERRY_BLOSSOM,
                     "Waxed Cherry Blossom", Material.CHERRY_LEAVES, Particle.CHERRY_LEAVES,
                     List.of("§7A beautiful trail of cherry petals."), 1550, Constants.Permissions.Effects.CHERRY
             ));
@@ -491,7 +493,7 @@ public class EffectsHandler {
 
         try {
             Particle particle = Particle.valueOf(particleNameToUse.toUpperCase());
-            effectsRegistry.put(key, new ElytraEffect(name, material, particle, lore, price, permission));
+            effectsRegistry.put(key, new ElytraEffect(key, name, material, particle, lore, price, permission));
         } catch (IllegalArgumentException e) {
             logger.warning("Could not register effect '" + name + "'. Particle '" + particleNameToUse + "' is not valid on this server version.");
         }

@@ -424,7 +424,7 @@ public class DatabaseHandler {
     }
 
 
-    public List<String> GetOwnedEffectKeys(UUID playerId) throws SQLException {
+    public List<String> getOwnedEffectKeys(UUID playerId) throws SQLException {
         List<String> ownedEffects = new ArrayList<>();
         String query = "SELECT effect_key FROM " + Constants.Database.Tables.OWNED_EFFECTS + " WHERE player_uuid = ?";
 

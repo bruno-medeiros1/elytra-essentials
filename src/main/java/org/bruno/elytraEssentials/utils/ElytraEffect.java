@@ -6,6 +6,7 @@ import org.bukkit.Particle;
 import java.util.List;
 
 public class ElytraEffect {
+    private String key;
     private String name;
     private final Material displayMaterial;
     private final Particle particle;
@@ -14,8 +15,9 @@ public class ElytraEffect {
     private String permission;
     private boolean isActive;
 
-    public ElytraEffect(String name, Material displayMaterial, Particle particle,
+    public ElytraEffect(String Key, String name, Material displayMaterial, Particle particle,
                         List<String> lore, double price, String permission) {
+        this.key = Key;
         this.name = name;
         this.displayMaterial = displayMaterial;
         this.particle = particle;
@@ -26,6 +28,7 @@ public class ElytraEffect {
     }
 
     public ElytraEffect(ElytraEffect templateEffect) {
+        this.key = templateEffect.key;
         this.name = templateEffect.name;
         this.displayMaterial = templateEffect.displayMaterial;
         this.particle = templateEffect.particle;
@@ -35,11 +38,13 @@ public class ElytraEffect {
         this.isActive = templateEffect.isActive;
     }
 
+    public String getKey() { return key; }
+
     public String getName() {
         return name;
     }
-    public void setName(String name) { this.name = name; }
 
+    public void setName(String name) { this.name = name; }
 
     public Material getDisplayMaterial() {
         return displayMaterial;
@@ -50,7 +55,6 @@ public class ElytraEffect {
     }
 
     public void setLore(List<String> lore) { this.lore = lore; }
-
 
     public double getPrice() {
         return price;
@@ -63,7 +67,6 @@ public class ElytraEffect {
     }
 
     public void setPermission(String permission) { this.permission = permission; }
-
 
     public Boolean getIsActive(){
         return isActive;

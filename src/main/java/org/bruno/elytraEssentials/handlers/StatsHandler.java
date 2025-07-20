@@ -105,7 +105,7 @@ public class StatsHandler {
                 if (PermissionsHelper.hasAllEffectsPermission(player)){
                     effectsOwned = totalEffects;
                 }else {
-                    effectsOwned = databaseHandler.GetOwnedEffectKeys(stats.getUuid()).size();
+                    effectsOwned = databaseHandler.getOwnedEffectKeys(stats.getUuid()).size();
                 }
             }
 

@@ -54,10 +54,10 @@ shop:
     name: "&aEmerald Spark"
     lore:
       - "&7Show off with a glittering green trail."
-  WITCHS_BREW:
+  WITCHES_BREW:
     price: 2200.00
     permission: "elytraessentials.effect.witch"
-    name: "&5Witch's Brew"
+    name: "&5Witches Brew"
     lore:
       - "&7A swirling, magical concoction follows you."
   SOUL_FIRE:
@@ -81,7 +81,7 @@ shop:
   SLIME_TRAIL:
     price: 900.00
     permission: "elytraessentials.effect.slime"
-    name: "&aSlime Trail"
+    name: "&2Slime Trail"
     lore:
       - "&7Leave a gooey, green trail behind."
   CRITICAL_AURA:

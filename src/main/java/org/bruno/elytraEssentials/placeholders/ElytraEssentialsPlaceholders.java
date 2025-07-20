@@ -108,7 +108,7 @@ public class ElytraEssentialsPlaceholders extends PlaceholderExpansion {
                 return (activeEffect != null) ? activeEffect : "None";
             case "effects_owned":
                 try {
-                    return String.valueOf(databaseHandler.GetOwnedEffectKeys(player.getUniqueId()).size());
+                    return String.valueOf(databaseHandler.getOwnedEffectKeys(player.getUniqueId()).size());
                 } catch (SQLException e) {
                     return "Error";
                 }

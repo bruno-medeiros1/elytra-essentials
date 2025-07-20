@@ -119,7 +119,7 @@ public class EffectsCommand implements ISubCommand {
         // Use the Folia-safe async task
         foliaHelper.runAsyncTask(() -> {
             try {
-                List<String> ownedKeys = databaseHandler.GetOwnedEffectKeys(target.getUniqueId());
+                List<String> ownedKeys = databaseHandler.getOwnedEffectKeys(target.getUniqueId());
                 if (ownedKeys.contains(effectKey)) {
                     // Return to the main thread to send the message
                     foliaHelper.runTaskOnMainThread(() ->
@@ -171,7 +171,7 @@ public class EffectsCommand implements ISubCommand {
         // Use the Folia-safe async task
         foliaHelper.runAsyncTask(() -> {
             try {
-                List<String> ownedKeys = databaseHandler.GetOwnedEffectKeys(target.getUniqueId());
+                List<String> ownedKeys = databaseHandler.getOwnedEffectKeys(target.getUniqueId());
                 if (!ownedKeys.contains(effectKey)) {
                     foliaHelper.runTaskOnMainThread(() ->
                             messagesHelper.sendCommandSenderMessage(sender,"&c" + target.getName() + " does not own this effect.")
@@ -216,7 +216,7 @@ public class EffectsCommand implements ISubCommand {
         foliaHelper.runAsyncTask(() -> {
             Set<String> allOwnedEffects;
             try {
-                allOwnedEffects = new HashSet<>(databaseHandler.GetOwnedEffectKeys(target.getUniqueId()));
+                allOwnedEffects = new HashSet<>(databaseHandler.getOwnedEffectKeys(target.getUniqueId()));
             } catch (SQLException e) {
                 foliaHelper.runTaskOnMainThread(() ->
                         messagesHelper.sendCommandSenderMessage(sender,"&cA database error occurred while fetching owned effects.")
