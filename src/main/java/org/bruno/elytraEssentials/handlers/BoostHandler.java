@@ -214,8 +214,10 @@ public class BoostHandler {
 
                 // Use Folia-safe delayed task
                 foliaHelper.runTaskLater(player, () -> {
-                    if (player.isOnline() && !player.isOnGround()) {
+                    if (player.isOnline() && !player.isOnGround())
+                    {
                         player.setGliding(true);
+                        statsHandler.setGliding(player, true);
                         flightHandler.handleGlideStart(player);
                     }
                 }, 2L);
