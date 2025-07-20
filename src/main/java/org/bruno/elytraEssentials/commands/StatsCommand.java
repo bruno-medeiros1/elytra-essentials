@@ -21,7 +21,7 @@ public class StatsCommand implements ISubCommand {
     }
 
     @Override
-    public boolean Execute(CommandSender sender, String[] args) {
+    public boolean execute(CommandSender sender, String[] args) {
         OfflinePlayer target;
 
         if (args.length == 0) {

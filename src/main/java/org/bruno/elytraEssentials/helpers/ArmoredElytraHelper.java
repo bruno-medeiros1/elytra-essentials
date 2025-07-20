@@ -161,7 +161,6 @@ public class ArmoredElytraHelper {
         return chestplate;
     }
 
-
     public ItemStack reassembleElytra(ItemStack armoredElytra) {
         ItemMeta sourceMeta = armoredElytra.getItemMeta();
         if (sourceMeta == null) return null;
@@ -191,7 +190,6 @@ public class ArmoredElytraHelper {
         }
         return plainElytra;
     }
-
 
     public void addPreviewTag(ItemStack item) {
         if (item == null || item.getType() == Material.AIR) return;
@@ -342,7 +340,6 @@ public class ArmoredElytraHelper {
         }
     }
 
-
     public void removeArmorModifier(Player player, NamespacedKey key) {
         AttributeInstance armorAttr = getArmorAttribute(player);
         if (armorAttr == null) return;
@@ -367,7 +364,6 @@ public class ArmoredElytraHelper {
         }
     }
 
-
     public void removeToughnessModifier(Player player, NamespacedKey key) {
         AttributeInstance toughnessAttr = getToughnessAttribute(player);
         if (toughnessAttr == null) return;
@@ -390,8 +386,6 @@ public class ArmoredElytraHelper {
             }
         }
     }
-
-
 
     private AttributeModifier createModifier(NamespacedKey key, double amount, String name, AttributeModifier.Operation op) {
         UUID uuid = toUUID(key);

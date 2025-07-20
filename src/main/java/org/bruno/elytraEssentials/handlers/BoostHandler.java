@@ -87,6 +87,44 @@ public class BoostHandler {
         }
     }
 
+    /**
+     * Checks if a player's normal boost message should be active.
+     * @param uuid The player's UUID.
+     * @return true if the boost is active, false otherwise.
+     */
+    public boolean isBoostActive(UUID uuid) {
+        Long expiryTime = boostMessageExpirations.get(uuid);
+        if (expiryTime == null) {
+            return false;
+        }
+
+        // Check if the current time has passed the expiry time
+        if (System.currentTimeMillis() > expiryTime) {
+            boostMessageExpirations.remove(uuid); // Clean up expired entry
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Checks if a player's super boost message should be active.
+     * @param uuid The player's UUID.
+     * @return true if the super boost is active, false otherwise.
+     */
+    public boolean isSuperBoostActive(UUID uuid) {
+        Long expiryTime = superBoostMessageExpirations.get(uuid);
+        if (expiryTime == null) {
+            return false;
+        }
+
+        if (System.currentTimeMillis() > expiryTime) {
+            superBoostMessageExpirations.remove(uuid); // Clean up expired entry
+            return false;
+        }
+
+        return true;
+    }
 
     private void handleInAirBoost(Player player) {
         if (!configHandler.getIsBoostEnabled()) return;
@@ -256,45 +294,6 @@ public class BoostHandler {
     }
 
     /**
-     * Checks if a player's normal boost message should be active.
-     * @param uuid The player's UUID.
-     * @return true if the boost is active, false otherwise.
-     */
-    public boolean isBoostActive(UUID uuid) {
-        Long expiryTime = boostMessageExpirations.get(uuid);
-        if (expiryTime == null) {
-            return false;
-        }
-
-        // Check if the current time has passed the expiry time
-        if (System.currentTimeMillis() > expiryTime) {
-            boostMessageExpirations.remove(uuid); // Clean up expired entry
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Checks if a player's super boost message should be active.
-     * @param uuid The player's UUID.
-     * @return true if the super boost is active, false otherwise.
-     */
-    public boolean isSuperBoostActive(UUID uuid) {
-        Long expiryTime = superBoostMessageExpirations.get(uuid);
-        if (expiryTime == null) {
-            return false;
-        }
-
-        if (System.currentTimeMillis() > expiryTime) {
-            superBoostMessageExpirations.remove(uuid); // Clean up expired entry
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
      * Checks if a player is on cooldown. Sends them a message if they are.
      * @param player The player to check.
      * @return True if the player is on cooldown, false otherwise.
@@ -303,7 +302,7 @@ public class BoostHandler {
         long effectiveCooldownMs;
         int configuredCooldownMs = configHandler.getBoostCooldown();
 
-        if (PermissionsHelper.PlayerBypassBoostCooldown(player)) {
+        if (PermissionsHelper.playerBypassBoostCooldown(player)) {
             // Players with bypass permission are still subject to the minimum anti-spam delay.
             effectiveCooldownMs = MINIMUM_SPAM_DELAY_MS;
         } else {
@@ -347,13 +346,13 @@ public class BoostHandler {
      * Place this method within the same class that contains your handleChargedJump logic.
      */
     private void playChargeUpEffect(Player player, long ticksElapsed, long totalTicksToCharge) {
-        // --- Configuration ---
+        // Configuration
         double radius = 1.0; // The radius of the particle circle.
         int particleCount = 20; // How many particles are in the circle at any time.
         double rotationSpeed = 0.1; // How fast the circle rotates.
         double maxRiseHeight = 1.5; // How high the particles will rise by the end of the charge.
 
-        // --- Calculation ---
+        // Calculation
         Location playerLocation = player.getLocation();
         double progress = (double) ticksElapsed / totalTicksToCharge;
 
@@ -376,7 +375,7 @@ public class BoostHandler {
         // The dust transition options allow for the color-changing effect.
         Particle.DustTransition dustOptions = new Particle.DustTransition(startColor, Color.RED, 1.0f);
 
-        // --- Particle Spawning ---
+        // Particle Spawning
         for (int i = 0; i < particleCount; i++) {
             double angle = 2 * Math.PI * i / particleCount + angleOffset;
             double x = playerLocation.getX() + radius * Math.cos(angle);

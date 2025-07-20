@@ -77,72 +77,6 @@ public class StatsHandler {
         });
     }
 
-    /**
-     * Private helper method to format and send the stats message.
-     * Moved from StatsCommand.
-     */
-    private void displayStats(CommandSender sender, PlayerStats stats, PlayerRanks ranks, String titlePrefix) {
-        if (stats == null) {
-            messagesHelper.sendCommandSenderMessage(sender, "&cCould not load stats for this player.");
-            return;
-        }
-
-        // Calculate Derived Stats
-        double totalDistance = stats.getTotalDistance();
-        long totalTime = stats.getTotalTimeSeconds();
-        double avgSpeedKmh = (totalTime > 0) ? (totalDistance / totalTime) * KMH_CONVERSION_FACTOR : 0;
-
-        // Get Rank Strings
-        String distanceRankStr = (ranks.distanceRank > 0) ? ColorHelper.parse(" &#FFD700(#" + ranks.distanceRank + ")") : "";
-        String timeRankStr = (ranks.timeRank > 0) ? ColorHelper.parse(" &#FFD700(#" + ranks.timeRank + ")") : "";
-        String longestFlightRankStr = (ranks.longestFlightRank > 0) ? ColorHelper.parse(" &#FFD700(#" + ranks.longestFlightRank + ")") : "";
-
-        int effectsOwned = 0;
-        int totalEffects = effectsHandler.getEffectsRegistry().size();
-        String activeEffect = "None";
-        try {
-            if (sender instanceof Player player){
-                if (PermissionsHelper.hasAllEffectsPermission(player)){
-                    effectsOwned = totalEffects;
-                }else {
-                    effectsOwned = databaseHandler.getOwnedEffectKeys(stats.getUuid()).size();
-                }
-            }
-
-            String storedEffect = databaseHandler.getPlayerActiveEffect(stats.getUuid());
-            if (storedEffect != null) activeEffect = storedEffect;
-        } catch (SQLException e) {
-            messagesHelper.sendCommandSenderMessage(sender,"&cCould not load effect data...");
-            logger.log(Level.SEVERE, "Could not load effect data: ", e);
-        }
-
-        // Formatting and Sending Message
-        var primary = "§6";
-        var secondary = "§e";
-        var text = "§7";
-        var value = "§f";
-        var arrow = "» ";
-
-        sender.sendMessage(primary + "§m----------------------------------------------------");
-        sender.sendMessage("");
-        sender.sendMessage(primary + "§l" + titlePrefix + " Elytra Statistics");
-        sender.sendMessage("");
-
-        sender.sendMessage(secondary + arrow + text + "Total Distance Flown: " + value + String.format("%.1f km", totalDistance / METERS_IN_ONE_KILOMETER) + distanceRankStr);
-        sender.sendMessage(secondary + arrow + text + "Total Flight Time: " + value + TimeHelper.formatFlightTime((int) totalTime) + timeRankStr);
-        sender.sendMessage(secondary + arrow + text + "Longest Flight: " + value + String.format("%.0f blocks", stats.getLongestFlight()) + longestFlightRankStr);
-        sender.sendMessage(secondary + arrow + text + "Average Speed: " + value + String.format("%.1f km/h", avgSpeedKmh));
-        sender.sendMessage("");
-        sender.sendMessage(secondary + arrow + text + "Boosts Used: " + value + String.format("%d (%d Super Boosts)", stats.getBoostsUsed(), stats.getSuperBoostsUsed()));
-        sender.sendMessage(secondary + arrow + text + "Saves: " + value + String.format("%d times", stats.getPluginSaves()));
-        sender.sendMessage(secondary + arrow + text + "Effects Unlocked: " + value + String.format("%d/%d", effectsOwned, totalEffects));
-        sender.sendMessage(secondary + arrow + text + "Active Effect: " + value + activeEffect);
-
-        sender.sendMessage("");
-        sender.sendMessage(primary + "§m----------------------------------------------------");
-    }
-
-    // Cache Management
     public void loadPlayerStats(Player player) {
         foliaHelper.runAsyncTask(() -> {
             try {
@@ -212,7 +146,6 @@ public class StatsHandler {
         };
     }
 
-    // Gliding State
     public void setGliding(Player player, boolean isGliding) {
         if (isGliding) {
             glidingPlayers.add(player.getUniqueId());
@@ -236,15 +169,6 @@ public class StatsHandler {
 
         // Save any remaining data on shutdown
         saveAllOnlinePlayers();
-    }
-
-    public void glidingTimeTracker() {
-        for (UUID uuid : glidingPlayers) {
-            PlayerStats stats = statsCache.get(uuid);
-            if (stats != null) {
-                stats.addTime(1); // Add 1 second to their total time
-            }
-        }
     }
 
     public void displayTopStats(CommandSender sender, String category) {
@@ -318,5 +242,79 @@ public class StatsHandler {
                         messagesHelper.sendCommandSenderMessage(sender, "&cAn error occurred while fetching the leaderboard."));
             }
         });
+    }
+
+    private void glidingTimeTracker() {
+        for (UUID uuid : glidingPlayers) {
+            PlayerStats stats = statsCache.get(uuid);
+            if (stats != null) {
+                stats.addTime(1); // Add 1 second to their total time
+            }
+        }
+    }
+
+    /**
+     * Private helper method to format and send the stats message.
+     * Moved from StatsCommand.
+     */
+    private void displayStats(CommandSender sender, PlayerStats stats, PlayerRanks ranks, String titlePrefix) {
+        if (stats == null) {
+            messagesHelper.sendCommandSenderMessage(sender, "&cCould not load stats for this player.");
+            return;
+        }
+
+        // Calculate Derived Stats
+        double totalDistance = stats.getTotalDistance();
+        long totalTime = stats.getTotalTimeSeconds();
+        double avgSpeedKmh = (totalTime > 0) ? (totalDistance / totalTime) * KMH_CONVERSION_FACTOR : 0;
+
+        // Get Rank Strings
+        String distanceRankStr = (ranks.distanceRank > 0) ? ColorHelper.parse(" &#FFD700(#" + ranks.distanceRank + ")") : "";
+        String timeRankStr = (ranks.timeRank > 0) ? ColorHelper.parse(" &#FFD700(#" + ranks.timeRank + ")") : "";
+        String longestFlightRankStr = (ranks.longestFlightRank > 0) ? ColorHelper.parse(" &#FFD700(#" + ranks.longestFlightRank + ")") : "";
+
+        int effectsOwned = 0;
+        int totalEffects = effectsHandler.getEffectsRegistry().size();
+        String activeEffect = "None";
+        try {
+            if (sender instanceof Player player){
+                if (PermissionsHelper.hasAllEffectsPermission(player)){
+                    effectsOwned = totalEffects;
+                }else {
+                    effectsOwned = databaseHandler.getOwnedEffectKeys(stats.getUuid()).size();
+                }
+            }
+
+            String storedEffect = databaseHandler.getPlayerActiveEffect(stats.getUuid());
+            if (storedEffect != null) activeEffect = storedEffect;
+        } catch (SQLException e) {
+            messagesHelper.sendCommandSenderMessage(sender,"&cCould not load effect data...");
+            logger.log(Level.SEVERE, "Could not load effect data: ", e);
+        }
+
+        // Formatting and Sending Message
+        var primary = "§6";
+        var secondary = "§e";
+        var text = "§7";
+        var value = "§f";
+        var arrow = "» ";
+
+        sender.sendMessage(primary + "§m----------------------------------------------------");
+        sender.sendMessage("");
+        sender.sendMessage(primary + "§l" + titlePrefix + " Elytra Statistics");
+        sender.sendMessage("");
+
+        sender.sendMessage(secondary + arrow + text + "Total Distance Flown: " + value + String.format("%.1f km", totalDistance / METERS_IN_ONE_KILOMETER) + distanceRankStr);
+        sender.sendMessage(secondary + arrow + text + "Total Flight Time: " + value + TimeHelper.formatFlightTime((int) totalTime) + timeRankStr);
+        sender.sendMessage(secondary + arrow + text + "Longest Flight: " + value + String.format("%.0f blocks", stats.getLongestFlight()) + longestFlightRankStr);
+        sender.sendMessage(secondary + arrow + text + "Average Speed: " + value + String.format("%.1f km/h", avgSpeedKmh));
+        sender.sendMessage("");
+        sender.sendMessage(secondary + arrow + text + "Boosts Used: " + value + String.format("%d (%d Super Boosts)", stats.getBoostsUsed(), stats.getSuperBoostsUsed()));
+        sender.sendMessage(secondary + arrow + text + "Saves: " + value + String.format("%d times", stats.getPluginSaves()));
+        sender.sendMessage(secondary + arrow + text + "Effects Unlocked: " + value + String.format("%d/%d", effectsOwned, totalEffects));
+        sender.sendMessage(secondary + arrow + text + "Active Effect: " + value + activeEffect);
+
+        sender.sendMessage("");
+        sender.sendMessage(primary + "§m----------------------------------------------------");
     }
 }

@@ -22,7 +22,7 @@ public class ForgeCommand implements ISubCommand {
     }
 
     @Override
-    public boolean Execute(CommandSender sender, String[] args) {
+    public boolean execute(CommandSender sender, String[] args) {
         if (!(sender instanceof Player player)) return true;
 
         if (!configHandler.getIsArmoredElytraEnabled()){
@@ -36,7 +36,7 @@ public class ForgeCommand implements ISubCommand {
         }
 
         player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_PLACE, 0.8f, 0.8f);
-        forgeGuiHandler.openForge(player); // Delegate to the handler
+        forgeGuiHandler.openForge(player);
         return true;
     }
 }

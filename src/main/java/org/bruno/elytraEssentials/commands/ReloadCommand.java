@@ -22,7 +22,7 @@ public class ReloadCommand implements ISubCommand {
     }
 
     @Override
-    public boolean Execute(CommandSender sender, String[] args) {
+    public boolean execute(CommandSender sender, String[] args) {
         if (!PermissionsHelper.hasReloadPermission(sender)) {
             messagesHelper.sendCommandSenderMessage(sender, messagesHandler.getNoPermissionMessage());
             return true;

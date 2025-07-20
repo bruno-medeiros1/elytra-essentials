@@ -48,6 +48,52 @@ public class ArmoredElytraHandler {
     }
 
     /**
+     * This is the new main entry point for handling damage events.
+     * It contains all the logic from the old ArmoredElytraDamageListener.
+     */
+    public void handleDamage(EntityDamageEvent event) {
+        if (!(event.getEntity() instanceof Player player)) return;
+        if (!configHandler.getIsArmoredElytraEnabled()) return;
+
+        ItemStack chestplate = player.getInventory().getChestplate();
+        if (!isArmoredElytra(chestplate)) return;
+
+        ItemMeta meta = chestplate.getItemMeta();
+        if (meta == null) return;
+
+        PersistentDataContainer container = meta.getPersistentDataContainer();
+        int currentDurability = container.getOrDefault(durabilityKey, PersistentDataType.INTEGER, 0);
+
+        if (currentDurability <= 0) return;
+
+        double initialDamage = event.getDamage();
+        double finalDamage = applyAllProtection(initialDamage, container, event.getCause());
+        event.setDamage(finalDamage);
+
+        double absorbed = initialDamage - finalDamage;
+        double totalAbsorbed = container.getOrDefault(new NamespacedKey(plugin, Constants.NBT.DAMAGE_ABSORBED_TAG), PersistentDataType.FLOAT, 0.0f);
+        container.set(new NamespacedKey(plugin, Constants.NBT.DAMAGE_ABSORBED_TAG), PersistentDataType.FLOAT, (float) (totalAbsorbed + absorbed));
+
+        //  Handle Armor Durability
+        //  TODO: Improve durability to not be so narrow to just removing 1 point
+        int newDurability = currentDurability - 1;
+        container.set(durabilityKey, PersistentDataType.INTEGER, newDurability);
+
+        // Update the item's lore to show the new durability
+        updateDurabilityLore(meta);
+        chestplate.setItemMeta(meta);
+
+        // Armor plating broke on this hit!
+        if (newDurability <= 0) {
+            int shatteredCount = container.getOrDefault(new NamespacedKey(plugin, Constants.NBT.PLATING_SHATTERED_TAG), PersistentDataType.INTEGER, 0);
+            container.set(new NamespacedKey(plugin, Constants.NBT.PLATING_SHATTERED_TAG), PersistentDataType.INTEGER, shatteredCount + 1);
+
+            player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+            messagesHelper.sendPlayerMessage(player, "&cYour Armored Elytra's plating has shattered!");
+        }
+    }
+
+    /**
      * Schedules a check to update a player's armor attributes based on their equipped chestplate.
      * This is the main entry point called by listeners.
      */
@@ -96,52 +142,6 @@ public class ArmoredElytraHandler {
     public void removeArmorAttributes(Player player) {
         armoredElytraHelper.removeArmorModifier(player, armoredElytraKey);
         armoredElytraHelper.removeToughnessModifier(player, toughnessElytraKey);
-    }
-
-    /**
-     * This is the new main entry point for handling damage events.
-     * It contains all the logic from the old ArmoredElytraDamageListener.
-     */
-    public void handleDamage(EntityDamageEvent event) {
-        if (!(event.getEntity() instanceof Player player)) return;
-        if (!configHandler.getIsArmoredElytraEnabled()) return;
-
-        ItemStack chestplate = player.getInventory().getChestplate();
-        if (!isArmoredElytra(chestplate)) return;
-
-        ItemMeta meta = chestplate.getItemMeta();
-        if (meta == null) return;
-
-        PersistentDataContainer container = meta.getPersistentDataContainer();
-        int currentDurability = container.getOrDefault(durabilityKey, PersistentDataType.INTEGER, 0);
-
-        if (currentDurability <= 0) return;
-
-        double initialDamage = event.getDamage();
-        double finalDamage = applyAllProtection(initialDamage, container, event.getCause());
-        event.setDamage(finalDamage);
-
-        double absorbed = initialDamage - finalDamage;
-        double totalAbsorbed = container.getOrDefault(new NamespacedKey(plugin, Constants.NBT.DAMAGE_ABSORBED_TAG), PersistentDataType.FLOAT, 0.0f);
-        container.set(new NamespacedKey(plugin, Constants.NBT.DAMAGE_ABSORBED_TAG), PersistentDataType.FLOAT, (float) (totalAbsorbed + absorbed));
-
-        //  Handle Armor Durability
-        //  TODO: Improve durability to not be so narrow to just removing 1 point
-        int newDurability = currentDurability - 1;
-        container.set(durabilityKey, PersistentDataType.INTEGER, newDurability);
-
-        // Update the item's lore to show the new durability
-        updateDurabilityLore(meta);
-        chestplate.setItemMeta(meta);
-
-        // Armor plating broke on this hit!
-        if (newDurability <= 0) {
-            int shatteredCount = container.getOrDefault(new NamespacedKey(plugin, Constants.NBT.PLATING_SHATTERED_TAG), PersistentDataType.INTEGER, 0);
-            container.set(new NamespacedKey(plugin, Constants.NBT.PLATING_SHATTERED_TAG), PersistentDataType.INTEGER, shatteredCount + 1);
-
-            player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
-            messagesHelper.sendPlayerMessage(player, "&cYour Armored Elytra's plating has shattered!");
-        }
     }
 
     private void updateDurabilityLore(ItemMeta meta) {

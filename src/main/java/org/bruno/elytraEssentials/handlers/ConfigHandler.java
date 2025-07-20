@@ -1,6 +1,5 @@
 package org.bruno.elytraEssentials.handlers;
 
-import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
@@ -68,10 +67,10 @@ public class ConfigHandler {
         this.fileConfiguration = fileConfiguration;
         this.logger = logger;
 
-        SetConfigVariables();
+        setConfigVariables();
     }
 
-    public final void SetConfigVariables() {
+    public final void setConfigVariables() {
         this.isDebugModeEnabled = this.fileConfiguration.getBoolean("general.debug-mode", false);
         this.isCheckForUpdatesEnabled = this.fileConfiguration.getBoolean("general.check-for-updates", true);
         this.isElytraEquipDisabled = this.fileConfiguration.getBoolean("general.disable-elytra-equipment", false);
@@ -142,7 +141,7 @@ public class ConfigHandler {
      */
     public void reload(FileConfiguration newFileConfiguration) {
         this.fileConfiguration = newFileConfiguration;
-        SetConfigVariables();
+        setConfigVariables();
         logger.info("Configuration values have been reloaded.");
     }
 
@@ -158,7 +157,7 @@ public class ConfigHandler {
     public final boolean getIsGlobalFlightDisabled() {
         return this.isGlobalFlightDisabled;
     }
-    public final List getDisabledWorlds() {
+    public final List<String> getDisabledWorlds() {
         return this.disabledWorlds;
     }
     public final boolean getIsSpeedLimitEnabled() { return this.isSpeedLimitEnabled; }

@@ -77,7 +77,7 @@ public class EffectsHandler {
             if (economy != null) {
                 economy.withdrawPlayer(player, effect.getPrice());
             }
-            databaseHandler.AddOwnedEffect(player.getUniqueId(), effectKey);
+            databaseHandler.addOwnedEffect(player.getUniqueId(), effectKey);
 
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 0.8f);
             String message = messagesHandler.getPurchaseSuccessful().replace("{0}", ColorHelper.parse(effect.getName()));
@@ -96,11 +96,11 @@ public class EffectsHandler {
 
             // Deactivate the old effect first
             if (currentActive != null) {
-                databaseHandler.UpdateOwnedEffect(player.getUniqueId(), currentActive, false);
+                databaseHandler.updateOwnedEffect(player.getUniqueId(), currentActive, false);
             }
 
             // Activate the new effect
-            databaseHandler.UpdateOwnedEffect(player.getUniqueId(), effectKey, true);
+            databaseHandler.updateOwnedEffect(player.getUniqueId(), effectKey, true);
             setActiveEffect(player.getUniqueId(), effectKey); // Update cache
 
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 0.8f);
@@ -124,7 +124,7 @@ public class EffectsHandler {
             String activeEffect = getActiveEffect(player.getUniqueId());
             if (!effectKey.equals(activeEffect)) return false;
 
-            databaseHandler.UpdateOwnedEffect(player.getUniqueId(), effectKey, false);
+            databaseHandler.updateOwnedEffect(player.getUniqueId(), effectKey, false);
             setActiveEffect(player.getUniqueId(), null); // Clear from cache
 
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 0.8f);
@@ -480,8 +480,7 @@ public class EffectsHandler {
         }
     }
 
-    private void registerVersionDependentEffect(String key, String name, Material material,
-                                                Map<ServerVersion, String> particleNames,
+    private void registerVersionDependentEffect(String key, String name, Material material, Map<ServerVersion, String> particleNames,
                                                 List<String> lore, int price, String permission) {
 
         String particleNameToUse = particleNames.getOrDefault(serverVersion, particleNames.get(ServerVersion.V_1_21));

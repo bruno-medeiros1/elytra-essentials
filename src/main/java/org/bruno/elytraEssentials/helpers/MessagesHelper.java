@@ -21,7 +21,7 @@ public class MessagesHelper {
     private String pluginPrefix;
     private boolean debugEnabled = false;
 
-    public MessagesHelper(ElytraEssentials plugin, ServerVersion serverVersion) {
+    public MessagesHelper(ServerVersion serverVersion) {
         this.serverVersion = serverVersion;
     }
 

@@ -60,7 +60,7 @@ public class HelpCommand implements ISubCommand {
     }
 
     @Override
-    public boolean Execute(CommandSender sender, String[] args) {
+    public boolean execute(CommandSender sender, String[] args) {
         // Filter commands based on sender's permissions
         List<HelpEntry> allowedCommands = allCommands.stream()
                 .filter(entry -> sender.hasPermission(entry.permission()))
@@ -87,7 +87,7 @@ public class HelpCommand implements ISubCommand {
             }
         }
 
-        // --- Send the Help Menu ---
+        // Send the help header and the list of commands
         sendHeader(sender);
 
         int startIndex = (page - 1) * COMMANDS_PER_PAGE;

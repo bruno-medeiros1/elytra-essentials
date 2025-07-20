@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// TODO: Migrate this logic to the StatsHandler class
 public class TopCommand implements ISubCommand {
     private final StatsHandler statsHandler;
     private final MessagesHelper messagesHelper;
@@ -27,7 +28,7 @@ public class TopCommand implements ISubCommand {
     }
 
     @Override
-    public boolean Execute(CommandSender sender, String[] args) {
+    public boolean execute(CommandSender sender, String[] args) {
         if (sender instanceof Player player && !PermissionsHelper.hasTopPermission(player)) {
             messagesHelper.sendPlayerMessage(player, "&cYou do not have permission to view the leaderboards.");
             return true;

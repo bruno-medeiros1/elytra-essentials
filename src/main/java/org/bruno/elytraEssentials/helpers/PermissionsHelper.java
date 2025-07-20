@@ -13,31 +13,31 @@ public final class PermissionsHelper {
 
     //<editor-fold desc="BYPASS PERMISSIONS (Player-Specific)">
 
-    public static boolean PlayerBypassTimeLimit(Player player) {
+    public static boolean playerBypassTimeLimit(Player player) {
         return player.hasPermission(Constants.Permissions.ALL) ||
                 player.hasPermission(Constants.Permissions.ALL_BYPASS) ||
                 player.hasPermission(Constants.Permissions.BYPASS_TIME_LIMIT);
     }
 
-    public static boolean PlayerBypassSpeedLimit(Player player) {
+    public static boolean playerBypassSpeedLimit(Player player) {
         return player.hasPermission(Constants.Permissions.ALL) ||
                 player.hasPermission(Constants.Permissions.ALL_BYPASS) ||
                 player.hasPermission(Constants.Permissions.BYPASS_SPEED_LIMIT);
     }
 
-    public static boolean PlayerBypassBoostCooldown(Player player) {
+    public static boolean playerBypassBoostCooldown(Player player) {
         return player.hasPermission(Constants.Permissions.ALL) ||
                 player.hasPermission(Constants.Permissions.ALL_BYPASS) ||
                 player.hasPermission(Constants.Permissions.BYPASS_BOOST_COOLDOWN);
     }
 
-    public static boolean PlayerBypassElytraEquip(Player player) {
+    public static boolean playerBypassElytraEquip(Player player) {
         return player.hasPermission(Constants.Permissions.ALL) ||
                 player.hasPermission(Constants.Permissions.ALL_BYPASS) ||
                 player.hasPermission(Constants.Permissions.BYPASS_EQUIPMENT);
     }
 
-    public static boolean PlayerBypassCombatTag(Player player){
+    public static boolean playerBypassCombatTag(Player player){
         return player.hasPermission(Constants.Permissions.ALL) ||
                 player.hasPermission(Constants.Permissions.ALL_BYPASS) ||
                 player.hasPermission(Constants.Permissions.BYPASS_COMBAT_TAG);

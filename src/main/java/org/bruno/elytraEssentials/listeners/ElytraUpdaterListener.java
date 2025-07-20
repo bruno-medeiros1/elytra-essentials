@@ -16,7 +16,7 @@ public class ElytraUpdaterListener implements Listener {
     private final ConfigHandler configHandler;
     private final PluginInfoHandler pluginInfoHandler;
 
-    public ElytraUpdaterListener(ElytraEssentials plugin, MessagesHelper messagesHelper, String latestVersion, ConfigHandler configHandler, PluginInfoHandler pluginInfoHandler) {
+    public ElytraUpdaterListener(MessagesHelper messagesHelper, String latestVersion, ConfigHandler configHandler, PluginInfoHandler pluginInfoHandler) {
         this.messagesHelper = messagesHelper;
         this.latestVersion = latestVersion;
         this.configHandler = configHandler;
@@ -28,9 +28,8 @@ public class ElytraUpdaterListener implements Listener {
         boolean isCheckForUpdatesEnabled = configHandler.getIsCheckForUpdatesEnabled();
         if (!isCheckForUpdatesEnabled) return;
 
-        Player player = event.getPlayer();
-
         // Check for updates and send the interactive notification
+        Player player = event.getPlayer();
         if (PermissionsHelper.hasUpdateNotifyPermission(player) && pluginInfoHandler.isUpdateAvailable()) {
             messagesHelper.sendUpdateNotification(player, latestVersion);
         }

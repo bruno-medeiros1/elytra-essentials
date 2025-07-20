@@ -34,7 +34,7 @@ public class ElytraEquipHandler {
      */
     private void checkAndHandleElytraEquip(Player player) {
         if (!configHandler.getIsElytraEquipDisabled()) return;
-        if (PermissionsHelper.PlayerBypassElytraEquip(player)) return;
+        if (PermissionsHelper.playerBypassElytraEquip(player)) return;
 
         ItemStack chestplate = player.getInventory().getChestplate();
         if (chestplate != null && chestplate.getType() == Material.ELYTRA) {

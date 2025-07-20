@@ -18,7 +18,7 @@ public class AchievementsCommand implements ISubCommand {
     }
 
     @Override
-    public boolean Execute(CommandSender sender, String[] args) {
+    public boolean execute(CommandSender sender, String[] args) {
         if (!(sender instanceof Player player)) {
             messagesHelper.sendCommandSenderMessage(sender,"&cThis command can only be run by a player.");
             return true;

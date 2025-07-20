@@ -3,10 +3,8 @@ package org.bruno.elytraEssentials.handlers;
 import org.bruno.elytraEssentials.helpers.FoliaHelper;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
-import org.bruno.elytraEssentials.helpers.TimeHelper;
 import org.bruno.elytraEssentials.utils.CancellableTask;
 import org.bukkit.Bukkit;
-import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
@@ -14,17 +12,13 @@ import java.util.UUID;
 public class RecoveryHandler
 {
     private final FlightHandler flightHandler;
-    private final MessagesHelper messagesHelper;
-    private final MessagesHandler messagesHandler; // For getting message strings
     private final ConfigHandler configHandler;
     private final FoliaHelper foliaHelper;
 
     private CancellableTask task;
 
-    public RecoveryHandler(FlightHandler flightHandler, MessagesHelper messagesHelper, MessagesHandler messagesHandler, ConfigHandler configHandler, FoliaHelper foliaHelper) {
+    public RecoveryHandler(FlightHandler flightHandler, ConfigHandler configHandler, FoliaHelper foliaHelper) {
         this.flightHandler = flightHandler;
-        this.messagesHelper = messagesHelper;
-        this.messagesHandler = messagesHandler;
         this.configHandler = configHandler;
         this.foliaHelper = foliaHelper;
     }
@@ -54,7 +48,7 @@ public class RecoveryHandler
         int timeToAddBase = configHandler.getRecoveryAmount();
 
         for (Player player : Bukkit.getOnlinePlayers()) {
-            if (PermissionsHelper.PlayerBypassTimeLimit(player)) continue;
+            if (PermissionsHelper.playerBypassTimeLimit(player)) continue;
 
             UUID playerId = player.getUniqueId();
             int currentFlightTime = flightHandler.getCurrentFlightTime(playerId);

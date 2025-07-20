@@ -19,7 +19,6 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -106,54 +105,6 @@ public final class GuiHelper {
         }
     }
 
-    /**
-     * Creates a player head with a custom texture from a Base64 string.
-     * This method uses the modern PlayerProfile API and does not require reflection or external libraries.
-     * Only compatible with 1.19 and above.
-     */
-    private static ItemStack createCustomHead(String base64, String name, String... lore) {
-        ItemStack head = new ItemStack(Material.PLAYER_HEAD);
-        SkullMeta meta = (SkullMeta) head.getItemMeta();
-        if (meta == null) return head;
-
-        try {
-            // Create a new, blank player profile.
-            PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID());
-            PlayerTextures textures = profile.getTextures();
-
-            // Decode the Base64 string to get the texture URL.
-            byte[] decoded = Base64.getDecoder().decode(base64);
-            String decodedString = new String(decoded, StandardCharsets.UTF_8);
-
-            // Use regex to safely extract the URL from the JSON data.
-            Matcher matcher = URL_PATTERN.matcher(decodedString);
-            if (matcher.find()) {
-                String urlString = matcher.group(1);
-                textures.setSkin(new URL(urlString));
-            } else {
-                throw new IllegalArgumentException("Could not find URL in decoded texture data.");
-            }
-
-            // Apply the textured profile to the skull meta.
-            profile.setTextures(textures);
-            meta.setOwnerProfile(profile);
-
-            // Set display name and lore.
-            meta.setDisplayName(name);
-            meta.setLore(Arrays.asList(lore));
-            head.setItemMeta(meta);
-        }
-        catch (Exception e) {
-            // Fallback to a default item if the texture fails to load
-            return createGuiItem(Material.BARRIER, name, lore);
-        }
-        catch (Throwable e){
-            throw e; // Re-throw any other unexpected errors
-        }
-
-        return head;
-    }
-
     public static ItemStack createPageInfoItem(int currentPage, int totalPages) {
         return createGuiItem(Material.COMPASS, String.format("§ePage %d / %d", currentPage, totalPages));
     }
@@ -210,5 +161,53 @@ public final class GuiHelper {
             capitalized.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1)).append(" ");
         }
         return capitalized.toString().trim();
+    }
+
+    /**
+     * Creates a player head with a custom texture from a Base64 string.
+     * This method uses the modern PlayerProfile API and does not require reflection or external libraries.
+     * Only compatible with 1.19 and above.
+     */
+    private static ItemStack createCustomHead(String base64, String name, String... lore) {
+        ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+        SkullMeta meta = (SkullMeta) head.getItemMeta();
+        if (meta == null) return head;
+
+        try {
+            // Create a new, blank player profile.
+            PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID());
+            PlayerTextures textures = profile.getTextures();
+
+            // Decode the Base64 string to get the texture URL.
+            byte[] decoded = Base64.getDecoder().decode(base64);
+            String decodedString = new String(decoded, StandardCharsets.UTF_8);
+
+            // Use regex to safely extract the URL from the JSON data.
+            Matcher matcher = URL_PATTERN.matcher(decodedString);
+            if (matcher.find()) {
+                String urlString = matcher.group(1);
+                textures.setSkin(new URL(urlString));
+            } else {
+                throw new IllegalArgumentException("Could not find URL in decoded texture data.");
+            }
+
+            // Apply the textured profile to the skull meta.
+            profile.setTextures(textures);
+            meta.setOwnerProfile(profile);
+
+            // Set display name and lore.
+            meta.setDisplayName(name);
+            meta.setLore(Arrays.asList(lore));
+            head.setItemMeta(meta);
+        }
+        catch (Exception e) {
+            // Fallback to a default item if the texture fails to load
+            return createGuiItem(Material.BARRIER, name, lore);
+        }
+        catch (Throwable e){
+            throw e; // Re-throw any other unexpected errors
+        }
+
+        return head;
     }
 }

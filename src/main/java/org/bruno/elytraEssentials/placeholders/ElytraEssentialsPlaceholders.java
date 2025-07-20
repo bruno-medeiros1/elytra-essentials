@@ -60,7 +60,7 @@ public class ElytraEssentialsPlaceholders extends PlaceholderExpansion {
             if (!configHandler.getIsTimeLimitEnabled()) {
                 return "Disabled";
             }
-            if (PermissionsHelper.PlayerBypassTimeLimit(player)) {
+            if (PermissionsHelper.playerBypassTimeLimit(player)) {
                 return "Unlimited";
             }
 

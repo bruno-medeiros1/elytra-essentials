@@ -37,7 +37,7 @@ public class EffectsCommand implements ISubCommand {
     }
 
     @Override
-    public boolean Execute(CommandSender sender, String[] args) {
+    public boolean execute(CommandSender sender, String[] args) {
         if (args.length == 0) {
             if (!(sender instanceof Player player)) { /* ... */ return true; }
 
@@ -128,7 +128,7 @@ public class EffectsCommand implements ISubCommand {
                     return;
                 }
 
-                databaseHandler.AddOwnedEffect(target.getUniqueId(), effectKey);
+                databaseHandler.addOwnedEffect(target.getUniqueId(), effectKey);
 
                 // Return to the main thread to send the message
                 foliaHelper.runTaskOnMainThread(() ->

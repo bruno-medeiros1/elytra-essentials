@@ -24,22 +24,17 @@ public class ElytraEquipListener implements Listener {
         this.elytraEquipHandler = elytraEquipHandler;
     }
 
-    // This listener's only job is to tell the handler to run a check.
-    private void triggerCheck(Player player) {
-        elytraEquipHandler.scheduleEquipCheck(player);
-    }
-
     @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) { triggerCheck(event.getPlayer()); }
+    public void onPlayerJoin(PlayerJoinEvent event) { elytraEquipHandler.scheduleEquipCheck(event.getPlayer()); }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onPlayerRespawn(PlayerRespawnEvent event) { triggerCheck(event.getPlayer()); }
+    public void onPlayerRespawn(PlayerRespawnEvent event) { elytraEquipHandler.scheduleEquipCheck(event.getPlayer()); }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent event) {
         if (event.getSlotType() == InventoryType.SlotType.ARMOR || event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
             if (event.getWhoClicked() instanceof Player player) {
-                triggerCheck(player);
+                elytraEquipHandler.scheduleEquipCheck(player);
             }
         }
     }
@@ -48,7 +43,7 @@ public class ElytraEquipListener implements Listener {
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
             if (event.getItem() != null && event.getItem().getType() == Material.ELYTRA) {
-                triggerCheck(event.getPlayer());
+                elytraEquipHandler.scheduleEquipCheck(event.getPlayer());
             }
         }
     }
@@ -56,19 +51,19 @@ public class ElytraEquipListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onDispense(BlockDispenseArmorEvent event) {
         if (event.getItem().getType() == Material.ELYTRA && event.getTargetEntity() instanceof Player player) {
-            triggerCheck(player);
+            elytraEquipHandler.scheduleEquipCheck(player);
         }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onItemBreak(PlayerItemBreakEvent event) {
         if (event.getBrokenItem().getType() == Material.ELYTRA) {
-            triggerCheck(event.getPlayer());
+            elytraEquipHandler.scheduleEquipCheck(event.getPlayer());
         }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerDeath(PlayerDeathEvent event) {
-        triggerCheck(event.getEntity());
+        elytraEquipHandler.scheduleEquipCheck(event.getEntity());
     }
 }

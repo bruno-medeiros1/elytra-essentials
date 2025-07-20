@@ -39,26 +39,6 @@ public final class FileHelper {
     }
 
     /**
-     * A generic method to handle the setup of any custom .yml file.
-     * It ensures the file exists (creating it from defaults if necessary) and returns its configuration.
-     *
-     * @param fileName The name of the file (e.g., "messages.yml").
-     * @return The loaded FileConfiguration for that file.
-     */
-    private FileConfiguration setupCustomFile(String fileName) {
-        File file = new File(plugin.getDataFolder(), fileName);
-
-        // If the file doesn't exist, save the default from the JAR.
-        if (!file.exists()) {
-            logger.info("File not found: " + fileName + ". Creating from defaults.");
-            plugin.saveResource(fileName, false);
-        }
-
-        // Load and return the configuration.
-        return YamlConfiguration.loadConfiguration(file);
-    }
-
-    /**
      * Reloads all custom configuration files from the disk.
      */
     public void reloadAll() {
@@ -79,5 +59,25 @@ public final class FileHelper {
 
     public FileConfiguration getAchievementsConfig() {
         return this.achievementsConfig;
+    }
+
+    /**
+     * A generic method to handle the setup of any custom .yml file.
+     * It ensures the file exists (creating it from defaults if necessary) and returns its configuration.
+     *
+     * @param fileName The name of the file (e.g., "messages.yml").
+     * @return The loaded FileConfiguration for that file.
+     */
+    private FileConfiguration setupCustomFile(String fileName) {
+        File file = new File(plugin.getDataFolder(), fileName);
+
+        // If the file doesn't exist, save the default from the JAR.
+        if (!file.exists()) {
+            logger.info("File not found: " + fileName + ". Creating from defaults.");
+            plugin.saveResource(fileName, false);
+        }
+
+        // Load and return the configuration.
+        return YamlConfiguration.loadConfiguration(file);
     }
 }

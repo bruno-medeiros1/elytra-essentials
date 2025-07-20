@@ -27,7 +27,7 @@ public class ImportDbCommand implements ISubCommand {
     }
 
     @Override
-    public boolean Execute(CommandSender sender, String[] args) {
+    public boolean execute(CommandSender sender, String[] args) {
         if (!PermissionsHelper.hasImportDbPermission(sender)) {
             messagesHelper.sendCommandSenderMessage(sender, messagesHandler.getNoPermissionMessage());
             return true;

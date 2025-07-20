@@ -98,7 +98,7 @@ public final class ElytraEssentials extends JavaPlugin {
     public void onDisable() {
         shutdownAllPluginTasks();
         if (databaseHandler != null) {
-            databaseHandler.Disconnect();
+            databaseHandler.disconnect();
         }
         unregisterPlaceholders();
         HandlerList.unregisterAll(this);
@@ -111,7 +111,7 @@ public final class ElytraEssentials extends JavaPlugin {
         this.serverVersion = ServerVersion.getCurrent();
         this.foliaHelper = new FoliaHelper(this);
         this.fileHelper = new FileHelper(this, getLogger());
-        this.messagesHelper = new MessagesHelper(this, this.serverVersion);
+        this.messagesHelper = new MessagesHelper(this.serverVersion);
         this.armoredElytraHelper = new ArmoredElytraHelper(this, getLogger());
 
         this.pluginInfoHandler = new PluginInfoHandler(this.getPluginMeta());
@@ -122,7 +122,7 @@ public final class ElytraEssentials extends JavaPlugin {
 
         // Database Initialization
         this.databaseHandler = new DatabaseHandler(this, configHandler, foliaHelper, messagesHelper, getLogger());
-        databaseHandler.Initialize();
+        databaseHandler.initialize();
 
         // Handlers Initialization
         this.tpsHandler = new TpsHandler( foliaHelper, messagesHelper);
@@ -134,7 +134,7 @@ public final class ElytraEssentials extends JavaPlugin {
         this.flightHandler = new FlightHandler(getLogger(), this.configHandler, this.effectsHandler, this.boostHandler, this.foliaHelper, this.messagesHelper, this.databaseHandler, this.statsHandler, this.messagesHandler);
         this.boostHandler.setFlightHandler(this.flightHandler);
 
-        this.recoveryHandler = new RecoveryHandler(flightHandler, messagesHelper, messagesHandler, configHandler, foliaHelper);
+        this.recoveryHandler = new RecoveryHandler(flightHandler, configHandler, foliaHelper);
         this.combatTagHandler = new CombatTagHandler(this, configHandler, messagesHelper, foliaHelper);
         this.elytraEquipHandler = new ElytraEquipHandler(configHandler, messagesHelper, foliaHelper);
         this.armoredElytraHandler = new ArmoredElytraHandler(this, configHandler, foliaHelper, armoredElytraHelper, messagesHelper);
@@ -161,7 +161,7 @@ public final class ElytraEssentials extends JavaPlugin {
         var elytraFlightListener = new ElytraFlightListener(this.flightHandler, this.statsHandler, this.effectsHandler);
         var elytraBoostListener = new BoostListener(this.boostHandler);
         var elytraEquipListener = new ElytraEquipListener(this.elytraEquipHandler);
-        var elytraUpdaterListener = new ElytraUpdaterListener(this, this.messagesHelper, this.pluginInfoHandler.getLatestVersion(), this.configHandler, this.pluginInfoHandler);
+        var elytraUpdaterListener = new ElytraUpdaterListener(this.messagesHelper, this.pluginInfoHandler.getLatestVersion(), this.configHandler, this.pluginInfoHandler);
         var armoredElytraListener = new ArmoredElytraListener(this.armoredElytraHandler, this.configHandler);
         var combatTagListener = new CombatTagListener(this.combatTagHandler);
         var damageListener = new DamageListener(this.flightHandler, this.statsHandler, this.armoredElytraHandler);

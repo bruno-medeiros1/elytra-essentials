@@ -36,7 +36,7 @@ public class ElytraEssentialsCommand implements CommandExecutor, TabCompleter {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length == 0) {
             try {
-                subCommands.get("help").Execute(sender, new String[0]);
+                subCommands.get("help").execute(sender, new String[0]);
             } catch (SQLException e) {
                 logger.log(Level.SEVERE, "A database error occurred while executing command /ee help'" + "' for " + sender.getName(), e);
                 messagesHelper.sendCommandSenderMessage(sender,"&cAn unexpected database error occurred. Please contact an administrator.");
@@ -56,7 +56,7 @@ public class ElytraEssentialsCommand implements CommandExecutor, TabCompleter {
         try {
             // Pass only the arguments relevant to the subcommand
             String[] subCommandArgs = Arrays.copyOfRange(args, 1, args.length);
-            return commandHandler.Execute(sender, subCommandArgs);
+            return commandHandler.execute(sender, subCommandArgs);
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "A database error occurred while executing command '" + subCommandName + "' for " + sender.getName(), e);
             messagesHelper.sendCommandSenderMessage(sender,"&cAn unexpected database error occurred. Please contact an administrator.");

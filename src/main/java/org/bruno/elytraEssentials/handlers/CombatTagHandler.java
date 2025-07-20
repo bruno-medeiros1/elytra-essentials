@@ -87,6 +87,7 @@ public class CombatTagHandler {
             countdownTask.cancel();
             countdownTask = null;
         }
+
         // Clean up any remaining boss bars
         combatTagBossBars.values().forEach(BossBar::removeAll);
         combatTagBossBars.clear();
@@ -94,7 +95,7 @@ public class CombatTagHandler {
 
     public void handleDamage(EntityDamageEvent event) {
         if (!(event.getEntity() instanceof Player player) || !configHandler.getIsCombatTagEnabled() || !player.isGliding()) return;
-        if (PermissionsHelper.PlayerBypassCombatTag(player)) return;
+        if (PermissionsHelper.playerBypassCombatTag(player)) return;
 
         boolean playerDamageOnly = configHandler.getIsCombatTagPlayerDamageOnlyEnabled();
         boolean damageSourceIsValid = false;
@@ -152,7 +153,7 @@ public class CombatTagHandler {
     }
 
     private void applyCombatTag(Player player) {
-        if (PermissionsHelper.PlayerBypassCombatTag(player)) {
+        if (PermissionsHelper.playerBypassCombatTag(player)) {
             return;
         }
 

@@ -1,6 +1,5 @@
 package org.bruno.elytraEssentials.handlers;
 
-import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.helpers.*;
 import org.bruno.elytraEssentials.utils.CancellableTask;
 import org.bruno.elytraEssentials.utils.Constants;
@@ -95,7 +94,7 @@ public class FlightHandler {
     public void loadPlayerData(Player player) {
         if (!configHandler.getIsTimeLimitEnabled()) return;
         try {
-            int storedTime = databaseHandler.GetPlayerFlightTime(player.getUniqueId());
+            int storedTime = databaseHandler.getPlayerFlightTime(player.getUniqueId());
             flightTimeData.put(player.getUniqueId(), storedTime);
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Failed to load flight time for " + player.getName(), e);
@@ -191,7 +190,7 @@ public class FlightHandler {
             if (target != null && target.isOnline()) {
                 currentFlightTime = this.flightTimeData.getOrDefault(playerId, 0);
             } else {
-                currentFlightTime = databaseHandler.GetPlayerFlightTime(playerId);
+                currentFlightTime = databaseHandler.getPlayerFlightTime(playerId);
             }
 
             int maxTimeLimit = configHandler.getMaxTimeLimit();
@@ -213,7 +212,7 @@ public class FlightHandler {
                 return;
             }
 
-            databaseHandler.SetPlayerFlightTime(playerId, newFlightTime);
+            databaseHandler.setPlayerFlightTime(playerId, newFlightTime);
 
             // Update the live cache and notify the player if they are online
             if (target != null && target.isOnline()) {
@@ -234,12 +233,12 @@ public class FlightHandler {
 
     public void removeFlightTime(UUID playerId, int secondsToRemove, CommandSender feedbackRecipient) {
         try {
-            int currentFlightTime = databaseHandler.GetPlayerFlightTime(playerId);
+            int currentFlightTime = databaseHandler.getPlayerFlightTime(playerId);
             // Ensure flight time doesn't go below zero
             int newFlightTime = Math.max(0, currentFlightTime - secondsToRemove);
             int actualAmountRemoved = currentFlightTime - newFlightTime;
 
-            databaseHandler.SetPlayerFlightTime(playerId, newFlightTime);
+            databaseHandler.setPlayerFlightTime(playerId, newFlightTime);
 
             // Update the live cache and notify the player if they are online
             Player target = Bukkit.getPlayer(playerId);
@@ -263,7 +262,7 @@ public class FlightHandler {
             // Cap the amount at the max limit if one is set
             int finalAmount = (maxTimeLimit > 0) ? Math.min(secondsToSet, maxTimeLimit) : secondsToSet;
 
-            databaseHandler.SetPlayerFlightTime(playerId, finalAmount);
+            databaseHandler.setPlayerFlightTime(playerId, finalAmount);
 
             // Update the live cache and notify the player if they are online
             Player target = Bukkit.getPlayer(playerId);
@@ -283,7 +282,7 @@ public class FlightHandler {
 
     public void clearFlightTime(UUID playerId, CommandSender feedbackRecipient) {
         try {
-            databaseHandler.SetPlayerFlightTime(playerId, 0);
+            databaseHandler.setPlayerFlightTime(playerId, 0);
 
             OfflinePlayer target = Bukkit.getOfflinePlayer(playerId);
 
@@ -317,7 +316,7 @@ public class FlightHandler {
     // This is the global loop for Spigot/Paper
     private void handleGlobalFlightTimeCountdown() {
         for (Player player : Bukkit.getOnlinePlayers()) {
-            boolean isFlying = player.isGliding() && !PermissionsHelper.PlayerBypassTimeLimit(player);
+            boolean isFlying = player.isGliding() && !PermissionsHelper.playerBypassTimeLimit(player);
             if (isFlying) {
                 if (!flightBossBars.containsKey(player.getUniqueId())) createBossBar(player);
                 updatePlayerFlight(player);
@@ -350,7 +349,7 @@ public class FlightHandler {
     }
 
     private void startTrackingPlayer(Player player) {
-        if (activeFlightTasks.containsKey(player.getUniqueId()) || PermissionsHelper.PlayerBypassTimeLimit(player))
+        if (activeFlightTasks.containsKey(player.getUniqueId()) || PermissionsHelper.playerBypassTimeLimit(player))
             return;
 
         CancellableTask task = foliaHelper.runTaskTimerForEntity(player, () -> updatePlayerFlight(player), 0L, 20L);
@@ -369,7 +368,7 @@ public class FlightHandler {
 
         // Enforce speed limits
         double worldMaxSpeed = configHandler.getPerWorldSpeedLimits().getOrDefault(player.getWorld().getName(), configHandler.getDefaultSpeedLimit());
-        if (!PermissionsHelper.PlayerBypassSpeedLimit(player) && configHandler.getIsSpeedLimitEnabled() && realSpeed > worldMaxSpeed) {
+        if (!PermissionsHelper.playerBypassSpeedLimit(player) && configHandler.getIsSpeedLimitEnabled() && realSpeed > worldMaxSpeed) {
             finalSpeed = worldMaxSpeed;
             player.setVelocity(velocity.normalize().multiply(worldMaxSpeed / METERS_PER_SECOND_TO_KMH / TICKS_IN_ONE_SECOND));
         } else if (realSpeed > MAX_FLIGHT_SPEED) {
@@ -471,7 +470,7 @@ public class FlightHandler {
         Integer time = flightTimeData.get(playerId);
         if (time != null) {
             try {
-                databaseHandler.SetPlayerFlightTime(playerId, time);
+                databaseHandler.setPlayerFlightTime(playerId, time);
             } catch (SQLException e) {
                 logger.log(Level.SEVERE, "Failed to save flight time for " + playerId, e);
             }
@@ -481,7 +480,7 @@ public class FlightHandler {
     private void createBossBar(Player player) {
         if (!configHandler.getIsTimeLimitEnabled() || flightBossBars.containsKey(player.getUniqueId())) return;
 
-        if (PermissionsHelper.PlayerBypassTimeLimit(player)) {
+        if (PermissionsHelper.playerBypassTimeLimit(player)) {
             String message = messagesHandler.getElytraFlightTimeBypass();
             BossBar bossBar = Bukkit.createBossBar(ColorHelper.parse(message), BarColor.YELLOW, BarStyle.SOLID);
             bossBar.addPlayer(player);

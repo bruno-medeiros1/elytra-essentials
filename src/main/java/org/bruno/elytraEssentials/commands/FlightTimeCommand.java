@@ -35,7 +35,7 @@ public class FlightTimeCommand implements ISubCommand {
     }
 
     @Override
-    public boolean Execute(CommandSender sender, String[] args) {
+    public boolean execute(CommandSender sender, String[] args) {
         if (!configHandler.getIsTimeLimitEnabled()) { /* ... */ return true; }
         if (!PermissionsHelper.hasFlightTimeCommandPermission(sender)) { /* ... */ return true; }
         if (args.length < 2) { /* send usage */ return true; }
@@ -118,7 +118,7 @@ public class FlightTimeCommand implements ISubCommand {
             messagesHelper.sendCommandSenderMessage(sender, message);
             return false;
         }
-        if (target.isOnline() && PermissionsHelper.PlayerBypassTimeLimit(target.getPlayer())) {
+        if (target.isOnline() && PermissionsHelper.playerBypassTimeLimit(target.getPlayer())) {
             messagesHelper.sendCommandSenderMessage(sender,"&cThe player " + targetName + " has time limit bypass and cannot be managed.");
             return false;
         }

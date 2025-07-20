@@ -51,7 +51,7 @@ public class DatabaseHandler {
         setDatabaseVariables();
     }
 
-    public void Initialize() throws SQLException {
+    public void initialize() throws SQLException {
         logger.info("Using " + storageType.name() + " for data storage.");
 
         if (storageType == StorageType.MYSQL) {
@@ -70,15 +70,15 @@ public class DatabaseHandler {
             connection = DriverManager.getConnection("jdbc:sqlite:" + dbFile.getAbsolutePath());
         }
         logger.info("Database connection established.");
-        InitializeTables();
+        initializeTables();
     }
 
-    public boolean IsConnected() {
+    public boolean isConnected() {
         return connection != null;
     }
 
-    public void Disconnect() {
-        if (IsConnected()) {
+    public void disconnect() {
+        if (isConnected()) {
             try {
                 connection.close();
                 messagesHelper.sendDebugMessage(storageType.name() + " database connection closed successfully!");
@@ -86,44 +86,6 @@ public class DatabaseHandler {
                 logger.log(Level.SEVERE, "Failed to close the database connection.", e);
             }
         }
-    }
-
-    private void InitializeTables() throws SQLException {
-        executeTableQuery(Constants.Database.Tables.ELYTRA_FLIGHT_TIME);
-        executeTableQuery(Constants.Database.Tables.OWNED_EFFECTS);
-        executeTableQuery(Constants.Database.Tables.PLAYER_STATS);
-        executeTableQuery(Constants.Database.Tables.PLAYER_ACHIEVEMENTS);
-        logger.info("Database tables verified and initialized successfully.");
-    }
-
-    private void executeTableQuery(String tableName) throws SQLException {
-        String query = getCreateTableQuery(tableName);
-        if (query == null) {
-            logger.warning("No schema found for table: " + tableName);
-            return;
-        }
-        try (Statement stmt = connection.createStatement()) {
-            stmt.executeUpdate(query);
-        }
-    }
-
-    private String getCreateTableQuery(String tableName) {
-        boolean isMysql = storageType == StorageType.MYSQL;
-        return switch (tableName) {
-            case Constants.Database.Tables.ELYTRA_FLIGHT_TIME -> isMysql ?
-                    "CREATE TABLE IF NOT EXISTS " + tableName + " (uuid VARCHAR(36) PRIMARY KEY, flight_time INT DEFAULT 0);" :
-                    "CREATE TABLE IF NOT EXISTS " + tableName + " (uuid TEXT PRIMARY KEY, flight_time INTEGER DEFAULT 0);";
-            case Constants.Database.Tables.OWNED_EFFECTS -> isMysql ?
-                    "CREATE TABLE IF NOT EXISTS " + tableName + " (id INT AUTO_INCREMENT PRIMARY KEY, player_uuid VARCHAR(36) NOT NULL, effect_key VARCHAR(255) NOT NULL, is_active BOOLEAN NOT NULL DEFAULT FALSE, owned_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP);" :
-                    "CREATE TABLE IF NOT EXISTS " + tableName + " (id INTEGER PRIMARY KEY AUTOINCREMENT, player_uuid TEXT NOT NULL, effect_key TEXT NOT NULL, is_active INTEGER NOT NULL DEFAULT 0, owned_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP);";
-            case Constants.Database.Tables.PLAYER_STATS -> isMysql ?
-                    "CREATE TABLE IF NOT EXISTS " + tableName + " (uuid VARCHAR(36) PRIMARY KEY, total_distance DOUBLE DEFAULT 0, total_time_seconds BIGINT DEFAULT 0, longest_flight DOUBLE DEFAULT 0, boosts_used INT DEFAULT 0, super_boosts_used INT DEFAULT 0, plugin_saves INT DEFAULT 0);" :
-                    "CREATE TABLE IF NOT EXISTS " + tableName + " (uuid TEXT PRIMARY KEY, total_distance REAL DEFAULT 0, total_time_seconds INTEGER DEFAULT 0, longest_flight REAL DEFAULT 0, boosts_used INTEGER DEFAULT 0, super_boosts_used INTEGER DEFAULT 0, plugin_saves INTEGER DEFAULT 0);";
-            case Constants.Database.Tables.PLAYER_ACHIEVEMENTS -> isMysql ?
-                    "CREATE TABLE IF NOT EXISTS " + tableName + " (player_uuid VARCHAR(36) NOT NULL, achievement_id VARCHAR(255) NOT NULL, unlocked_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (player_uuid, achievement_id));" :
-                    "CREATE TABLE IF NOT EXISTS " + tableName + " (player_uuid TEXT NOT NULL, achievement_id TEXT NOT NULL, unlocked_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (player_uuid, achievement_id));";
-            default -> null;
-        };
     }
 
     public void setDatabaseVariables() {
@@ -191,7 +153,7 @@ public class DatabaseHandler {
 
         logger.info("All players kicked. Shutting down plugin services...");
         plugin.shutdownAllPluginTasks();
-        this.Disconnect();
+        this.disconnect();
 
         foliaHelper.runAsyncTask(() -> {
             File databaseFolder = new File(plugin.getDataFolder(), Constants.Files.DB_FOLDER);
@@ -217,7 +179,7 @@ public class DatabaseHandler {
                             logger.warning("Could not delete temporary database file: " + tempDbFile.getName());
                         }
                         try {
-                            this.Initialize(); // Reconnect to the original database
+                            this.initialize(); // Reconnect to the original database
                             plugin.startAllPluginTasks();
                         } catch (SQLException ex) {
                             logger.log(Level.SEVERE, "Failed to reconnect to original database after failed import.", ex);
@@ -236,7 +198,7 @@ public class DatabaseHandler {
                 foliaHelper.runTaskOnMainThread(() -> {
                     try {
                         logger.info("Re-initializing plugin services...");
-                        this.Initialize();
+                        this.initialize();
                         plugin.startAllPluginTasks();
                         messagesHelper.sendCommandSenderMessage(sender, "&aDatabase import successful! Players can now reconnect.");
                         logger.info("Database import complete.");
@@ -253,6 +215,23 @@ public class DatabaseHandler {
                 });
             }
         });
+    }
+
+    public List<String> getBackupFileNames() {
+        if (storageType != StorageType.SQLITE) {
+            return Collections.emptyList();
+        }
+        List<String> fileNames = new ArrayList<>();
+        File backupFolder = new File(plugin.getDataFolder(), Constants.Files.DB_FOLDER + "/" + Constants.Files.DB_BACKUP_FOLDER);
+        if (backupFolder.exists() && backupFolder.isDirectory()) {
+            File[] files = backupFolder.listFiles((dir, name) -> name.toLowerCase().endsWith(".db"));
+            if (files != null) {
+                for (File file : files) {
+                    fileNames.add(file.getName());
+                }
+            }
+        }
+        return fileNames;
     }
 
     private void backupSQLiteDatabase() {
@@ -296,25 +275,9 @@ public class DatabaseHandler {
         }
     }
 
-    public List<String> getBackupFileNames() {
-        if (storageType != StorageType.SQLITE) {
-            return Collections.emptyList();
-        }
-        List<String> fileNames = new ArrayList<>();
-        File backupFolder = new File(plugin.getDataFolder(), Constants.Files.DB_FOLDER + "/" + Constants.Files.DB_BACKUP_FOLDER);
-        if (backupFolder.exists() && backupFolder.isDirectory()) {
-            File[] files = backupFolder.listFiles((dir, name) -> name.toLowerCase().endsWith(".db"));
-            if (files != null) {
-                for (File file : files) {
-                    fileNames.add(file.getName());
-                }
-            }
-        }
-        return fileNames;
-    }
     //</editor-fold>
 
-    public int GetPlayerFlightTime(UUID uuid) throws SQLException {
+    public int getPlayerFlightTime(UUID uuid) throws SQLException {
         String query = "SELECT flight_time FROM " + Constants.Database.Tables.ELYTRA_FLIGHT_TIME + " WHERE uuid = ?";
 
         // Wrap in the conditional block for structural consistency.
@@ -334,7 +297,7 @@ public class DatabaseHandler {
     }
 
 
-    public void SetPlayerFlightTime(UUID uuid, int time) throws SQLException {
+    public void setPlayerFlightTime(UUID uuid, int time) throws SQLException {
         String query;
         if (storageType == StorageType.MYSQL) {
             query = "INSERT INTO " + Constants.Database.Tables.ELYTRA_FLIGHT_TIME + " (uuid, flight_time) VALUES (?, ?) ON DUPLICATE KEY UPDATE flight_time = ?";
@@ -355,7 +318,7 @@ public class DatabaseHandler {
         }
     }
 
-    public void AddOwnedEffect(UUID playerUuid, String effectKey) throws SQLException {
+    public void addOwnedEffect(UUID playerUuid, String effectKey) throws SQLException {
         String query;
         if (storageType == StorageType.MYSQL) {
             query = "INSERT IGNORE INTO " + Constants.Database.Tables.OWNED_EFFECTS + " (player_uuid, effect_key, is_active) VALUES (?, ?, ?)";
@@ -389,7 +352,7 @@ public class DatabaseHandler {
         }
     }
 
-    public void UpdateOwnedEffect(UUID playerId, String effectKey, boolean isActive) throws SQLException {
+    public void updateOwnedEffect(UUID playerId, String effectKey, boolean isActive) throws SQLException {
         String query = "UPDATE " + Constants.Database.Tables.OWNED_EFFECTS + " SET is_active = ? WHERE player_uuid = ? AND effect_key = ?";
 
         if (storageType == StorageType.MYSQL || storageType == StorageType.SQLITE) {
@@ -403,7 +366,7 @@ public class DatabaseHandler {
     }
 
 
-    public boolean GetIsActiveOwnedEffect(UUID playerId, String effectKey) throws SQLException {
+    public boolean getIsActiveOwnedEffect(UUID playerId, String effectKey) throws SQLException {
         String query = "SELECT is_active FROM " + Constants.Database.Tables.OWNED_EFFECTS + " WHERE player_uuid = ? AND effect_key = ?";
 
         if (storageType == StorageType.MYSQL || storageType == StorageType.SQLITE) {
@@ -456,8 +419,6 @@ public class DatabaseHandler {
                 }
             }
         }
-
-        // Return null if no active effect is found
         return null;
     }
 
@@ -521,13 +482,13 @@ public class DatabaseHandler {
         // Although the UPDATE syntax is the same for both, we use the if/else
         // block to maintain our code structure and for future-proofing.
         if (storageType == StorageType.MYSQL || storageType == StorageType.SQLITE) {
-            // --- Reset Player Stats Table ---
+            // Reset Player Stats Table
             try (PreparedStatement stmt = connection.prepareStatement(resetStatsQuery)) {
                 stmt.setString(1, uuid.toString());
                 stmt.executeUpdate();
             }
 
-            // --- Reset Flight Time Table ---
+            // Reset Flight Time Table
             try (PreparedStatement stmt = connection.prepareStatement(resetFlightTimeQuery)) {
                 stmt.setString(1, uuid.toString());
                 stmt.executeUpdate();
@@ -697,4 +658,42 @@ public class DatabaseHandler {
     }
 
     //</editor-fold>
+
+    private void initializeTables() throws SQLException {
+        executeTableQuery(Constants.Database.Tables.ELYTRA_FLIGHT_TIME);
+        executeTableQuery(Constants.Database.Tables.OWNED_EFFECTS);
+        executeTableQuery(Constants.Database.Tables.PLAYER_STATS);
+        executeTableQuery(Constants.Database.Tables.PLAYER_ACHIEVEMENTS);
+        logger.info("Database tables verified and initialized successfully.");
+    }
+
+    private void executeTableQuery(String tableName) throws SQLException {
+        String query = getCreateTableQuery(tableName);
+        if (query == null) {
+            logger.warning("No schema found for table: " + tableName);
+            return;
+        }
+        try (Statement stmt = connection.createStatement()) {
+            stmt.executeUpdate(query);
+        }
+    }
+
+    private String getCreateTableQuery(String tableName) {
+        boolean isMysql = storageType == StorageType.MYSQL;
+        return switch (tableName) {
+            case Constants.Database.Tables.ELYTRA_FLIGHT_TIME -> isMysql ?
+                    "CREATE TABLE IF NOT EXISTS " + tableName + " (uuid VARCHAR(36) PRIMARY KEY, flight_time INT DEFAULT 0);" :
+                    "CREATE TABLE IF NOT EXISTS " + tableName + " (uuid TEXT PRIMARY KEY, flight_time INTEGER DEFAULT 0);";
+            case Constants.Database.Tables.OWNED_EFFECTS -> isMysql ?
+                    "CREATE TABLE IF NOT EXISTS " + tableName + " (id INT AUTO_INCREMENT PRIMARY KEY, player_uuid VARCHAR(36) NOT NULL, effect_key VARCHAR(255) NOT NULL, is_active BOOLEAN NOT NULL DEFAULT FALSE, owned_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP);" :
+                    "CREATE TABLE IF NOT EXISTS " + tableName + " (id INTEGER PRIMARY KEY AUTOINCREMENT, player_uuid TEXT NOT NULL, effect_key TEXT NOT NULL, is_active INTEGER NOT NULL DEFAULT 0, owned_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP);";
+            case Constants.Database.Tables.PLAYER_STATS -> isMysql ?
+                    "CREATE TABLE IF NOT EXISTS " + tableName + " (uuid VARCHAR(36) PRIMARY KEY, total_distance DOUBLE DEFAULT 0, total_time_seconds BIGINT DEFAULT 0, longest_flight DOUBLE DEFAULT 0, boosts_used INT DEFAULT 0, super_boosts_used INT DEFAULT 0, plugin_saves INT DEFAULT 0);" :
+                    "CREATE TABLE IF NOT EXISTS " + tableName + " (uuid TEXT PRIMARY KEY, total_distance REAL DEFAULT 0, total_time_seconds INTEGER DEFAULT 0, longest_flight REAL DEFAULT 0, boosts_used INTEGER DEFAULT 0, super_boosts_used INTEGER DEFAULT 0, plugin_saves INTEGER DEFAULT 0);";
+            case Constants.Database.Tables.PLAYER_ACHIEVEMENTS -> isMysql ?
+                    "CREATE TABLE IF NOT EXISTS " + tableName + " (player_uuid VARCHAR(36) NOT NULL, achievement_id VARCHAR(255) NOT NULL, unlocked_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (player_uuid, achievement_id));" :
+                    "CREATE TABLE IF NOT EXISTS " + tableName + " (player_uuid TEXT NOT NULL, achievement_id TEXT NOT NULL, unlocked_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (player_uuid, achievement_id));";
+            default -> null;
+        };
+    }
 }

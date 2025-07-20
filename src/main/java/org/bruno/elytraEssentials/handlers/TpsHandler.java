@@ -63,7 +63,6 @@ public class TpsHandler {
     }
 
     public double getTps() {
-        // Return the live TPS from the server
         return Bukkit.getServer().getTPS()[0];
     }
 }
