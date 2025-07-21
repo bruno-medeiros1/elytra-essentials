@@ -66,6 +66,7 @@ public final class ElytraEssentials extends JavaPlugin {
     private FoliaHelper foliaHelper;
 
     private Economy economy = null;
+    private boolean isEconomyEnabled = false;
     private ElytraEssentialsPlaceholders elytraStatsExpansion;
 
     private ServerVersion serverVersion;
@@ -87,18 +88,8 @@ public final class ElytraEssentials extends JavaPlugin {
             startAllPluginTasks();
             setupIntegrations();
 
-            messagesHelper.sendConsoleMessage("&e###########################################");
-            messagesHelper.sendConsoleMessage("&6Plugin by: &6&lCodingMaestro");
-            messagesHelper.sendConsoleMessage("&6Version: &6&l" + pluginInfoHandler.getCurrentVersion());
-            messagesHelper.sendConsoleMessage("&6Has been enabled successfully!");
-            messagesHelper.sendConsoleMessage("&e###########################################");
-            messagesHelper.sendDebugMessage("&eDeveloper debug mode enabled!");
-            messagesHelper.sendDebugMessage("&eThis WILL fill the console");
-            messagesHelper.sendDebugMessage("&ewith additional ElytraEssentials information!");
-            messagesHelper.sendDebugMessage("&eThis setting is not intended for continuous use!");
-        }
-        catch (Exception e)
-        {
+            sendStartupMessages();
+        } catch (Exception e) {
             getLogger().log(Level.SEVERE, "A critical error occurred during plugin startup. Disabling ElytraEssentials.", e);
             getServer().getPluginManager().disablePlugin(this);
         }
@@ -112,7 +103,43 @@ public final class ElytraEssentials extends JavaPlugin {
         }
         unregisterPlaceholders();
         HandlerList.unregisterAll(this);
-        getLogger().info("ElytraEssentials has been disabled.");
+
+        sendOnDisableMessages();
+    }
+
+    public void startAllPluginTasks() {
+        if (databaseHandler != null) databaseHandler.start();
+
+        if (recoveryHandler != null) recoveryHandler.start();
+        if (tpsHandler != null) tpsHandler.start();
+        if (statsHandler != null) statsHandler.start();
+        if (achievementsHandler != null) achievementsHandler.start();
+        if (flightHandler != null) flightHandler.start();
+        if (combatTagHandler != null) combatTagHandler.start();
+    }
+
+    public void reload() {
+        // Stop all repeating tasks
+        shutdownAllPluginTasks();
+
+        // Reload configuration files from disk
+        reloadConfig();
+        fileHelper.reloadAll();
+
+        // Tell handlers to update their internal values from the reloaded configs
+        configHandler.reload(getConfig());
+        messagesHandler.reload(fileHelper.getMessagesConfig());
+        messagesHelper.setPrefix(messagesHandler.getPrefixMessage());
+
+        // Restart all repeating tasks with the new settings
+        startAllPluginTasks();
+
+        // Reload data for all online players
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            statsHandler.loadPlayerStats(player);
+            flightHandler.loadPlayerData(player);
+            effectsHandler.loadPlayerActiveEffect(player);
+        }
     }
 
     private void setupComponents() throws Exception {
@@ -232,15 +259,18 @@ public final class ElytraEssentials extends JavaPlugin {
     private void setupEconomy() {
         if (getServer().getPluginManager().getPlugin("Vault") == null) {
             getLogger().warning("Vault not found! All economy features will be disabled.");
+            this.isEconomyEnabled = false;
             return;
         }
         RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
         if (rsp == null) {
             getLogger().warning("Vault found, but no economy plugin is hooked into it. Economy features will be disabled.");
+            this.isEconomyEnabled = false;
             return;
         }
         economy = rsp.getProvider();
         getLogger().info("Successfully hooked into Vault & found economy provider: " + rsp.getProvider().getName());
+        this.isEconomyEnabled = true;
     }
 
     private void registerPlaceholders() {
@@ -259,7 +289,7 @@ public final class ElytraEssentials extends JavaPlugin {
         }
     }
 
-    public void shutdownAllPluginTasks(){
+    public void shutdownAllPluginTasks() {
         if (recoveryHandler != null)
             recoveryHandler.shutdown();
 
@@ -282,38 +312,40 @@ public final class ElytraEssentials extends JavaPlugin {
             databaseHandler.shutdown();
     }
 
-    public void startAllPluginTasks(){
-        if (databaseHandler != null) databaseHandler.start();
+    private void sendStartupMessages() {
+        messagesHelper.sendConsoleMessage("&e┌───────────────────────────────────────────┐");
+        messagesHelper.sendConsoleMessage(" ");
+        messagesHelper.sendConsoleMessage("  &6&lElytraEssentials &fv" + pluginInfoHandler.getCurrentVersion());
+        messagesHelper.sendConsoleMessage("  &7by CodingMaestro");
+        messagesHelper.sendConsoleMessage(" ");
 
-        if (recoveryHandler != null) recoveryHandler.start();
-        if (tpsHandler != null) tpsHandler.start();
-        if (statsHandler != null) statsHandler.start();
-        if (achievementsHandler != null) achievementsHandler.start();
-        if (flightHandler != null) flightHandler.start();
-        if (combatTagHandler != null) combatTagHandler.start();
+        String platform = foliaHelper.isFolia() ? "&dFolia" : "&bSpigot/Paper/Purpur";
+        messagesHelper.sendConsoleMessage("  &eStatus:");
+        messagesHelper.sendConsoleMessage("    &7Platform: " + platform);
+        messagesHelper.sendConsoleMessage("    &7Storage: &f" + databaseHandler.getStorageType());
+        String economyStatus = isEconomyEnabled ? "&aEnabled (&f" + economy.getName() + "&a)" : "&cDisabled";
+        messagesHelper.sendConsoleMessage("    &7Economy: " + economyStatus);
+        String papiStatus = (elytraStatsExpansion != null) ? "&aHooked" : "&cNot Found";
+        messagesHelper.sendConsoleMessage("    &7Placeholders (PAPI): " + papiStatus);
+        messagesHelper.sendConsoleMessage(" ");
+        messagesHelper.sendConsoleMessage("  &aPlugin has been enabled successfully!");
+        messagesHelper.sendConsoleMessage(" ");
+        messagesHelper.sendConsoleMessage("&e└───────────────────────────────────────────┘");
+
+        messagesHelper.sendDebugMessage(" ");
+        messagesHelper.sendDebugMessage("&6&lDEBUG MODE IS ENABLED. THIS WILL SPAM YOUR CONSOLE.");
+        messagesHelper.sendDebugMessage("&6&lIT IS NOT INTENDED FOR PRODUCTION USE.");
+        messagesHelper.sendDebugMessage(" ");
     }
 
-    public void reload() {
-        // Stop all repeating tasks
-        shutdownAllPluginTasks();
-
-        // Reload configuration files from disk
-        reloadConfig();
-        fileHelper.reloadAll();
-
-        // Tell handlers to update their internal values from the reloaded configs
-        configHandler.reload(getConfig());
-        messagesHandler.reload(fileHelper.getMessagesConfig());
-        messagesHelper.setPrefix(messagesHandler.getPrefixMessage());
-
-        // Restart all repeating tasks with the new settings
-        startAllPluginTasks();
-
-        // Reload data for all online players
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            statsHandler.loadPlayerStats(player);
-            flightHandler.loadPlayerData(player);
-            effectsHandler.loadPlayerActiveEffect(player);
-        }
+    private void sendOnDisableMessages() {
+        messagesHelper.sendConsoleMessage("&e┌───────────────────────────────────────────┐");
+        messagesHelper.sendConsoleMessage(" ");
+        messagesHelper.sendConsoleMessage("  &6&lElytraEssentials &fv" + pluginInfoHandler.getCurrentVersion());
+        messagesHelper.sendConsoleMessage("  &7by CodingMaestro");
+        messagesHelper.sendConsoleMessage(" ");
+        messagesHelper.sendConsoleMessage("  &cPlugin has been disabled. All tasks stopped and data saved.");
+        messagesHelper.sendConsoleMessage(" ");
+        messagesHelper.sendConsoleMessage("&e└───────────────────────────────────────────┘");
     }
 }
