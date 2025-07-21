@@ -36,9 +36,20 @@ public class FlightTimeCommand implements ISubCommand {
 
     @Override
     public boolean execute(CommandSender sender, String[] args) {
-        if (!configHandler.getIsTimeLimitEnabled()) { /* ... */ return true; }
-        if (!PermissionsHelper.hasFlightTimeCommandPermission(sender)) { /* ... */ return true; }
-        if (args.length < 2) { /* send usage */ return true; }
+        if (!configHandler.getIsTimeLimitEnabled()) {
+            messagesHelper.sendCommandSenderMessage(sender, messagesHandler.getFeatureNotEnabled());
+            return true;
+        }
+
+        if (!PermissionsHelper.hasFlightTimeCommandPermission(sender)) {
+            messagesHelper.sendCommandSenderMessage(sender, messagesHandler.getNoPermissionMessage());
+            return true;
+        }
+
+        if (args.length < 2) {
+            sendUsageMessage(sender);
+            return true;
+        }
 
         String action = args[0].toLowerCase();
         switch (action) {

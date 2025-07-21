@@ -1,6 +1,7 @@
 package org.bruno.elytraEssentials.commands;
 
 import org.bruno.elytraEssentials.gui.shop.ShopGuiHandler;
+import org.bruno.elytraEssentials.handlers.MessagesHandler;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
@@ -11,10 +12,12 @@ import org.bukkit.entity.Player;
 public class ShopCommand implements ISubCommand {
     private final ShopGuiHandler shopGuiHandler;
     private final MessagesHelper messagesHelper;
+    private final MessagesHandler messagesHandler;
 
-    public ShopCommand(ShopGuiHandler shopGuiHandler, MessagesHelper messagesHelper) {
+    public ShopCommand(ShopGuiHandler shopGuiHandler, MessagesHelper messagesHelper, MessagesHandler messagesHandler) {
         this.shopGuiHandler = shopGuiHandler;
         this.messagesHelper = messagesHelper;
+        this.messagesHandler = messagesHandler;
     }
 
     @Override
@@ -25,7 +28,7 @@ public class ShopCommand implements ISubCommand {
         }
 
         if (!PermissionsHelper.hasShopPermission(player)) {
-            messagesHelper.sendCommandSenderMessage(sender, "&cYou do not have permission to use the shop.");
+            messagesHelper.sendCommandSenderMessage(sender, messagesHandler.getNoPermissionMessage());
             return true;
         }
 

@@ -87,8 +87,18 @@ public final class ElytraEssentials extends JavaPlugin {
             startAllPluginTasks();
             setupIntegrations();
 
-            messagesHelper.sendConsoleMessage("&aPlugin v" + pluginInfoHandler.getCurrentVersion() + " has been enabled successfully!");
-        } catch (Exception e) {
+            messagesHelper.sendConsoleMessage("###########################################");
+            messagesHelper.sendConsoleMessage("&ePlugin by: &6&lCodingMaestro");
+            messagesHelper.sendConsoleMessage("&eVersion: &6&l" + pluginInfoHandler.getCurrentVersion());
+            messagesHelper.sendConsoleMessage("&ahas been enabled successfully");
+            messagesHelper.sendConsoleMessage("###########################################");
+            messagesHelper.sendDebugMessage("&eDeveloper debug mode enabled!");
+            messagesHelper.sendDebugMessage("&eThis WILL fill the console");
+            messagesHelper.sendDebugMessage("&ewith additional ElytraEssentials information!");
+            messagesHelper.sendDebugMessage("&eThis setting is not intended for continuous use!");
+        }
+        catch (Exception e)
+        {
             getLogger().log(Level.SEVERE, "A critical error occurred during plugin startup. Disabling ElytraEssentials.", e);
             getServer().getPluginManager().disablePlugin(this);
         }
@@ -117,35 +127,44 @@ public final class ElytraEssentials extends JavaPlugin {
         this.pluginInfoHandler = new PluginInfoHandler(this.getPluginMeta());
         this.configHandler = new ConfigHandler(this.getConfig(), getLogger());
         this.messagesHandler = new MessagesHandler(this.fileHelper.getMessagesConfig());
-        messagesHelper.setPrefix(messagesHandler.getPrefixMessage());
-        messagesHelper.setDebugMode(configHandler.getIsDebugModeEnabled());
+        messagesHelper.setPrefix(this.messagesHandler.getPrefixMessage());
+        messagesHelper.setDebugMode(this.configHandler.getIsDebugModeEnabled());
 
         // Database Initialization
-        this.databaseHandler = new DatabaseHandler(this, configHandler, foliaHelper, messagesHelper, getLogger());
+        this.databaseHandler = new DatabaseHandler(this, this.configHandler, this.foliaHelper, this.messagesHelper,
+                getLogger());
         databaseHandler.initialize();
 
         // Handlers Initialization
-        this.tpsHandler = new TpsHandler( foliaHelper, messagesHelper);
-        this.effectsHandler = new EffectsHandler(this, fileHelper.getShopConfig(), foliaHelper, databaseHandler, messagesHelper, serverVersion, economy, tpsHandler, messagesHandler, getLogger());
-        this.statsHandler = new StatsHandler(getLogger(), databaseHandler, foliaHelper, messagesHelper, effectsHandler);
-        this.achievementsHandler = new AchievementsHandler(this, databaseHandler, statsHandler, foliaHelper, messagesHelper, fileHelper.getAchievementsConfig(), getLogger());
+        this.tpsHandler = new TpsHandler(this.foliaHelper, this.messagesHelper);
+        this.effectsHandler = new EffectsHandler(this, fileHelper.getShopConfig(), this.foliaHelper, this.databaseHandler,
+                this.messagesHelper, this.serverVersion, this.economy, this.tpsHandler, this.messagesHandler, getLogger());
+        this.statsHandler = new StatsHandler(getLogger(), this.databaseHandler, this.foliaHelper, this.messagesHelper,
+                this.effectsHandler);
+        this.achievementsHandler = new AchievementsHandler(this, this.databaseHandler, this.statsHandler, this.foliaHelper,
+                this.messagesHelper, this.fileHelper.getAchievementsConfig(), getLogger());
 
-        this.boostHandler = new BoostHandler(this, this.foliaHelper, this.messagesHelper, this.serverVersion, this.statsHandler, this.configHandler, this.messagesHandler);
-        this.flightHandler = new FlightHandler(getLogger(), this.configHandler, this.effectsHandler, this.boostHandler, this.foliaHelper, this.messagesHelper, this.databaseHandler, this.statsHandler, this.messagesHandler);
+        this.boostHandler = new BoostHandler(this, this.foliaHelper, this.messagesHelper, this.serverVersion,
+                this.statsHandler, this.configHandler, this.messagesHandler);
+        this.flightHandler = new FlightHandler(getLogger(), this.configHandler, this.effectsHandler, this.boostHandler,
+                this.foliaHelper, this.messagesHelper, this.databaseHandler, this.statsHandler, this.messagesHandler);
         this.boostHandler.setFlightHandler(this.flightHandler);
 
-        this.recoveryHandler = new RecoveryHandler(flightHandler, configHandler, foliaHelper);
-        this.combatTagHandler = new CombatTagHandler(this, configHandler, messagesHelper, foliaHelper);
-        this.elytraEquipHandler = new ElytraEquipHandler(configHandler, messagesHelper, foliaHelper);
-        this.armoredElytraHandler = new ArmoredElytraHandler(this, configHandler, foliaHelper, armoredElytraHelper, messagesHelper);
+        this.recoveryHandler = new RecoveryHandler(this.flightHandler, this.configHandler, this.foliaHelper);
+        this.combatTagHandler = new CombatTagHandler(this.configHandler, this.messagesHelper, this.foliaHelper);
+        this.elytraEquipHandler = new ElytraEquipHandler(this.configHandler, this.messagesHelper, this.foliaHelper, this.messagesHandler);
+        this.armoredElytraHandler = new ArmoredElytraHandler(this, this.configHandler, this.foliaHelper, this.armoredElytraHelper,
+                messagesHelper);
 
         this.effectsGuiHandler = new EffectsGuiHandler(this, this.effectsHandler, this.databaseHandler, this.foliaHelper, this.messagesHelper, getLogger());
         this.shopGuiHandler = new ShopGuiHandler(this, this.effectsHandler, this.effectsGuiHandler, getLogger());
         this.effectsGuiHandler.setShopGuiHandler(this.shopGuiHandler);
-        this.forgeGuiHandler = new ForgeGuiHandler(this.configHandler, this.armoredElytraHelper, this.foliaHelper);
-        this.achievementsGuiHandler = new AchievementsGuiHandler(getLogger(), databaseHandler, foliaHelper, messagesHelper, achievementsHandler, statsHandler);
+        this.forgeGuiHandler = new ForgeGuiHandler(this.configHandler, this.armoredElytraHelper, this.foliaHelper,
+                this.messagesHandler, this.messagesHelper);
+        this.achievementsGuiHandler = new AchievementsGuiHandler(getLogger(), this.databaseHandler, this.foliaHelper, this.messagesHelper,
+                this.achievementsHandler, this.statsHandler);
 
-        this.updaterHandler = new UpdaterHandler(getLogger(), foliaHelper, configHandler, pluginInfoHandler);
+        this.updaterHandler = new UpdaterHandler(getLogger(), this.foliaHelper, this.configHandler, this.pluginInfoHandler);
     }
 
     private void setupIntegrations() {
@@ -184,14 +203,14 @@ public final class ElytraEssentials extends JavaPlugin {
         var helpCommand = new HelpCommand(this);
         var reloadCommand = new ReloadCommand(this, this.messagesHelper, this.messagesHandler);
         var flightTimeCommand = new FlightTimeCommand(this.flightHandler, this.configHandler, this.messagesHelper, this.foliaHelper, this.messagesHandler);
-        var shopCommand = new ShopCommand(this.shopGuiHandler, this.messagesHelper);
-        var effectsCommand = new EffectsCommand(getLogger(), this.effectsGuiHandler, this.effectsHandler, this.databaseHandler, this.foliaHelper, this.messagesHelper);
-        var statsCommand = new StatsCommand(this.statsHandler, this.messagesHelper);
-        var topCommand = new TopCommand(this.statsHandler, this.messagesHelper);
-        var forgeCommand = new ForgeCommand(this.forgeGuiHandler, this.configHandler, this.messagesHelper);
+        var shopCommand = new ShopCommand(this.shopGuiHandler, this.messagesHelper, this.messagesHandler);
+        var effectsCommand = new EffectsCommand(getLogger(), this.effectsGuiHandler, this.effectsHandler, this.databaseHandler, this.foliaHelper, this.messagesHelper, this.messagesHandler);
+        var statsCommand = new StatsCommand(this.statsHandler, this.messagesHelper, this.messagesHandler);
+        var topCommand = new TopCommand(this.statsHandler, this.messagesHelper, this.messagesHandler);
+        var forgeCommand = new ForgeCommand(this.forgeGuiHandler, this.configHandler, this.messagesHelper, this.messagesHandler);
         var armorCommand = new ArmorCommand(this, this.messagesHelper, this.economy, this.configHandler, this.messagesHandler);
         var importDbCommand = new ImportDbCommand(this, messagesHandler, this.messagesHelper, this.databaseHandler);
-        var achievementsCommand = new AchievementsCommand(this.achievementsGuiHandler, this.messagesHelper);
+        var achievementsCommand = new AchievementsCommand(this.achievementsGuiHandler, this.messagesHelper, this.messagesHandler);
 
         ElytraEssentialsCommand mainCommand = new ElytraEssentialsCommand(getLogger(), this.messagesHelper);
         mainCommand.registerSubCommand("help", helpCommand);

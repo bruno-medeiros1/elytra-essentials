@@ -67,8 +67,7 @@ public class ElytraEssentialsPlaceholders extends PlaceholderExpansion {
             int flightTimeLeft = flightHandler.getCurrentFlightTime(player.getUniqueId());
 
             return identifier.equalsIgnoreCase("flight_time_formatted")
-                    ? TimeHelper.formatFlightTime(flightTimeLeft)
-                    : String.valueOf(flightTimeLeft);
+                    ? TimeHelper.formatFlightTime(flightTimeLeft) : String.valueOf(flightTimeLeft);
         }
 
         // We get the stats once and use them for all stat-related placeholders

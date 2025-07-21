@@ -1,0 +1,167 @@
+# --------------------------------------------------
+#        ElytraEssentials - Shop Configuration
+# --------------------------------------------------
+#
+# This file controls all the items available in the /ee shop GUI.
+# Each item is identified by a unique key (e.g., FIRE_TRAIL).
+#
+# You can customize the following for each effect:
+#   price: The cost of the effect (requires Vault).
+#   permission: The permission node required to purchase or use the effect.
+#   name: The display name of the item in the shop (supports '&' color codes).
+#   lore: The description text that appears below the item's name.
+
+shop:
+  FIRE_TRAIL:
+    price: 1000.00
+    permission: "elytraessentials.effect.fire"
+    name: "&6Fire Trail"
+    lore:
+      - "&7Leave a fiery trail!"
+  WATER_TRAIL:
+    price: 2000.00
+    permission: "elytraessentials.effect.water"
+    name: "&bWater Trail"
+    lore:
+      - "&7Trails of water follow you!"
+  ARCANE_TRAIL:
+    price: 2500.00
+    permission: "elytraessentials.effect.arcane"
+    name: "&dArcane Trail"
+    lore:
+      - "&7Leave a trail of mystical runes."
+  INKY_VOID:
+    price: 1750.00
+    permission: "elytraessentials.effect.void"
+    name: "&8Inky Void"
+    lore:
+      - "&7Soar with a trail of darkness."
+  HEART_TRAIL:
+    price: 1250.00
+    permission: "elytraessentials.effect.heart"
+    name: "&cHeart Trail"
+    lore:
+      - "&7Spread love wherever you fly!"
+  ICE_SHARDS:
+    price: 1500.00
+    permission: "elytraessentials.effect.ice"
+    name: "&bIce Shards"
+    lore:
+      - "&7Shards of ice behind you!"
+  EMERALD_SPARK:
+    price: 3000.00
+    permission: "elytraessentials.effect.emerald"
+    name: "&aEmerald Spark"
+    lore:
+      - "&7Show off with a glittering green trail."
+  WITCHES_BREW:
+    price: 2200.00
+    permission: "elytraessentials.effect.witch"
+    name: "&5Witches Brew"
+    lore:
+      - "&7A swirling, magical concoction follows you."
+  SOUL_FIRE:
+    price: 1800.00
+    permission: "elytraessentials.effect.soulfire"
+    name: "&3Soul Fire"
+    lore:
+      - "&7A trail of eerie, blue soul fire."
+  MUSICAL_FLIGHT:
+    price: 1300.00
+    permission: "elytraessentials.effect.note"
+    name: "&eMusical Flight"
+    lore:
+      - "&7Leave a trail of musical notes as you fly."
+  CLOUD_SURFER:
+    price: 800.00
+    permission: "elytraessentials.effect.cloud"
+    name: "&fCloud Surfer"
+    lore:
+      - "&7Fly on your own personal cloud."
+  SLIME_TRAIL:
+    price: 900.00
+    permission: "elytraessentials.effect.slime"
+    name: "&2Slime Trail"
+    lore:
+      - "&7Leave a gooey, green trail behind."
+  CRITICAL_AURA:
+    price: 2100.00
+    permission: "elytraessentials.effect.crit"
+    name: "&9Critical Aura"
+    lore:
+      - "&7Fly with the power of a critical hit!"
+  ENDERS_WAKE:
+    price: 2800.00
+    permission: "elytraessentials.effect.portal"
+    name: "&5Ender's Wake"
+    lore:
+      - "&7A swirling vortex of the void follows you."
+  SPORE_BLOOM:
+    price: 1600.00
+    permission: "elytraessentials.effect.spore"
+    name: "&dSpore Bloom"
+    lore:
+      - "&7A trail of beautiful, floating spores."
+  BUBBLE_STREAM:
+    price: 950.00
+    permission: "elytraessentials.effect.bubble"
+    name: "&bBubble Stream"
+    lore:
+      - "&7A stream of popping bubbles."
+  DRAGON_BREATH:
+    price: 2400.00
+    permission: "elytraessentials.effect.dragon"
+    name: "&5Dragon Breath"
+    lore:
+      - "&7The spark of dragon breath."
+  DOLPHINS_GRACE:
+    price: 3200.00
+    permission: "elytraessentials.effect.dolphin"
+    name: "&3Dolphin's Grace"
+    lore:
+      - "&7Swim through the air with a dolphin's help."
+  DAMAGE_FLASH:
+    price: 1650.00
+    permission: "elytraessentials.effect.damage"
+    name: "&cDamage Flash"
+    lore:
+      - "&7A flash of red damage particles."
+  WAXED_WINGS:
+    price: 1400.00
+    permission: "elytraessentials.effect.wax"
+    name: "&eWaxed Wings"
+    lore:
+      - "&7A trail of waxy particles."
+  EXPLOSIVE_TRAIL:
+    price: 1100.00
+    permission: "elytraessentials.effect.explosion"
+    name: "&4Explosive Trail"
+    lore:
+      - "&7A trail of small explosions."
+  SMOKE_SCREEN:
+    price: 1100.00
+    permission: "elytraessentials.effect.smoke"
+    name: "&8Smoke Screen"
+    lore:
+      - "&7Create a screen of thick smoke."
+  TOTEM_BLESSING:
+    price: 3500.00
+    permission: "elytraessentials.effect.totem"
+    name: "&6Totem's Blessing"
+    lore:
+      - "&7Fly with the blessing of immortality!"
+  LAVA_DRIP:
+    price: 1900.00
+    permission: "elytraessentials.effect.lavadrip"
+    name: "&6Lava Drip"
+    lore:
+      - "&7Drips of hot magma follow you."
+
+  # This effect is only available in versions 1.20 above
+  # If you are below you will not see it
+  CHERRY_BLOSSOM:
+    price: 1550.00
+    permission: "elytraessentials.effect.cherry"
+    name: "&dCherry Blossom"
+    lore:
+      - "&7A beautiful trail of cherry petals."

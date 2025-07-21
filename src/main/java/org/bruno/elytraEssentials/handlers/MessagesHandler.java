@@ -20,7 +20,6 @@ public final class MessagesHandler {
     private String elytraEquipDisabled;
     private String elytraEquipDropped;
 
-    private String flightTimeRecovery;
     private String flightTimeExpired;
     private String flightTimeAdded;
     private String flightTimeRemoved;
@@ -85,7 +84,6 @@ public final class MessagesHandler {
         this.elytraEquipDropped = fileConfiguration.getString("elytra-equip-dropped", "&6Your inventory is full! The elytra was dropped on the ground instead.");
 
         // Flight Time Messages
-        this.flightTimeRecovery = fileConfiguration.getString("flight-time-recovery", "&7You have recovered &e{0} &7of flight time!");
         this.flightTimeExpired = fileConfiguration.getString("flight-time-expired", "&cYour elytra flight time has expired...");
         this.flightTimeAdded = fileConfiguration.getString("flight-time-added", "&e{0} &7have been added to your flight time.");
         this.flightTimeRemoved = fileConfiguration.getString("flight-time-removed", "&e{0} &7 have been removed from your flight time.");

@@ -1,6 +1,5 @@
 package org.bruno.elytraEssentials.listeners;
 
-import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.handlers.ConfigHandler;
 import org.bruno.elytraEssentials.handlers.PluginInfoHandler;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;

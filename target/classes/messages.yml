@@ -1,0 +1,81 @@
+# ---------------------------------------------------
+#       ElytraEssentials - Messages Configuration
+# ---------------------------------------------------
+#
+# This file controls all the messages shown to players.
+# You can use standard Minecraft color codes with the '&' symbol.
+# You can also use hex color codes, e.g., '&#FFD700' for a custom gold color.
+# Placeholders like {0}, {1}, etc., will be replaced by the plugin automatically.
+
+# The prefix that appears before most plugin messages.
+prefix: "&#FFD700ElytraEssentials &e» "
+
+# General Messages
+no-permission: "&cYou do not have permission to perform this action."
+player-not-found: "&cPlayer '{0}' could not be found."
+feature-not-enabled: "&cThis feature is not enabled."
+not-enough-xp: "&cYou don't have enough experience levels."
+not-enough-money: "&cYou don't have enough money."
+fall-protection-enabled: "&fFall Protection: &a&lEnabled"
+
+# Reload Command Message
+reload-start: "&eReloading ElytraEssentials... Please wait."
+reload-success: "&aPlugin successfully reloaded! All configuration files are up to date."
+
+# Restriction Messages
+elytra-usage-disabled: "&cElytra flight is currently disabled on this server."
+elytra-usage-world-disabled: "&cYou are not permitted to fly in this world."
+elytra-equip-disabled: "&cEquipping elytra is disabled in this server."
+elytra-equip-dropped: "&6Your inventory is full! The elytra was dropped on the ground instead."
+
+# Flight Time Messages
+flight-time-expired: "&cYour elytra flight time has expired..."
+flight-time-added: "&e{0} &7have been added to your flight time."
+flight-time-removed: "&e{0} &7 have been removed from your flight time."
+flight-time-set: "&7Your flight time has been set to &e{0}&7."
+flight-time-cleared: "&cYour flight time has been cleared."
+flight-time-bypass: "&eYou have unlimited time!"
+flight-time-limit: "&eFlight Time Left: &6{0}" # Used for the boss bar
+
+# Boost Messages
+boost-cooldown: "&7You must wait &e{0}s &7before boosting again."
+
+# Speedometer Messages (Action Bar)
+speedometer-normal: "&eSpeed: {0}{1} &ekm/h"
+speedometer-boost: "&a&l+ &eSpeed: {0}{1} &ekm/h &a&l+"
+speedometer-super-boost: "&c&l++ &eSpeed: {0}{1} &ekm/h &c&l++"
+
+# Stats & Records
+longest-flight-pr: "&6&lNew Record! &fYour new longest flight: &e{0} blocks!"
+
+# Shop & Effects Messages
+purchase-successful: "&aYou have successfully purchased the {0} effect!"
+effect-selected: "&7You have equipped the {0} &7effect."
+effect-deselected: "&7You have cleared the {0} &7effect."
+effect-gui-owned: "&cYou already own this effect!"
+effect-gui-select: "&aLeft Click: Select Effect"
+effect-gui-deselect: "&cRight Click: Clear Effect"
+no-active-effect-to-clear: "&cYou do not have an active effect to clear."
+give-effect-success: "&aYou have successfully given the {0} effect to {1}."
+
+# Forge Messages
+forge-successful: "&aYou have successfully forged an Armored Elytra!"
+revert-successful: "&aYou have successfully reverted your Armored Elytra."
+
+# Armored Elytra Messages
+not-wearing-armored-elytra: "&cYou are not currently wearing an Armored Elytra."
+not-wearing-armored-elytra-repair: "&eYou must be wearing an Armored Elytra to repair it."
+armored-elytra-repair-success: "&aYour Armored Elytra's has been fully repaired!"
+armored-elytra-already-repaired: "&cYour Armored Elytra's is already fully repaired!"
+armored-elytra-broken: "&cYour Armored Elytra's plating has shattered!"
+
+# Emergency Deploy Messages
+emergency-deploy-success: "&eElytra Auto-Deployed!"
+
+# Achievement Messages
+achievement-unlocked: "&eYou have completed the &6{0} &eachievement!"
+
+# Combat Tag Messages
+cannot-glide-combat-tagged: "&cYou cannot glide while in combat!"
+combat-tagged: "&cCombat Tagged! Time Left: &6{0}"
+combat-tagged-expired: "&cYour combat tag has expired."

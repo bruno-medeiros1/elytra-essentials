@@ -156,7 +156,7 @@ public class ArmorCommand implements ISubCommand {
         chestplate.setItemMeta(meta);
 
         player.playSound(player.getLocation(), Sound.ENTITY_IRON_GOLEM_REPAIR, 1.0f, 1.2f);
-        messagesHelper.sendPlayerMessage(player,"&aYour Armored Elytra's has been fully repaired!");
+        messagesHelper.sendPlayerMessage(player,  "&aYour Armored Elytra's has been fully repaired!");
     }
 
     private boolean handleRepairPayment(Player player) {

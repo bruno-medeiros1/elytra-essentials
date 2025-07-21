@@ -1,6 +1,7 @@
 package org.bruno.elytraEssentials.commands;
 
 import org.bruno.elytraEssentials.gui.achievements.AchievementsGuiHandler;
+import org.bruno.elytraEssentials.handlers.MessagesHandler;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
@@ -11,10 +12,12 @@ import org.bukkit.entity.Player;
 public class AchievementsCommand implements ISubCommand {
     private final AchievementsGuiHandler achievementsGuiHandler;
     private final MessagesHelper messagesHelper;
+    private final MessagesHandler messagesHandler;
 
-    public AchievementsCommand(AchievementsGuiHandler achievementsGuiHandler, MessagesHelper messagesHelper) {
+    public AchievementsCommand(AchievementsGuiHandler achievementsGuiHandler, MessagesHelper messagesHelper, MessagesHandler messagesHandler) {
         this.achievementsGuiHandler = achievementsGuiHandler;
         this.messagesHelper = messagesHelper;
+        this.messagesHandler = messagesHandler;
     }
 
     @Override
@@ -24,7 +27,7 @@ public class AchievementsCommand implements ISubCommand {
             return true;
         }
         if (!PermissionsHelper.hasAchievementsPermission(player)) {
-            messagesHelper.sendCommandSenderMessage(sender, "&cYou do not have permission to view achievements.");
+            messagesHelper.sendCommandSenderMessage(sender, messagesHandler.getNoPermissionMessage());
             return true;
         }
 

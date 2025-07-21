@@ -1,9 +1,11 @@
 package org.bruno.elytraEssentials.gui.forge;
 
 import org.bruno.elytraEssentials.handlers.ConfigHandler;
+import org.bruno.elytraEssentials.handlers.MessagesHandler;
 import org.bruno.elytraEssentials.helpers.ArmoredElytraHelper;
 import org.bruno.elytraEssentials.helpers.FoliaHelper;
 import org.bruno.elytraEssentials.helpers.GuiHelper;
+import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.utils.Constants;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -21,14 +23,19 @@ public class ForgeGuiHandler {
     private final ConfigHandler configHandler;
     private final ArmoredElytraHelper armoredElytraHelper;
     private final FoliaHelper foliaHelper;
+    private final MessagesHandler messagesHandler;
+    private final MessagesHelper messagesHelper;
 
     // Use a thread-safe set for Folia compatibility
     private final Set<UUID> processedAction = ConcurrentHashMap.newKeySet();
 
-    public ForgeGuiHandler(ConfigHandler configHandler, ArmoredElytraHelper armoredElytraHelper, FoliaHelper foliaHelper) {
+    public ForgeGuiHandler(ConfigHandler configHandler, ArmoredElytraHelper armoredElytraHelper, FoliaHelper foliaHelper,
+                           MessagesHandler messagesHandler, MessagesHelper messagesHelper) {
         this.configHandler = configHandler;
         this.armoredElytraHelper = armoredElytraHelper;
         this.foliaHelper = foliaHelper;
+        this.messagesHandler = messagesHandler;
+        this.messagesHelper = messagesHelper;
     }
 
     /**
@@ -152,12 +159,16 @@ public class ForgeGuiHandler {
             forge.clear();
             player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_USE, 1.0f, 1.0f);
             player.closeInventory();
-        } else if (armoredElytraHelper.isPreviewItem(revertedElytra) && armoredElytraHelper.isPreviewItem(revertedArmor)) { // Reverting
+            messagesHelper.sendPlayerMessage(player, messagesHandler.getForgeSuccessful());
+        }
+        else if (armoredElytraHelper.isPreviewItem(revertedElytra) && armoredElytraHelper.isPreviewItem(revertedArmor)) // Reverting
+        {
             returnItemToPlayer(player, armoredElytraHelper.createCleanCopy(revertedElytra));
             returnItemToPlayer(player, armoredElytraHelper.createCleanCopy(revertedArmor));
             forge.clear();
             player.playSound(player.getLocation(), Sound.BLOCK_GRINDSTONE_USE, 1.0f, 1.0f);
             player.closeInventory();
+            messagesHelper.sendPlayerMessage(player, messagesHandler.getRevertSuccessful());
         }
     }
 

@@ -4,6 +4,7 @@ import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.handlers.DatabaseHandler;
 import org.bruno.elytraEssentials.handlers.EffectsHandler;
 import org.bruno.elytraEssentials.gui.effects.EffectsGuiHandler;
+import org.bruno.elytraEssentials.handlers.MessagesHandler;
 import org.bruno.elytraEssentials.helpers.FoliaHelper;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
@@ -25,24 +26,29 @@ public class EffectsCommand implements ISubCommand {
     private final DatabaseHandler databaseHandler;
     private final FoliaHelper foliaHelper;
     private final MessagesHelper messagesHelper;
+    private final MessagesHandler messagesHandler;
 
     public EffectsCommand(Logger logger, EffectsGuiHandler guiHandler, EffectsHandler effectsHandler, DatabaseHandler dbHandler, FoliaHelper fHelper,
-                          MessagesHelper msgHelper) {
+                          MessagesHelper messagesHelper, MessagesHandler messagesHandler) {
         this.logger = logger;
         this.effectsGuiHandler = guiHandler;
         this.effectsHandler = effectsHandler;
         this.databaseHandler = dbHandler;
         this.foliaHelper = fHelper;
-        this.messagesHelper = msgHelper;
+        this.messagesHelper = messagesHelper;
+        this.messagesHandler = messagesHandler;
     }
 
     @Override
     public boolean execute(CommandSender sender, String[] args) {
         if (args.length == 0) {
-            if (!(sender instanceof Player player)) { /* ... */ return true; }
+            if (!(sender instanceof Player player)) {
+                messagesHelper.sendCommandSenderMessage(sender,"&cThis command can only be run by a player.");
+                return true;
+            }
 
             if (!PermissionsHelper.hasEffectsPermission(player)) {
-                messagesHelper.sendPlayerMessage(player, "&cYou do not have permission to use effects.");
+                messagesHelper.sendPlayerMessage(player, messagesHandler.getNoPermissionMessage());
                 return true;
             }
 
@@ -77,7 +83,7 @@ public class EffectsCommand implements ISubCommand {
             return;
         }
         if (!PermissionsHelper.hasClearEffectsCommandPermission(player)) {
-            messagesHelper.sendPlayerMessage(player, "&cYou do not have permission to clear effects.");
+            messagesHelper.sendPlayerMessage(player, messagesHandler.getNoPermissionMessage());
             return;
         }
 
@@ -91,7 +97,7 @@ public class EffectsCommand implements ISubCommand {
 
     private void handleGive(CommandSender sender, String[] args) {
         if (!PermissionsHelper.hasGiveEffectPermission(sender)) {
-            messagesHelper.sendCommandSenderMessage(sender, "&cYou do not have permission to give effects.");
+            messagesHelper.sendCommandSenderMessage(sender, messagesHandler.getNoPermissionMessage());
             return;
         }
         if (args.length < 3) {
@@ -147,7 +153,7 @@ public class EffectsCommand implements ISubCommand {
 
     private void handleRemove(CommandSender sender, String[] args) {
         if (!PermissionsHelper.hasRemoveEffectPermission(sender)) {
-            messagesHelper.sendCommandSenderMessage(sender, "&cYou do not have permission to remove effects.");
+            messagesHelper.sendCommandSenderMessage(sender, messagesHandler.getNoPermissionMessage());
             return;
         }
         if (args.length < 3) {
@@ -157,7 +163,7 @@ public class EffectsCommand implements ISubCommand {
 
         OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
         if (!target.hasPlayedBefore() && !target.isOnline()) {
-            messagesHelper.sendCommandSenderMessage(sender,"&cPlayer '" + args[1] + "' not found.");
+            messagesHelper.sendCommandSenderMessage(sender, messagesHandler.getPlayerNotFound().replace("{0}",  args[1]));
             return;
         }
 
@@ -196,7 +202,7 @@ public class EffectsCommand implements ISubCommand {
 
     private void handleList(CommandSender sender, String[] args) {
         if (!PermissionsHelper.hasListEffectsPermission(sender)) {
-            messagesHelper.sendCommandSenderMessage(sender, "&cYou do not have permission to list effects.");
+            messagesHelper.sendCommandSenderMessage(sender, messagesHandler.getNoPermissionMessage());
             return;
         }
         if (args.length < 2) {
@@ -206,7 +212,7 @@ public class EffectsCommand implements ISubCommand {
 
         OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
         if (!target.hasPlayedBefore() && !target.isOnline()) {
-            messagesHelper.sendCommandSenderMessage(sender,"&cPlayer '" + args[1] + "' not found.");
+            messagesHelper.sendCommandSenderMessage(sender,messagesHandler.getPlayerNotFound().replace("{0}",  args[1]));
             return;
         }
 

@@ -13,11 +13,13 @@ public class ElytraEquipHandler {
     private final ConfigHandler configHandler;
     private final MessagesHelper messagesHelper;
     private final FoliaHelper foliaHelper;
+    private final MessagesHandler messagesHandler;
 
-    public ElytraEquipHandler(ConfigHandler configHandler, MessagesHelper messagesHelper, FoliaHelper foliaHelper) {
+    public ElytraEquipHandler(ConfigHandler configHandler, MessagesHelper messagesHelper, FoliaHelper foliaHelper, MessagesHandler messagesHandler) {
         this.configHandler = configHandler;
         this.messagesHelper = messagesHelper;
         this.foliaHelper = foliaHelper;
+        this.messagesHandler = messagesHandler;
     }
 
     /**
@@ -38,14 +40,14 @@ public class ElytraEquipHandler {
 
         ItemStack chestplate = player.getInventory().getChestplate();
         if (chestplate != null && chestplate.getType() == Material.ELYTRA) {
-            messagesHelper.sendPlayerMessage(player, "&cEquipping elytras is disabled on this server.");
+            messagesHelper.sendPlayerMessage(player, messagesHandler.getElytraEquipDisabled());
 
             player.getInventory().setChestplate(null);
             HashMap<Integer, ItemStack> leftovers = player.getInventory().addItem(chestplate);
 
             if (!leftovers.isEmpty()) {
                 player.getWorld().dropItemNaturally(player.getLocation(), chestplate);
-                messagesHelper.sendPlayerMessage(player, "&cYour inventory was full, so the elytra was dropped at your feet.");
+                messagesHelper.sendPlayerMessage(player, messagesHandler.getElytraEquipDropped());
             }
         }
     }

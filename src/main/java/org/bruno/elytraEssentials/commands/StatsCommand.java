@@ -1,5 +1,6 @@
 package org.bruno.elytraEssentials.commands;
 
+import org.bruno.elytraEssentials.handlers.MessagesHandler;
 import org.bruno.elytraEssentials.handlers.StatsHandler;
 import org.bruno.elytraEssentials.helpers.*;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
@@ -14,10 +15,12 @@ import java.util.stream.Collectors;
 public class StatsCommand implements ISubCommand {
     private final StatsHandler statsHandler;
     private final MessagesHelper messagesHelper;
+    private final MessagesHandler messagesHandler;
 
-    public StatsCommand(StatsHandler statsHandler, MessagesHelper messagesHelper) {
+    public StatsCommand(StatsHandler statsHandler, MessagesHelper messagesHelper, MessagesHandler messagesHandler) {
         this.statsHandler = statsHandler;
         this.messagesHelper = messagesHelper;
+        this.messagesHandler = messagesHandler;
     }
 
     @Override
@@ -30,18 +33,18 @@ public class StatsCommand implements ISubCommand {
                 return true;
             }
             if (!PermissionsHelper.hasStatsPermission(player)) {
-                messagesHelper.sendPlayerMessage(player, "&cYou do not have permission to view your own stats.");
+                messagesHelper.sendPlayerMessage(player, messagesHandler.getNoPermissionMessage());
                 return true;
             }
             target = player;
         } else {
             if (!PermissionsHelper.hasStatsOthersPermission(sender)) {
-                messagesHelper.sendCommandSenderMessage(sender, "&cYou do not have permission to view other players' stats.");
+                messagesHelper.sendCommandSenderMessage(sender, messagesHandler.getNoPermissionMessage());
                 return true;
             }
             target = Bukkit.getOfflinePlayer(args[0]);
             if (!target.hasPlayedBefore() && !target.isOnline()) {
-                messagesHelper.sendCommandSenderMessage(sender,"&cPlayer '" + args[0] + "' not found.");
+                messagesHelper.sendCommandSenderMessage(sender, messagesHandler.getPlayerNotFound().replace("{0}",  args[0]));
                 return true;
             }
         }

@@ -2,6 +2,7 @@ package org.bruno.elytraEssentials.commands;
 
 import org.bruno.elytraEssentials.handlers.ConfigHandler;
 import org.bruno.elytraEssentials.gui.forge.ForgeGuiHandler;
+import org.bruno.elytraEssentials.handlers.MessagesHandler;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.interfaces.ISubCommand;
@@ -14,11 +15,13 @@ public class ForgeCommand implements ISubCommand {
     private final ForgeGuiHandler forgeGuiHandler;
     private final ConfigHandler configHandler;
     private final MessagesHelper messagesHelper;
+    private final MessagesHandler messagesHandler;
 
-    public ForgeCommand(ForgeGuiHandler forgeGuiHandler, ConfigHandler configHandler, MessagesHelper messagesHelper) {
+    public ForgeCommand(ForgeGuiHandler forgeGuiHandler, ConfigHandler configHandler, MessagesHelper messagesHelper, MessagesHandler messagesHandler) {
         this.forgeGuiHandler = forgeGuiHandler;
         this.configHandler = configHandler;
         this.messagesHelper = messagesHelper;
+        this.messagesHandler = messagesHandler;
     }
 
     @Override
@@ -26,12 +29,12 @@ public class ForgeCommand implements ISubCommand {
         if (!(sender instanceof Player player)) return true;
 
         if (!configHandler.getIsArmoredElytraEnabled()){
-            messagesHelper.sendPlayerMessage(player, "&cThis feature is currently disabled.");
+            messagesHelper.sendPlayerMessage(player, messagesHandler.getFeatureNotEnabled());
             return true;
         }
 
         if (!PermissionsHelper.hasForgePermission(player)){
-            messagesHelper.sendPlayerMessage(player, "&cYou do not have permission to use the forge.");
+            messagesHelper.sendPlayerMessage(player, messagesHandler.getNoPermissionMessage());
             return true;
         }
 

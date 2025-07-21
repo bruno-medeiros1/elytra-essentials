@@ -5,6 +5,7 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.chat.hover.content.Text;
+import org.bruno.elytraEssentials.handlers.MessagesHandler;
 import org.bruno.elytraEssentials.handlers.StatsHandler;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
@@ -17,20 +18,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-// TODO: Migrate this logic to the StatsHandler class
 public class TopCommand implements ISubCommand {
     private final StatsHandler statsHandler;
     private final MessagesHelper messagesHelper;
+    private final MessagesHandler messagesHandler;
 
-    public TopCommand(StatsHandler statsHandler, MessagesHelper messagesHelper) {
+    public TopCommand(StatsHandler statsHandler, MessagesHelper messagesHelper, MessagesHandler messagesHandler) {
         this.statsHandler = statsHandler;
         this.messagesHelper = messagesHelper;
+        this.messagesHandler = messagesHandler;
     }
 
     @Override
     public boolean execute(CommandSender sender, String[] args) {
         if (sender instanceof Player player && !PermissionsHelper.hasTopPermission(player)) {
-            messagesHelper.sendPlayerMessage(player, "&cYou do not have permission to view the leaderboards.");
+            messagesHelper.sendPlayerMessage(player, messagesHandler.getNoPermissionMessage());
             return true;
         }
 

@@ -34,7 +34,7 @@ public class CombatTagHandler {
     private final Map<UUID, BossBar> combatTagBossBars = new ConcurrentHashMap<>();
     private CancellableTask countdownTask;
 
-    public CombatTagHandler(ElytraEssentials plugin, ConfigHandler configHandler, MessagesHelper messagesHelper, FoliaHelper foliaHelper) {
+    public CombatTagHandler(ConfigHandler configHandler, MessagesHelper messagesHelper, FoliaHelper foliaHelper) {
         this.configHandler = configHandler;
         this.messagesHelper = messagesHelper;
         this.foliaHelper = foliaHelper;
