@@ -103,24 +103,6 @@ public class StatsHandler {
         }
     }
 
-    // This is now fully asynchronous to prevent lag on shutdown/reload
-    public void saveAllOnlinePlayers() {
-       messagesHelper.sendDebugMessage("Saving stats asynchronously for all online players...");
-        foliaHelper.runAsyncTask(() -> {
-            for (Player player : Bukkit.getOnlinePlayers()) {
-                PlayerStats stats = statsCache.get(player.getUniqueId());
-                if (stats != null) {
-                    try {
-                        databaseHandler.savePlayerStats(stats);
-                    } catch (SQLException e) {
-                        logger.log(Level.SEVERE, "Failed to save stats for " + player.getName() + " during async save-all.", e);
-                    }
-                }
-            }
-           messagesHelper.sendDebugMessage("Finished async saving of all player stats.");
-        });
-    }
-
     public PlayerStats getStats(Player player) {
         return statsCache.getOrDefault(player.getUniqueId(), new PlayerStats(player.getUniqueId()));
     }
@@ -167,8 +149,25 @@ public class StatsHandler {
             this.task = null;
         }
 
-        // Save any remaining data on shutdown
+        // Synchronous Saving
         saveAllOnlinePlayers();
+    }
+
+    public void saveAllOnlinePlayers() {
+        messagesHelper.sendDebugMessage("Saving stats for all online players...");
+
+        // This loop runs directly on the main thread.
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            PlayerStats stats = statsCache.get(player.getUniqueId());
+            if (stats != null) {
+                try {
+                    databaseHandler.savePlayerStats(stats);
+                } catch (SQLException e) {
+                    logger.log(Level.SEVERE, "Failed to save stats for " + player.getName() + " during shutdown.", e);
+                }
+            }
+        }
+        messagesHelper.sendDebugMessage("Finished saving all player stats.");
     }
 
     public void displayTopStats(CommandSender sender, String category) {
