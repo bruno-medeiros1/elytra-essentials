@@ -48,7 +48,10 @@ public class ElytraFlightListener implements Listener
 
         statsHandler.setGliding(player, event.isGliding());
         if (event.isGliding()) {
-            flightHandler.handleGlideStart(player);
+            boolean shouldCancel = flightHandler.onGlideStartAttempt(player);
+            if (shouldCancel) {
+                event.setCancelled(true);
+            }
         } else {
             flightHandler.handleGlideEnd(player);
         }

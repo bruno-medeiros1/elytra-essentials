@@ -21,6 +21,7 @@ import org.bukkit.util.Vector;
 
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,12 +42,12 @@ public class FlightHandler {
     private final StatsHandler statsHandler;
     private final MessagesHandler messagesHandler;
 
-    private final Map<UUID, Integer> flightTimeData = new HashMap<>();
-    private final Map<UUID, BossBar> flightBossBars = new HashMap<>();
-    private final Map<UUID, Double> currentFlightDistances = new HashMap<>();
-    private final Set<UUID> noFallDamagePlayers = new HashSet<>();
-    private final Map<UUID, Integer> initialFlightTime = new HashMap<>();
-    private final Map<UUID, Long> deployCooldowns = new HashMap<>();
+    private final Map<UUID, Integer> flightTimeData = new ConcurrentHashMap<>();
+    private final Map<UUID, BossBar> flightBossBars = new ConcurrentHashMap<>();
+    private final Map<UUID, Double> currentFlightDistances = new ConcurrentHashMap<>();
+    private final Set<UUID> noFallDamagePlayers = ConcurrentHashMap.newKeySet(); // Thread-safe set
+    private final Map<UUID, Integer> initialFlightTime = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> deployCooldowns = new ConcurrentHashMap<>();
 
     private CancellableTask globalFlightTask;
     private final Map<UUID, CancellableTask> activeFlightTasks = new HashMap<>();
@@ -131,21 +132,37 @@ public class FlightHandler {
         return flightTimeData.getOrDefault(playerId, 0);
     }
 
-    public void handleGlideStart(Player player) {
+    /**
+     * Checks if a player is allowed to start gliding.
+     * @param player The player attempting to glide.
+     * @return {@code true} if the glide event should be cancelled, {@code false} otherwise.
+     */
+    public boolean onGlideStartAttempt(Player player) {
+        if (configHandler.getIsTimeLimitEnabled() && !PermissionsHelper.playerBypassTimeLimit(player)) {
+            int currentFlightTime = flightTimeData.getOrDefault(player.getUniqueId(), 0);
+            if (currentFlightTime <= 0) {
+                messagesHelper.sendActionBarMessage(player, messagesHandler.getElytraFlightTimeExpired());
+                return true;
+            }
+        }
+
+        // Check for world/global restrictions
         if (configHandler.getIsGlobalFlightDisabled() || (configHandler.getDisabledWorlds() != null && configHandler.getDisabledWorlds().contains(player.getWorld().getName()))) {
             String msg = configHandler.getIsGlobalFlightDisabled() ? messagesHandler.getElytraUsageDisabledMessage() : messagesHandler.getElytraUsageWorldDisabledMessage();
             messagesHelper.sendPlayerMessage(player, msg);
-            player.setGliding(false);
-            return;
+            return true;
         }
 
+        // If all checks pass, proceed with normal glide setup
         currentFlightDistances.put(player.getUniqueId(), 0.0);
-
-        if (configHandler.getIsTimeLimitEnabled())
+        if (configHandler.getIsTimeLimitEnabled()) {
             createBossBar(player);
+            if (foliaHelper.isFolia()) {
+                startTrackingPlayer(player);
+            }
+        }
 
-        if (foliaHelper.isFolia() && configHandler.getIsTimeLimitEnabled())
-            startTrackingPlayer(player);
+        return false;
     }
 
     public void handleGlideEnd(Player player) {
@@ -341,9 +358,13 @@ public class FlightHandler {
             noFallDamagePlayers.add(player.getUniqueId());
             foliaHelper.runTaskLater(player, () -> noFallDamagePlayers.remove(player.getUniqueId()), 40L);
             messagesHelper.sendActionBarMessage(player, messagesHandler.getElytraFlightTimeExpired());
-            if (!foliaHelper.isFolia()) removeBossBar(player);
+
+            if (!foliaHelper.isFolia())
+                removeBossBar(player);
+
             return;
         }
+
         flightTimeData.put(player.getUniqueId(), currentFlightTime - 1);
         updateBossBar(player, currentFlightTime);
     }

@@ -256,9 +256,9 @@ public class BoostHandler {
                     {
                         player.setGliding(true);
                         statsHandler.setGliding(player, true);
-                        flightHandler.handleGlideStart(player);
+                        flightHandler.onGlideStartAttempt(player);
                     }
-                }, 2L);
+                }, 0L);
 
                 player.getWorld().playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.2f, 1.0f);
 

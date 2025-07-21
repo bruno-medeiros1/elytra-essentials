@@ -83,7 +83,8 @@ public final class FoliaHelper {
      */
     public CancellableTask runTaskLater(Entity entity, Runnable task, long delay) {
         if (isFolia) {
-            return new CancellableTask(entity.getScheduler().runDelayed(plugin, scheduledTask -> task.run(), null, delay));
+            long foliaDelay = Math.max(1, delay);
+            return new CancellableTask(entity.getScheduler().runDelayed(plugin, scheduledTask -> task.run(), null, foliaDelay));
         } else {
             return new CancellableTask(plugin.getServer().getScheduler().runTaskLater(plugin, task, delay));
         }
