@@ -125,6 +125,13 @@ public class ForgeGuiHandler {
     }
 
     /**
+     * Cleans up player data when they quit the server.
+     */
+    public void clearPlayerData(Player player) {
+        processedAction.remove(player.getUniqueId());
+    }
+
+    /**
      * Schedules a result update using the Folia-safe helper.
      */
     private void scheduleResultUpdate(Inventory forge, Player player) {

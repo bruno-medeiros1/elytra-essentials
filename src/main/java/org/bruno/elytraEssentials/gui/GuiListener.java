@@ -12,6 +12,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 public class GuiListener implements Listener {
 
@@ -45,5 +46,14 @@ public class GuiListener implements Listener {
         else if (event.getInventory().getHolder() instanceof AchievementsHolder) {
             achievementsGuiHandler.handleClick(event);
         }
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        Player player = event.getPlayer();
+
+        shopGuiHandler.clearPlayerData(player);
+        forgeGuiHandler.clearPlayerData(player);
+        achievementsGuiHandler.clearPlayerData(player);
     }
 }

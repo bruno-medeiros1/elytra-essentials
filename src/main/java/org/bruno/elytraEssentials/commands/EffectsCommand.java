@@ -51,6 +51,7 @@ public class EffectsCommand implements ISubCommand {
                 return true;
             }
 
+            player.playSound(player.getLocation(), Sound.UI_LOOM_SELECT_PATTERN, 0.8f, 0.8f);
             effectsGuiHandler.open(player);
             return true;
         }

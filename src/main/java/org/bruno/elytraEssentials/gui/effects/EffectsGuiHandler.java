@@ -56,7 +56,6 @@ public class EffectsGuiHandler {
     public void open(Player player) {
         foliaHelper.runAsyncTask(() -> {
             try {
-
                 // Get the player's owned effects from the database or permissions
                 List<String> playerEffects;
                 if (PermissionsHelper.hasAllEffectsPermission(player)){
@@ -68,6 +67,10 @@ public class EffectsGuiHandler {
                     if (playerEffects.size() < effectsHandler.getEffectsRegistry().size()){
                         // check if the player has permission for a specific effect and add it to the list
                         for (ElytraEffect effect : effectsHandler.getEffectsRegistry().values()) {
+                            if (effect == null) {
+                                continue;
+                            }
+
                             if (player.hasPermission(effect.getPermission()) && !playerEffects.contains(effect.getKey())) {
                                 playerEffects.add(effect.getKey());
                             }
@@ -165,7 +168,6 @@ public class EffectsGuiHandler {
                 ElytraEffect playerSpecificEffect = new ElytraEffect(templateEffect);
                 playerSpecificEffect.setIsActive(effectKey.equals(activeEffectKey));
                 ItemStack item = effectsHandler.createOwnedItem(effectKey, playerSpecificEffect);
-                plugin.getLogger().info("item created for effect: " + effectKey);
                 inv.setItem(i, item);
             }
         }

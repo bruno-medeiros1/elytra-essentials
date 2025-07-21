@@ -1,6 +1,5 @@
 package org.bruno.elytraEssentials.gui.achievements;
 
-import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.handlers.AchievementsHandler;
 import org.bruno.elytraEssentials.handlers.DatabaseHandler;
 import org.bruno.elytraEssentials.handlers.StatsHandler;
@@ -55,7 +54,6 @@ public class AchievementsGuiHandler {
         StatType.SAVES
     );
 
-
     public AchievementsGuiHandler(Logger logger, DatabaseHandler databaseHandler, FoliaHelper foliaHelper, MessagesHelper messagesHelper,
                                   AchievementsHandler achievementsHandler, StatsHandler statsHandler) {
         this.logger = logger;
@@ -90,6 +88,13 @@ public class AchievementsGuiHandler {
                         messagesHelper.sendPlayerMessage(player,"&cCould not load your achievement data."));
             }
         });
+    }
+
+    /**
+     * Cleans up player data when they quit the server.
+     */
+    public void clearPlayerData(Player player) {
+        playerStates.remove(player.getUniqueId());
     }
 
     /**
