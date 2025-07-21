@@ -1,7 +1,6 @@
 package org.bruno.elytraEssentials.handlers;
 
 import org.bruno.elytraEssentials.helpers.FoliaHelper;
-import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.utils.CancellableTask;
 import org.bukkit.Bukkit;

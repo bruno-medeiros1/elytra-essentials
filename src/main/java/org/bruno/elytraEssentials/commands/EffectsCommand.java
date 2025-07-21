@@ -1,6 +1,5 @@
 package org.bruno.elytraEssentials.commands;
 
-import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.handlers.DatabaseHandler;
 import org.bruno.elytraEssentials.handlers.EffectsHandler;
 import org.bruno.elytraEssentials.gui.effects.EffectsGuiHandler;
@@ -89,7 +88,7 @@ public class EffectsCommand implements ISubCommand {
 
         String activeEffectKey = effectsHandler.getActiveEffect(player.getUniqueId());
         if (activeEffectKey == null) {
-            messagesHelper.sendPlayerMessage(player,"&cYou do not have an active effect to clear.");
+            messagesHelper.sendPlayerMessage(player, messagesHandler.getNoActiveEffectToClear());
             return;
         }
         effectsHandler.handleDeselection(player, activeEffectKey);
@@ -107,7 +106,7 @@ public class EffectsCommand implements ISubCommand {
 
         OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
         if (!target.hasPlayedBefore() && !target.isOnline()) {
-            messagesHelper.sendCommandSenderMessage(sender,"&cPlayer '" + args[1] + "' not found.");
+            messagesHelper.sendCommandSenderMessage(sender, messagesHandler.getPlayerNotFound().replace("{0}", args[1]));
             return;
         }
 
@@ -138,7 +137,7 @@ public class EffectsCommand implements ISubCommand {
 
                 // Return to the main thread to send the message
                 foliaHelper.runTaskOnMainThread(() ->
-                        messagesHelper.sendCommandSenderMessage(sender,"&aSuccessfully gave the " + effectKey + " effect to " + target.getName() + ".")
+                        messagesHelper.sendCommandSenderMessage(sender, messagesHandler.getGiveEffectSuccess().replace("{0}", effectKey).replace("{1}", target.getName()))
                 );
 
             } catch (SQLException e) {

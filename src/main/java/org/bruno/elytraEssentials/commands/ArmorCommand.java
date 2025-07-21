@@ -37,7 +37,8 @@ public class ArmorCommand implements ISubCommand {
     private final ConfigHandler configHandler;
     private final MessagesHandler messagesHandler;
 
-    public ArmorCommand(ElytraEssentials plugin, MessagesHelper messagesHelper, Economy economy, ConfigHandler configHandler, MessagesHandler messagesHandler) {
+    public ArmorCommand(ElytraEssentials plugin, MessagesHelper messagesHelper, Economy economy, ConfigHandler configHandler,
+                        MessagesHandler messagesHandler) {
         this.plugin = plugin;
 
         this.messagesHelper = messagesHelper;
@@ -73,7 +74,7 @@ public class ArmorCommand implements ISubCommand {
 
         ItemStack chestplate = player.getInventory().getChestplate();
         if (!isArmoredElytra(chestplate)) {
-            messagesHelper.sendPlayerMessage(player, "&cYou are not currently wearing an Armored Elytra.");
+            messagesHelper.sendPlayerMessage(player, messagesHandler.getNotWearingArmoredElytra());
             return;
         }
 
@@ -111,7 +112,7 @@ public class ArmorCommand implements ISubCommand {
 
         ItemStack chestplate = player.getInventory().getChestplate();
         if (!isArmoredElytra(chestplate)) {
-            messagesHelper.sendPlayerMessage(player,"&eYou must be wearing an Armored Elytra to repair it.");
+            messagesHelper.sendPlayerMessage(player,messagesHandler.getNotWearingArmoredElytraRepair());
             return;
         }
 
@@ -131,7 +132,7 @@ public class ArmorCommand implements ISubCommand {
         }
 
         if (currentDurability >= maxDurability && elytraFull) {
-            messagesHelper.sendPlayerMessage(player,"&aYour Armored Elytra's is already fully repaired!");
+            messagesHelper.sendPlayerMessage(player, messagesHandler.getArmoredElytraAlreadyRepaired());
             return;
         }
 
@@ -156,7 +157,7 @@ public class ArmorCommand implements ISubCommand {
         chestplate.setItemMeta(meta);
 
         player.playSound(player.getLocation(), Sound.ENTITY_IRON_GOLEM_REPAIR, 1.0f, 1.2f);
-        messagesHelper.sendPlayerMessage(player,  "&aYour Armored Elytra's has been fully repaired!");
+        messagesHelper.sendPlayerMessage(player,  messagesHandler.getArmoredElytraRepairSuccess());
     }
 
     private boolean handleRepairPayment(Player player) {

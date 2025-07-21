@@ -1,6 +1,5 @@
 package org.bruno.elytraEssentials.handlers;
 
-import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.helpers.ColorHelper;
 import org.bruno.elytraEssentials.helpers.FoliaHelper;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
@@ -24,13 +23,13 @@ import java.util.logging.Logger;
 
 public class AchievementsHandler {
 
-    private final ElytraEssentials plugin;
     private final DatabaseHandler databaseHandler;
     private final StatsHandler statsHandler;
     private final FoliaHelper foliaHelper;
     private final MessagesHelper messagesHelper;
     private final FileConfiguration fileConfiguration;
     private final Logger logger;
+    private final MessagesHandler messagesHandler;
 
     private final Map<String, Achievement> achievements = new HashMap<>();
     private CancellableTask checkTask;
@@ -39,15 +38,15 @@ public class AchievementsHandler {
                               Material displayItem,
                               String message, List<String> commands, List<String> rewards, boolean broadcast) {}
 
-    public AchievementsHandler(ElytraEssentials plugin, DatabaseHandler databaseHandler, StatsHandler statsHandler, FoliaHelper foliaHelper, MessagesHelper messagesHelper,
-                               FileConfiguration fileConfiguration, Logger logger) {
-        this.plugin = plugin;
+    public AchievementsHandler(DatabaseHandler databaseHandler, StatsHandler statsHandler, FoliaHelper foliaHelper, MessagesHelper messagesHelper,
+                               FileConfiguration fileConfiguration, Logger logger, MessagesHandler messagesHandler) {
         this.databaseHandler = databaseHandler;
         this.statsHandler = statsHandler;
         this.foliaHelper = foliaHelper;
         this.messagesHelper = messagesHelper;
         this.fileConfiguration = fileConfiguration;
         this.logger = logger;
+        this.messagesHandler = messagesHandler;
 
         loadAchievements();
     }
@@ -175,7 +174,7 @@ public class AchievementsHandler {
                 if (achievement.broadcast()) {
                     Bukkit.broadcastMessage(formattedMessage);
                 } else {
-                    messagesHelper.sendPlayerMessage(player, "&eYou have completed the &6" + achievement.name + " &eachievement!");
+                    messagesHelper.sendPlayerMessage(player, messagesHandler.getAchievementUnlockedMessage().replace("{0}", achievement.name));
                 }
             }
         });

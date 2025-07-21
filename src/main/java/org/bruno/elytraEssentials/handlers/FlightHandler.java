@@ -399,7 +399,7 @@ public class FlightHandler {
             if (damageable.getDamage() >= elytra.getType().getMaxDurability() - 1) {
                 if (noFallDamagePlayers.add(player.getUniqueId())) {
                     player.playSound(player.getLocation(), Sound.ITEM_TOTEM_USE, 0.8f, 0.8f);
-                    messagesHelper.sendActionBarMessage(player, "§fFall Protection: §a§lEnabled");
+                    messagesHelper.sendActionBarMessage(player, messagesHandler.getFallProtectionEnabled());
                 }
             }
         }
@@ -510,8 +510,7 @@ public class FlightHandler {
         bossBar.setProgress(progress);
 
         // Update the title with the formatted time
-        String title = messagesHandler.getElytraTimeLimitMessage()
-                .replace("{0}", TimeHelper.formatFlightTime(currentFlightTime));
+        String title = messagesHandler.getElytraTimeLimitMessage().replace("{0}", TimeHelper.formatFlightTime(currentFlightTime));
         bossBar.setTitle(ColorHelper.parse(title));
 
         // Update the color based on the remaining time percentage

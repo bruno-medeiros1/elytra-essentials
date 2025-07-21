@@ -26,6 +26,7 @@ public class ArmoredElytraHandler {
     private final FoliaHelper foliaHelper;
     private final ArmoredElytraHelper armoredElytraHelper;
     private final MessagesHelper messagesHelper;
+    private final MessagesHandler messagesHandler;
 
     private final NamespacedKey armoredElytraKey;
     private final NamespacedKey toughnessElytraKey;
@@ -33,12 +34,14 @@ public class ArmoredElytraHandler {
     private final NamespacedKey durabilityKey;
     private final NamespacedKey maxDurabilityKey;
 
-    public ArmoredElytraHandler(ElytraEssentials plugin, ConfigHandler configHandler, FoliaHelper foliaHelper, ArmoredElytraHelper armoredElytraHelper, MessagesHelper messagesHelper) {
+    public ArmoredElytraHandler(ElytraEssentials plugin, ConfigHandler configHandler, FoliaHelper foliaHelper, ArmoredElytraHelper armoredElytraHelper,
+                                MessagesHelper messagesHelper, MessagesHandler messagesHandler) {
         this.plugin = plugin;
         this.configHandler = configHandler;
         this.foliaHelper = foliaHelper;
         this.armoredElytraHelper = armoredElytraHelper;
         this.messagesHelper = messagesHelper;
+        this.messagesHandler = messagesHandler;
 
         this.armoredElytraKey = new NamespacedKey(plugin, Constants.NBT.ARMORED_ELYTRA_TAG);
         this.toughnessElytraKey = new NamespacedKey(plugin, Constants.NBT.ARMOR_DURABILITY_TAG);
@@ -89,7 +92,7 @@ public class ArmoredElytraHandler {
             container.set(new NamespacedKey(plugin, Constants.NBT.PLATING_SHATTERED_TAG), PersistentDataType.INTEGER, shatteredCount + 1);
 
             player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
-            messagesHelper.sendPlayerMessage(player, "&cYour Armored Elytra's plating has shattered!");
+            messagesHelper.sendPlayerMessage(player, messagesHandler.getArmoredElytraBroken());
         }
     }
 

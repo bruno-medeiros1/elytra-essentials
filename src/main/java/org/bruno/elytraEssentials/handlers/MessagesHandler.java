@@ -11,6 +11,7 @@ public final class MessagesHandler {
     private String featureNotEnabled;
     private String notEnoughXP;
     private String notEnoughMoney;
+    private String fallProtectionEnabled;
 
     private String reloadStart;
     private String reloadSuccess;
@@ -43,11 +44,25 @@ public final class MessagesHandler {
     private String effectGuiPurchase;
     private String effectGuiSelect;
     private String effectGuiDeselect;
+    private String noActiveEffectToClear;
+    public String giveEffectSuccess;
+
+    private String notWearingArmoredElytra;
+    private String notWearingArmoredElytraRepair;
+    private String armoredElytraRepairSuccess;
+    private String armoredElytraAlreadyRepaired;
+    private String armoredElytraBroken;
 
     private String forgeSuccessful;
     private String revertSuccessful;
 
     private String emergencyDeploySuccess;
+
+    private String achievementUnlocked;
+
+    private String cannotGlideCombatTagged;
+    private String combatTagged;
+    private String combatTaggedExpired;
 
     public MessagesHandler(FileConfiguration fileConfiguration) {
         this.fileConfiguration = fileConfiguration;
@@ -72,6 +87,7 @@ public final class MessagesHandler {
         this.featureNotEnabled = fileConfiguration.getString("feature-not-enabled", "&cThis feature is not enabled.");
         this.notEnoughXP = fileConfiguration.getString("not-enough-xp", "&cYou do not have enough experience levels.");
         this.notEnoughMoney = fileConfiguration.getString("not-enough-money", "&cYou don't have enough money.");
+        this.fallProtectionEnabled = fileConfiguration.getString("fall-protection-enabled", "&fFall Protection: &a&lEnabled");
 
         // Reload Command Messages
         this.reloadStart = fileConfiguration.getString("reload-start", "&eReloading ElytraEssentials... Please wait.");
@@ -111,13 +127,30 @@ public final class MessagesHandler {
         this.effectGuiPurchase = fileConfiguration.getString("effect-gui-purchase", "§aLeft Click: Select Effect");
         this.effectGuiSelect = fileConfiguration.getString("effect-gui-select", "&aLeft Click: Select Effect");
         this.effectGuiDeselect = fileConfiguration.getString("effect-gui-deselect", "&cRight Click: Clear Effect");
+        this.noActiveEffectToClear = fileConfiguration.getString("no-active-effect-to-clear", "&cYou do not have an active effect to clear.");
+        this.giveEffectSuccess = fileConfiguration.getString("give-effect-success", "&aYou have successfully given the {0} effect to {1}.");
 
-        //  Forge
+        // Forge
         this.forgeSuccessful = fileConfiguration.getString("forge-successful", "&aYou have successfully forged an Armored Elytra!");
         this.revertSuccessful = fileConfiguration.getString("revert-successful", "&aYou have successfully reverted your Armored Elytra.");
 
+        // Armored Elytra
+        this.notWearingArmoredElytra = fileConfiguration.getString("not-wearing-armored-elytra", "&cYou are not currently wearing an Armored Elytra.");
+        this.notWearingArmoredElytraRepair = fileConfiguration.getString("not-wearing-armored-elytra-repair", "&eYou must be wearing an Armored Elytra to repair it.");
+        this.armoredElytraRepairSuccess = fileConfiguration.getString("armored-elytra-repair-success", "&aYour Armored Elytra's has been fully repaired!");
+        this.armoredElytraAlreadyRepaired = fileConfiguration.getString("armored-elytra-already-repaired", "&cYour Armored Elytra's is already fully repaired!");
+        this.armoredElytraBroken = fileConfiguration.getString("armored-elytra-broken", "&cYour Armored Elytra's plating has shattered!");
+
         //  Emergency Deploy
         this.emergencyDeploySuccess = fileConfiguration.getString("emergency-deploy-success", "&eElytra Auto-Deployed!");
+
+        // Achievements
+        this.achievementUnlocked = fileConfiguration.getString("achievement-unlocked", "&eYou have completed the &6{0} &eachievement!");
+
+        // Combat Tag
+        this.cannotGlideCombatTagged = fileConfiguration.getString("cannot-glide-combat-tagged", "&cYou cannot glide while in combat!");
+        this.combatTagged = fileConfiguration.getString("combat-tagged", "&cCombat Tagged! Time Left: &6{0}");
+        this.combatTaggedExpired = fileConfiguration.getString("combat-tagged-expired", "&cYour combat tag has expired.");
     }
 
     // General Messages
@@ -127,6 +160,7 @@ public final class MessagesHandler {
     public String getFeatureNotEnabled() { return this.featureNotEnabled; }
     public String getNotEnoughXP() { return this.notEnoughXP; }
     public String getNotEnoughMoney() { return notEnoughMoney; }
+    public String getFallProtectionEnabled() { return this.fallProtectionEnabled; }
 
     // Reload Command Messages
     public String getReloadStartMessage() { return this.reloadStart; }
@@ -166,12 +200,28 @@ public final class MessagesHandler {
     public String getEffectGuiDeselect() { return effectGuiDeselect; }
     public String getEffectGuiSelect() { return effectGuiSelect; }
     public String getPurchaseSuccessful() { return purchaseSuccessful; }
+    public String getNoActiveEffectToClear() { return noActiveEffectToClear; }
+    public String getGiveEffectSuccess() { return giveEffectSuccess; }
 
     //  Forge
     public String getForgeSuccessful() { return forgeSuccessful; }
     public String getRevertSuccessful() { return revertSuccessful; }
 
+    // Armored Elytra
+    public String getNotWearingArmoredElytra() { return notWearingArmoredElytra; }
+    public String getNotWearingArmoredElytraRepair() { return notWearingArmoredElytraRepair; }
+    public String getArmoredElytraRepairSuccess() { return armoredElytraRepairSuccess; }
+    public String getArmoredElytraAlreadyRepaired() { return armoredElytraAlreadyRepaired; }
+    public String getArmoredElytraBroken() { return armoredElytraBroken; }
+
     //  Emergency Deploy
     public String getEmergencyDeploySuccess() { return emergencyDeploySuccess; }
 
+    //  Achievements
+    public String getAchievementUnlockedMessage() { return achievementUnlocked; }
+
+    // Combat Tag
+    public String getCannotGlideCombatTagged() { return cannotGlideCombatTagged; }
+    public String getCombatTagged() { return combatTagged; }
+    public String getCombatTaggedExpired() { return combatTaggedExpired; }
 }

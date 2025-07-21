@@ -87,11 +87,11 @@ public final class ElytraEssentials extends JavaPlugin {
             startAllPluginTasks();
             setupIntegrations();
 
-            messagesHelper.sendConsoleMessage("###########################################");
-            messagesHelper.sendConsoleMessage("&ePlugin by: &6&lCodingMaestro");
-            messagesHelper.sendConsoleMessage("&eVersion: &6&l" + pluginInfoHandler.getCurrentVersion());
-            messagesHelper.sendConsoleMessage("&ahas been enabled successfully");
-            messagesHelper.sendConsoleMessage("###########################################");
+            messagesHelper.sendConsoleMessage("&e###########################################");
+            messagesHelper.sendConsoleMessage("&6Plugin by: &6&lCodingMaestro");
+            messagesHelper.sendConsoleMessage("&6Version: &6&l" + pluginInfoHandler.getCurrentVersion());
+            messagesHelper.sendConsoleMessage("&6Has been enabled successfully!");
+            messagesHelper.sendConsoleMessage("&e###########################################");
             messagesHelper.sendDebugMessage("&eDeveloper debug mode enabled!");
             messagesHelper.sendDebugMessage("&eThis WILL fill the console");
             messagesHelper.sendDebugMessage("&ewith additional ElytraEssentials information!");
@@ -141,8 +141,8 @@ public final class ElytraEssentials extends JavaPlugin {
                 this.messagesHelper, this.serverVersion, this.economy, this.tpsHandler, this.messagesHandler, getLogger());
         this.statsHandler = new StatsHandler(getLogger(), this.databaseHandler, this.foliaHelper, this.messagesHelper,
                 this.effectsHandler);
-        this.achievementsHandler = new AchievementsHandler(this, this.databaseHandler, this.statsHandler, this.foliaHelper,
-                this.messagesHelper, this.fileHelper.getAchievementsConfig(), getLogger());
+        this.achievementsHandler = new AchievementsHandler(this.databaseHandler, this.statsHandler, this.foliaHelper,
+                this.messagesHelper, this.fileHelper.getAchievementsConfig(), getLogger(), this.messagesHandler);
 
         this.boostHandler = new BoostHandler(this, this.foliaHelper, this.messagesHelper, this.serverVersion,
                 this.statsHandler, this.configHandler, this.messagesHandler);
@@ -151,10 +151,10 @@ public final class ElytraEssentials extends JavaPlugin {
         this.boostHandler.setFlightHandler(this.flightHandler);
 
         this.recoveryHandler = new RecoveryHandler(this.flightHandler, this.configHandler, this.foliaHelper);
-        this.combatTagHandler = new CombatTagHandler(this.configHandler, this.messagesHelper, this.foliaHelper);
+        this.combatTagHandler = new CombatTagHandler(this.configHandler, this.messagesHelper, this.foliaHelper, this.messagesHandler);
         this.elytraEquipHandler = new ElytraEquipHandler(this.configHandler, this.messagesHelper, this.foliaHelper, this.messagesHandler);
         this.armoredElytraHandler = new ArmoredElytraHandler(this, this.configHandler, this.foliaHelper, this.armoredElytraHelper,
-                messagesHelper);
+                this.messagesHelper, this.messagesHandler);
 
         this.effectsGuiHandler = new EffectsGuiHandler(this, this.effectsHandler, this.databaseHandler, this.foliaHelper, this.messagesHelper, getLogger());
         this.shopGuiHandler = new ShopGuiHandler(this, this.effectsHandler, this.effectsGuiHandler, getLogger());

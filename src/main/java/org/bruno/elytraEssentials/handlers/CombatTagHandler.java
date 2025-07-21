@@ -1,10 +1,7 @@
 package org.bruno.elytraEssentials.handlers;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
-import org.bruno.elytraEssentials.helpers.FoliaHelper;
-import org.bruno.elytraEssentials.helpers.MessagesHelper;
-import org.bruno.elytraEssentials.helpers.PermissionsHelper;
-import org.bruno.elytraEssentials.helpers.TimeHelper;
+import org.bruno.elytraEssentials.helpers.*;
 import org.bruno.elytraEssentials.utils.CancellableTask;
 import org.bukkit.Bukkit;
 import org.bukkit.boss.BarColor;
@@ -28,16 +25,18 @@ public class CombatTagHandler {
     private final ConfigHandler configHandler;
     private final MessagesHelper messagesHelper;
     private final FoliaHelper foliaHelper;
+    private final MessagesHandler messagesHandler;
 
     private final Map<UUID, Long> combatTaggedPlayers = new ConcurrentHashMap<>();
     private final Set<UUID> fallDamageProtection = ConcurrentHashMap.newKeySet();
     private final Map<UUID, BossBar> combatTagBossBars = new ConcurrentHashMap<>();
     private CancellableTask countdownTask;
 
-    public CombatTagHandler(ConfigHandler configHandler, MessagesHelper messagesHelper, FoliaHelper foliaHelper) {
+    public CombatTagHandler(ConfigHandler configHandler, MessagesHelper messagesHelper, FoliaHelper foliaHelper, MessagesHandler messagesHandler) {
         this.configHandler = configHandler;
         this.messagesHelper = messagesHelper;
         this.foliaHelper = foliaHelper;
+        this.messagesHandler = messagesHandler;
     }
 
     public void start() {
@@ -69,14 +68,14 @@ public class CombatTagHandler {
                     int remainingSeconds = (int) Math.ceil(remainingMs / 1000.0);
 
                     bossBar.setProgress(Math.max(0, Math.min(1, progress)));
-                    bossBar.setTitle("§cCombat Tagged. Time Left: §6" + TimeHelper.formatFlightTime(remainingSeconds));
+                    bossBar.setTitle(ColorHelper.parse(messagesHandler.getCombatTagged().replace("{0}", TimeHelper.formatFlightTime(remainingSeconds))));
                 } else {
                     // Tag has expired, clean everything up
                     bossBar.removeAll();
                     combatTagBossBars.remove(playerId);
                     iterator.remove();
 
-                    messagesHelper.sendActionBarMessage(player, "§aYou can use your elytra again!");
+                    messagesHelper.sendActionBarMessage(player, messagesHandler.getCombatTaggedExpired());
                 }
             }
         }, 20L, 20L); // Run every second
@@ -129,7 +128,7 @@ public class CombatTagHandler {
 
         if (event.isGliding() && isCombatTagged(player)) {
             event.setCancelled(true);
-            messagesHelper.sendActionBarMessage(player, "§cYou cannot glide while in combat!");
+            messagesHelper.sendActionBarMessage(player, messagesHandler.getCannotGlideCombatTagged());
         }
     }
 

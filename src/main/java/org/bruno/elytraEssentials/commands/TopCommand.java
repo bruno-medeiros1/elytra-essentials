@@ -42,7 +42,7 @@ public class TopCommand implements ISubCommand {
         }
 
         if (args.length > 1){
-            messagesHelper.sendCommandSenderMessage(sender,"&cUsage: /ee top <distance|time|longest>");
+            messagesHelper.sendCommandSenderMessage(sender,"&cUsage: /ee top <distance, time, longest>");
             return true;
         }
 
