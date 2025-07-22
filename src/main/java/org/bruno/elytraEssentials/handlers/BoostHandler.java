@@ -258,7 +258,7 @@ public class BoostHandler {
                         statsHandler.setGliding(player, true);
                         flightHandler.onGlideStartAttempt(player);
                     }
-                }, 0L);
+                }, 2L); //  we need this delay to ensure the player is airborne before setting gliding
 
                 player.getWorld().playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.2f, 1.0f);
 
