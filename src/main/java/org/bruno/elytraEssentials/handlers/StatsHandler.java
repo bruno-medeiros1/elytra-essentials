@@ -241,6 +241,40 @@ public class StatsHandler {
         });
     }
 
+    /**
+     * Completely resets a player's statistics to zero in the database and live cache.
+     * This is an asynchronous-safe method.
+     *
+     * @param target The player whose stats to reset.
+     * @param sender The CommandSender to notify upon completion.
+     */
+    public void resetPlayerStats(OfflinePlayer target, CommandSender sender) {
+        // Run the database operation on a background thread
+        foliaHelper.runAsyncTask(() -> {
+            try {
+                databaseHandler.resetPlayerStats(target.getUniqueId());
+
+                // Switch back to the main thread for cache and messaging
+                foliaHelper.runTaskOnMainThread(() -> {
+                    // If the player is online, we must also clear their live cached data
+                    if (target.isOnline()) {
+                        Player onlinePlayer = target.getPlayer();
+                        if (onlinePlayer != null) {
+                            // Replace their cached stats with a fresh, empty object
+                            statsCache.put(target.getUniqueId(), new PlayerStats(target.getUniqueId()));
+                            messagesHelper.sendPlayerMessage(onlinePlayer, "&cYour ElytraEssentials stats have been reset by an administrator.");
+                        }
+                    }
+                    messagesHelper.sendCommandSenderMessage(sender, "&aSuccessfully reset all stats for " + target.getName() + ".");
+                });
+            } catch (SQLException e) {
+                logger.log(Level.SEVERE, "Failed to reset stats for " + target.getName(), e);
+                foliaHelper.runTaskOnMainThread(() ->
+                        messagesHelper.sendCommandSenderMessage(sender, "&cAn error occurred while resetting stats."));
+            }
+        });
+    }
+
     private void glidingTimeTracker() {
         for (UUID uuid : glidingPlayers) {
             PlayerStats stats = statsCache.get(uuid);

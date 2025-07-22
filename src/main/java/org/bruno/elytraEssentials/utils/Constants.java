@@ -91,6 +91,7 @@ public final class Constants {
         public static final String CMD_EFFECTS_LIST = "elytraessentials.effects.list";
         public static final String CMD_STATS = "elytraessentials.command.stats";
         public static final String CMD_STATS_OTHERS = "elytraessentials.command.stats.others";
+        public static final String CMD_STATS_RESET = "elytraessentials.command.stats.reset";
         public static final String CMD_TOP = "elytraessentials.command.top";
         public static final String CMD_FORGE = "elytraessentials.command.forge";
         public static final String CMD_ARMOR = "elytraessentials.command.armor";

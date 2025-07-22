@@ -57,6 +57,9 @@ permissions:
           elytraessentials.command.stats.others:
             default: op
             description: "Allows viewing another player's statistics."
+          elytraessentials.command.stats.reset:
+            default: op
+            description: "Allows resetting another player's statistics."
           elytraessentials.command.top:
             default: true
             description: "Allows viewing leaderboards."

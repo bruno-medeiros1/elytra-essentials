@@ -149,6 +149,12 @@ public final class PermissionsHelper {
                 sender.hasPermission(Constants.Permissions.CMD_ACHIEVEMENTS);
     }
 
+    public static boolean hasStatsResetPermission(CommandSender sender) {
+        return sender.hasPermission(Constants.Permissions.ALL) ||
+                sender.hasPermission(Constants.Permissions.ALL_COMMANDS) ||
+                sender.hasPermission(Constants.Permissions.CMD_STATS_RESET);
+    }
+
     //</editor-fold>
 
     //<editor-fold desc="FEATURE PERMISSIONS (Player-Specific)">
