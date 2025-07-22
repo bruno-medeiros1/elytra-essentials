@@ -93,13 +93,11 @@ public class StatsHandler {
         glidingPlayers.remove(player.getUniqueId());
 
         if (stats != null) {
-            foliaHelper.runAsyncTask(() -> {
-                try {
-                    databaseHandler.savePlayerStats(stats);
-                } catch (SQLException e) {
-                    logger.log(Level.SEVERE, "Could not save stats for player " + player.getName(), e);
-                }
-            });
+            try {
+                databaseHandler.savePlayerStats(stats);
+            } catch (SQLException e) {
+                logger.log(Level.SEVERE, "Could not save stats for player " + player.getName(), e);
+            }
         }
     }
 
