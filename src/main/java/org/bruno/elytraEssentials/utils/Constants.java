@@ -190,11 +190,6 @@ public final class Constants {
             public static final String PLAYER_STATS = "player_stats";
             public static final String PLAYER_ACHIEVEMENTS = "player_achievements";
         }
-
-        public static final class Backups {
-            public static final int MAX_BACKUPS = 24; // The maximum number of backup files to keep
-            public static final long BACKUP_INTERVAL_TICKS = 20L * 60 * 60; // 1 hour
-        }
     }
 
     public static final class NBT {

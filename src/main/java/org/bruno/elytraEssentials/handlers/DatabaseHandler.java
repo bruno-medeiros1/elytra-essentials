@@ -3,6 +3,7 @@ package org.bruno.elytraEssentials.handlers;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.helpers.FoliaHelper;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
+import org.bruno.elytraEssentials.helpers.TimeHelper;
 import org.bruno.elytraEssentials.utils.CancellableTask;
 import org.bruno.elytraEssentials.utils.Constants;
 import org.bruno.elytraEssentials.utils.PlayerStats;
@@ -114,10 +115,11 @@ public class DatabaseHandler {
     public void start() {
         if (storageType != StorageType.SQLITE) return;
 
-        // TODO: Add a config option to enable/disable automatic backups
+        if (!configHandler.getIsAutoBackupEnabled()) return;
+
         if (this.backupTask != null) return;
 
-        long interval = Constants.Database.Backups.BACKUP_INTERVAL_TICKS;
+        long interval = TimeHelper.minutesToTicks(configHandler.getAutoBackupInterval());
 
         logger.info("Starting automatic database backup task...");
 
@@ -252,7 +254,7 @@ public class DatabaseHandler {
         }
 
         File[] backupFiles = backupFolder.listFiles((dir, name) -> name.endsWith(".db"));
-        if (backupFiles != null && backupFiles.length >= Constants.Database.Backups.MAX_BACKUPS) {
+        if (backupFiles != null && backupFiles.length >= configHandler.getAutoBackupMaxBackups()) {
             Arrays.sort(backupFiles, Comparator.comparingLong(File::lastModified));
             File oldestFile = backupFiles[0];
             if (oldestFile.delete()) {

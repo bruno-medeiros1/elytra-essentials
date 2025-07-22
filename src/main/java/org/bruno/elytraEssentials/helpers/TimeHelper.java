@@ -27,4 +27,14 @@ public final class TimeHelper {
             return String.format("%dh %dm %ds", hours, minutes, seconds);
         }
     }
+
+    /**
+     * Converts a duration in minutes to Minecraft ticks.
+     *
+     * @param minutes The number of minutes to convert.
+     * @return The equivalent duration in server ticks.
+     */
+    public static long minutesToTicks(int minutes) {
+        return (long) minutes * 60 * 20;
+    }
 }

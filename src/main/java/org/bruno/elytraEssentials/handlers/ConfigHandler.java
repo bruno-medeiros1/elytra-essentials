@@ -36,6 +36,9 @@ public class ConfigHandler {
 
     //  Database section
     private String storageType;
+    private boolean isAutoBackupEnabled;
+    private int autoBackupInterval;
+    private int autoBackupMaxBackups;
     private String host;
     private int port;
     private String database;
@@ -109,6 +112,10 @@ public class ConfigHandler {
         this.recoveryInterval = this.fileConfiguration.getInt("flight.time-limit.recovery.interval", 60);
 
         this.storageType = this.fileConfiguration.getString("storage.type", "SQLITE");
+        this.isAutoBackupEnabled = this.fileConfiguration.getBoolean("storage.auto-backup.enabled", true);
+        this.autoBackupInterval = this.fileConfiguration.getInt("storage.auto-backup.interval", 60);
+        this.autoBackupMaxBackups = this.fileConfiguration.getInt("storage.auto-backup.max-backups", 24);
+
         this.host = this.fileConfiguration.getString("storage.mysql.host", "localhost");
         this.port = this.fileConfiguration.getInt("storage.mysql.port", 3306);
         this.database = this.fileConfiguration.getString("storage.mysql.database", "elytraessentials");
@@ -173,12 +180,15 @@ public class ConfigHandler {
     public final int getRecoveryAmount() { return this.recoveryAmount; }
     public final int getRecoveryInterval() { return this.recoveryInterval; }
 
-    public String getStorageType() { return this.storageType; }
-    public String getHost() { return this.host; }
-    public int getPort() { return this.port; }
-    public String getDatabase() { return this.database; }
-    public String getUsername() { return this.username; }
-    public String getPassword() { return this.password; }
+    public final String getStorageType() { return this.storageType; }
+    public final boolean getIsAutoBackupEnabled() { return this.isAutoBackupEnabled; }
+    public final int getAutoBackupInterval() { return this.autoBackupInterval; }
+    public final int getAutoBackupMaxBackups() { return this.autoBackupMaxBackups; }
+    public final String getHost() { return this.host; }
+    public final int getPort() { return this.port; }
+    public final String getDatabase() { return this.database; }
+    public final String getUsername() { return this.username; }
+    public final String getPassword() { return this.password; }
 
     public final boolean getIsBoostEnabled() { return this.isBoostEnabled; }
     public final String getBoostItem() { return this.boostItem; }

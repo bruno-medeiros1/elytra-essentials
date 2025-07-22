@@ -56,6 +56,16 @@ storage:
   # Options: SQLITE (default), MYSQL
   type: SQLITE
 
+  auto-backup:
+    # Set to true to enable automatic backups of the database.
+    enabled: true # [Default: true]
+
+    # The interval (in minutes) at which to perform backups.
+    interval: 60 # [Default: 60 minutes]
+
+    # The maximum number of backup files to keep.
+    max-backups: 24 # [Default: 24 backups]
+
   # --- MySQL Settings ---
   # These are ONLY used if 'type' is set to MYSQL.
   mysql:
