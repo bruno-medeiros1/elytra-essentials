@@ -37,12 +37,12 @@ jobs:
       # Rename the JAR file to include a suffix for the legacy build
       - name: Rename Legacy Artifact
         if: matrix.profile == 'legacy'
-        run: mv target/ElytraEssentials-*.jar target/ElytraEssentials-${{ github.ref_name }}-legacy-1.18-1.20.4.jar
+        run: mv target/ElytraEssentials-*.jar target/ElytraEssentials-${{ github.ref_name }}-legacy.jar
 
       # Rename the modern artifact for consistency
       - name: Rename Modern Artifact
         if: matrix.profile == 'modern'
-        run: mv target/ElytraEssentials-*.jar target/ElytraEssentials-${{ github.ref_name }}-modern-1.21+.jar
+        run: mv target/ElytraEssentials-*.jar target/ElytraEssentials-${{ github.ref_name }}-modern.jar
 
       # Upload the built JAR as an artifact so the next job can find it
       - name: Upload Artifact
