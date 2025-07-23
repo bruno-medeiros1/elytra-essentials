@@ -263,8 +263,11 @@ public class BoostHandler {
                 player.getWorld().playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.2f, 1.0f);
 
                 if (serverVersion.ordinal() == ServerVersion.V_1_21.ordinal() ) {
-                    player.getWorld().spawnParticle(Particle.EXPLOSION, player.getLocation(), 1);
-                    player.getWorld().spawnParticle(Particle.FIREWORK, player.getLocation(), 30, 0.5, 0.5, 0.5, 0.1);
+                    Particle particle = Particle.valueOf("EXPLOSION");
+                    player.getWorld().spawnParticle(particle, player.getLocation(), 1);
+
+                    Particle particle2 = Particle.valueOf("FIREWORK");
+                    player.getWorld().spawnParticle(particle2, player.getLocation(), 30, 0.5, 0.5, 0.5, 0.1);
                 }
                 else {
                     // For versions before 1.20 and below, use the old explosion particle

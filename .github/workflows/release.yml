@@ -1,0 +1,81 @@
+name: Create Plugin Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    # --- THIS IS THE NEW PART ---
+    # Use a matrix strategy to run the job for each profile
+    strategy:
+      matrix:
+        profile: [ 'modern', 'legacy' ]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get Commit Message
+        id: get_commit_message
+        run: echo "commit_message=$(git log -1 --pretty=%s)" >> $GITHUB_OUTPUT
+
+      # Set a different Java version based on the profile
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.profile == 'legacy' && '17' || '21' }}
+          distribution: 'temurin'
+          cache: 'maven'
+
+      # Build with Maven, activating the profile for the legacy build
+      - name: Build with Maven
+        run: mvn -B package --file pom.xml ${{ matrix.profile == 'legacy' && '-Pjava17-legacy' || '' }}
+      
+      # Rename the JAR file to include a suffix for the legacy build
+      - name: Rename Legacy Artifact
+        if: matrix.profile == 'legacy'
+        run: mv target/ElytraEssentials-*.jar target/ElytraEssentials-${{ github.ref_name }}-legacy-1.18-1.20.4.jar
+
+      # Rename the modern artifact for consistency
+      - name: Rename Modern Artifact
+        if: matrix.profile == 'modern'
+        run: mv target/ElytraEssentials-*.jar target/ElytraEssentials-${{ github.ref_name }}-modern-1.21+.jar
+
+      # Upload the built JAR as an artifact so the next job can find it
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-jar-${{ matrix.profile }}
+          path: target/ElytraEssentials-*.jar
+
+  # --- NEW JOB TO CREATE THE RELEASE ---
+  create-release:
+    runs-on: ubuntu-latest
+
+    # Grant this job the permission to write to the repository's contents,
+    permissions:
+      contents: write
+
+    environment:
+      name: production
+      url: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}
+
+    # This job depends on the build-and-release job finishing for both profiles
+    needs: build-and-release
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          # Upload all JAR files from the artifacts directory
+          files: artifacts/*/*.jar
+          prerelease: ${{ contains(github.ref_name, 'BETA') }}
+          generate_release_notes: true

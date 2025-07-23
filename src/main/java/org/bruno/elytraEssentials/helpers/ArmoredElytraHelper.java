@@ -239,7 +239,8 @@ public class ArmoredElytraHelper {
 
         if (attribute == null) {
             //  Fallback for versions that do not have the 'generic.armor' attribute (1.21.3+)
-            AttributeInstance attributeInstance = player.getAttribute(Attribute.ARMOR);
+            Attribute armorAttribute = Attribute.valueOf("ARMOR");
+            AttributeInstance attributeInstance = player.getAttribute(armorAttribute);
             if (attributeInstance == null) {
                 logger.warning("Player does not have 'armor' attribute instance. Report this to the plugin author!");
                 return null;
@@ -254,7 +255,8 @@ public class ArmoredElytraHelper {
         Attribute attribute = Registry.ATTRIBUTE.get(NamespacedKey.minecraft("generic.armor_toughness"));
 
         if (attribute == null) {
-            AttributeInstance attributeInstance = player.getAttribute(Attribute.ARMOR_TOUGHNESS);
+            Attribute armorToughnessAttribute = Attribute.valueOf("ARMOR_TOUGHNESS");
+            AttributeInstance attributeInstance = player.getAttribute(armorToughnessAttribute);
             if (attributeInstance == null) {
                 logger.warning("Player does not have 'armor_toughness' attribute instance. Report this to the plugin author!");
                 return null;
