@@ -66,6 +66,24 @@ jobs:
     # This job depends on the build-and-release job finishing for both profiles
     needs: build-and-release
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # This step generates the full description and saves it to a file.
+      - name: Generate Release Body
+        run: |
+          echo "### Supported Versions" >> release_body.md
+          echo "\`ElytraEssentials-${{ github.ref_name }}-modern.jar\`: For Minecraft 1.21+ (JAVA 21)" >> release_body.md
+          echo "\`ElytraEssentials-${{ github.ref_name }}-legacy.jar\`: For Minecraft 1.18.x - 1.20.4 (JAVA 17)" >> release_body.md
+          echo "" >> release_body.md
+          echo "---" >> release_body.md
+          echo "" >> release_body.md
+          echo "### Changelog" >> release_body.md
+          PREVIOUS_TAG=$(git tag --sort=-v:refname | sed -n '2p')
+          git log $PREVIOUS_TAG..${{ github.ref_name }} --pretty=format:'* %s' >> release_body.md
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
@@ -76,6 +94,6 @@ jobs:
         with:
           name: ${{ github.ref_name }}
           # Upload all JAR files from the artifacts directory
+          body_path: release_body.md
           files: artifacts/*/*.jar
           prerelease: ${{ contains(github.ref_name, 'BETA') }}
-          generate_release_notes: true
