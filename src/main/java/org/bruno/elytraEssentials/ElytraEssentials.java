@@ -97,14 +97,14 @@ public final class ElytraEssentials extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        sendOnDisableMessages();
+
         shutdownAllPluginTasks();
         if (databaseHandler != null) {
             databaseHandler.disconnect();
         }
         unregisterPlaceholders();
         HandlerList.unregisterAll(this);
-
-        sendOnDisableMessages();
     }
 
     public void startAllPluginTasks() {
@@ -151,7 +151,12 @@ public final class ElytraEssentials extends JavaPlugin {
         this.messagesHelper = new MessagesHelper(this.serverVersion);
         this.armoredElytraHelper = new ArmoredElytraHelper(this, getLogger());
 
-        this.pluginInfoHandler = new PluginInfoHandler(this.getPluginMeta());
+        try {
+            this.pluginInfoHandler = new PluginInfoHandler(this.getPluginMeta());
+        } catch (NoSuchMethodError e) {
+            this.pluginInfoHandler = new PluginInfoHandler(this.getDescription());
+        }
+
         this.configHandler = new ConfigHandler(this.getConfig(), getLogger());
         this.messagesHandler = new MessagesHandler(this.fileHelper.getMessagesConfig());
         messagesHelper.setPrefix(this.messagesHandler.getPrefixMessage());

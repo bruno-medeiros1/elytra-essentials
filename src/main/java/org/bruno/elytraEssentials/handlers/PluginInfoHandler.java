@@ -2,14 +2,23 @@ package org.bruno.elytraEssentials.handlers;
 
 import io.papermc.paper.plugin.configuration.PluginMeta;
 import org.bruno.elytraEssentials.helpers.VersionHelper;
+import org.bukkit.plugin.PluginDescriptionFile;
 
 public class PluginInfoHandler {
     private final String currentVersion;
     private String latestVersion;
     private boolean isUpdateAvailable;
 
+    // Modern constructor (for Paper 1.19+)
     public PluginInfoHandler(PluginMeta pluginMeta) {
         this.currentVersion = pluginMeta.getVersion();
+        this.latestVersion = this.currentVersion;
+        this.isUpdateAvailable = false;
+    }
+
+    // Legacy constructor (for Spigot and Paper < 1.19)
+    public PluginInfoHandler(PluginDescriptionFile descriptionFile) {
+        this.currentVersion = descriptionFile.getVersion();
         this.latestVersion = this.currentVersion;
         this.isUpdateAvailable = false;
     }
