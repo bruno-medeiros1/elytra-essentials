@@ -74,6 +74,7 @@ public class ConfigHandler {
     private double tandemFlightTimeCostMultiplier;
     private boolean tandemFallDamageProtection;
     private int tandemMountCountdown;
+    private boolean isLaunchAnimationEnabled;
 
     public ConfigHandler(FileConfiguration fileConfiguration, Logger logger) {
         this.fileConfiguration = fileConfiguration;
@@ -156,6 +157,7 @@ public class ConfigHandler {
         this.tandemFlightTimeCostMultiplier = this.fileConfiguration.getDouble("flight.tandem.flight-time-cost-multiplier", 2.0);
         this.tandemFallDamageProtection = this.fileConfiguration.getBoolean("flight.tandem.fall-damage-protection", true);
         this.tandemMountCountdown = this.fileConfiguration.getInt("flight.tandem.mount-countdown", 3);
+        this.isLaunchAnimationEnabled = this.fileConfiguration.getBoolean("flight.tandem.enable-launch-animation", true);
     }
 
     /**
@@ -232,4 +234,5 @@ public class ConfigHandler {
     public final double getTandemFlightTimeCostMultiplier() { return this.tandemFlightTimeCostMultiplier; }
     public final boolean getTandemFallDamageProtection() { return this.tandemFallDamageProtection; }
     public final int getTandemMountCountdown() { return this.tandemMountCountdown; }
+    public final boolean getIsLaunchAnimationEnabled() { return this.isLaunchAnimationEnabled; }
 }

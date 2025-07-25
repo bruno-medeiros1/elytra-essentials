@@ -8,16 +8,22 @@ import org.bruno.elytraEssentials.utils.CancellableTask;
 import org.bruno.elytraEssentials.utils.PlayerStats;
 import org.bruno.elytraEssentials.utils.ServerVersion;
 import org.bukkit.*;
+import org.bukkit.block.Block;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
+import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -42,6 +48,8 @@ public class BoostHandler {
     private final Map<UUID, Long> boostMessageExpirations = new ConcurrentHashMap<>();
     private final Map<UUID, CancellableTask> chargingTasks = new ConcurrentHashMap<>();
     private final Map<UUID, BossBar> chargeBossBars = new ConcurrentHashMap<>();
+
+    private final Random random = new Random();
 
     public BoostHandler(ElytraEssentials plugin, FoliaHelper foliaHelper, MessagesHelper messagesHelper, ServerVersion serverVersion, StatsHandler statsHandler,
                         ConfigHandler configHandler, MessagesHandler messagesHandler) {
@@ -251,6 +259,8 @@ public class BoostHandler {
                 double jumpStrength = configHandler.getJumpStrength();
                 player.setVelocity(player.getVelocity().add(new Vector(0, jumpStrength, 0)));
 
+                playLaunchAnimation(player);
+
                 // Use Folia-safe delayed task
                 foliaHelper.runTaskLater(player, () -> {
                     if (player.isOnline() && !player.isOnGround())
@@ -388,6 +398,60 @@ public class BoostHandler {
 
             // Spawn the particle. Use DustTransition for the cool color-changing effect.
             player.getWorld().spawnParticle(Particle.DUST_COLOR_TRANSITION, particleLocation, 1, 0, 0, 0, 0, dustOptions, true);
+        }
+    }
+
+    /**
+     * Creates a visual effect where the blocks under the player jump up and fall back down.
+     * This is triggered at the moment of a charged jump launch.
+     * @param player The player who is launching.
+     */
+    private void playLaunchAnimation(Player player) {
+        if (!configHandler.getIsLaunchAnimationEnabled()) return;
+
+        Location center = player.getLocation();
+        int radius = 1; // Creates a 3x3 area
+        List<Block> blocksToAnimate = new ArrayList<>();
+
+        // Find all solid blocks in a 3x3 area under the player
+        for (int x = -radius; x <= radius; x++) {
+            for (int z = -radius; z <= radius; z++) {
+                Block block = center.clone().subtract(0, 1, 0).add(x, 0, z).getBlock();
+                if (block.getType() != Material.AIR && block.getType().isSolid()) {
+                    blocksToAnimate.add(block);
+                }
+            }
+        }
+
+        // Animate each block
+        for (Block block : blocksToAnimate) {
+            final Location loc = block.getLocation();
+            final BlockData blockData = block.getBlockData();
+
+            // Spawn a temporary FallingBlock entity that looks like the original block
+            FallingBlock fallingBlock = loc.getWorld().spawnFallingBlock(loc.clone().add(0.5, 0.1, 0.5), blockData);
+            fallingBlock.setDropItem(false);
+            fallingBlock.setHurtEntities(false);
+            fallingBlock.setCancelDrop(true);
+
+            // Give each block an outward "explosion" velocity ---
+            Vector direction = loc.clone().add(0.5, 0, 0.5).toVector().subtract(center.toVector()).normalize();
+            double explosionStrength = 0.15;
+            double upwardPop = 0.3 + (0.4 - 0.3) * random.nextDouble(); // Random value between 0.3 and 0.4
+
+            Vector velocity = direction.multiply(explosionStrength).setY(upwardPop);
+            fallingBlock.setVelocity(velocity);
+
+            // Temporarily remove the original block
+            block.setType(Material.AIR);
+
+            // Schedule the block to be restored after the animation is over
+            foliaHelper.runTaskLater(player, () -> {
+                // Check if the block is still air before placing it back to avoid replacing player-placed blocks
+                if (loc.getBlock().getType() == Material.AIR) {
+                    loc.getBlock().setBlockData(blockData, false); // false to prevent physics updates
+                }
+            }, 10L); // Restore after 0.5 second
         }
     }
 }

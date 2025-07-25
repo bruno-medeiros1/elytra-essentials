@@ -140,6 +140,9 @@ flight:
       # The strength of the upward launch. 1.5 is a strong vertical boost.
       jump-strength: 1.5
 
+      # Set to true to enable a visual animation where blocks jump up when a player launches.
+      enable-launch-animation: true # [Default: true]
+
   combat-tag:
     # Set to true to disable a player's elytra for a short time after they take damage while flying.
     enabled: true # [Default: true]
