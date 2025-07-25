@@ -60,10 +60,17 @@ public class BoostHandler {
     }
 
     public void handleInteract(Player player, boolean isGliding, boolean isSneaking, boolean isOnGround) {
+        // First, check if the player is holding the correct boost item.
+        ItemStack itemInHand = player.getInventory().getItemInMainHand();
+        Material boostMaterial = Material.valueOf(configHandler.getBoostItem());
+        if (itemInHand.getType() != boostMaterial) {
+            return;
+        }
+
         if (isGliding) {
             handleInAirBoost(player);
         } else if (isSneaking && isOnGround) {
-            handleChargedJump(player);
+            handleChargedJump(player, boostMaterial);
         }
     }
 
@@ -167,9 +174,10 @@ public class BoostHandler {
         }
     }
 
-    private void handleChargedJump(Player player) {
+    private void handleChargedJump(Player player, Material boostMaterial) {
         if (!configHandler.getIsBoostEnabled() || !configHandler.getIsChargedJumpEnabled()) return;
-        if (configHandler.getIsTimeLimitEnabled()){
+
+        if (configHandler.getIsTimeLimitEnabled() && !PermissionsHelper.playerBypassTimeLimit(player)) {
             var currentTime = flightHandler.getCurrentFlightTime(player.getUniqueId());
             if (currentTime == 0){
                 messagesHelper.sendActionBarMessage(player, messagesHandler.getElytraFlightTimeExpired());
@@ -186,13 +194,6 @@ public class BoostHandler {
 
         //  Permission Check
         if (!PermissionsHelper.hasChargedJumpPermission(player)) {
-            return;
-        }
-
-        //  Item Check
-        ItemStack itemInHand = player.getInventory().getItemInMainHand();
-        Material configuredMaterial = Material.valueOf(configHandler.getBoostItem());
-        if (itemInHand.getType() != configuredMaterial) {
             return;
         }
 
@@ -217,7 +218,7 @@ public class BoostHandler {
 
         CancellableTask task = foliaHelper.runTaskTimerForEntity(player, () -> {
             ItemStack currentItem = player.getInventory().getItemInMainHand();
-            if (!player.isOnline() || !player.isSneaking() || !player.isOnGround() || currentItem.getType() != configuredMaterial) {
+            if (!player.isOnline() || !player.isSneaking() || !player.isOnGround() || currentItem.getType() != boostMaterial) {
                 cancelCharge(player);
                 return;
             }
