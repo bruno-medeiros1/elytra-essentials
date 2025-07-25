@@ -12,7 +12,10 @@ import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.command.CommandSender;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -294,6 +297,46 @@ public class FlightHandler {
                     messagesHelper.sendCommandSenderMessage(sender, "&aSet " + Bukkit.getOfflinePlayer(playerId).getName() + "'s flight time to " + TimeHelper.formatFlightTime(finalAmount)));
         } catch (SQLException e) {
             handleSqlException(sender, "set flight time", playerId, e);
+        }
+    }
+
+    /**
+     * Handles the PlayerInteractEvent to check for and disable vanilla flight mechanics
+     * like firework boosting and Riptide launching if they are disabled in the config.
+     *
+     * @param event The PlayerInteractEvent triggered by the player.
+     */
+    public void handleVanillaMechanics(PlayerInteractEvent event) {
+        if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+        ItemStack itemInHand = event.getItem();
+
+        if (itemInHand == null) return;
+
+        // Block Firework Boosting
+        if (configHandler.getIsFireworkBoostingDisabled() && player.isGliding() && itemInHand.getType() == Material.FIREWORK_ROCKET) {
+            event.setCancelled(true);
+            messagesHelper.sendPlayerMessage(player, messagesHandler.getFireworkBoostDisabled());
+        }
+
+        // Block Riptide Launching
+        if (configHandler.getIsRiptideLaunchDisabled() && itemInHand.getType() == Material.TRIDENT) {
+            if (itemInHand.getEnchantmentLevel(Enchantment.RIPTIDE) > 0) {
+                ItemStack chestplate = player.getInventory().getChestplate();
+
+                // Only block Riptide if the player is wearing an elytra,
+                // as this indicates an intent to fly. This allows normal ground-based Riptide use.
+                if (chestplate != null && chestplate.getType() == Material.ELYTRA) {
+                    // Riptide only works in water or rain.
+                    if (player.isInWaterOrRain()) {
+                        event.setCancelled(true);
+                        messagesHelper.sendPlayerMessage(player, messagesHandler.getRiptideLaunchDisabled());
+                    }
+                }
+            }
         }
     }
 

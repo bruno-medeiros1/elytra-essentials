@@ -19,6 +19,8 @@ public class ConfigHandler {
     private boolean isElytraBreakProtectionEnabled;
     private boolean isKineticEnergyProtectionEnabled;
     private boolean isEmergencyDeployEnabled;
+    private boolean isFireworkBoostingDisabled;
+    private boolean isRiptideLaunchDisabled;
 
     // Flight section
     private boolean isGlobalFlightDisabled;
@@ -80,6 +82,8 @@ public class ConfigHandler {
         this.isElytraBreakProtectionEnabled = this.fileConfiguration.getBoolean("general.elytra-break-protection", false);
         this.isKineticEnergyProtectionEnabled = this.fileConfiguration.getBoolean("general.kinetic-energy-protection", false);
         this.isEmergencyDeployEnabled = this.fileConfiguration.getBoolean("general.emergency-deploy", false);
+        this.isFireworkBoostingDisabled = this.fileConfiguration.getBoolean("general.disable-firework-boosting", false);
+        this.isRiptideLaunchDisabled = this.fileConfiguration.getBoolean("general.disable-riptide-launch", false);
 
         this.isGlobalFlightDisabled = this.fileConfiguration.getBoolean("flight.disable-global", false);
         this.disabledWorlds = this.fileConfiguration.getStringList("flight.disabled-worlds");
@@ -160,6 +164,8 @@ public class ConfigHandler {
     public final boolean getIsElytraBreakProtectionEnabled() { return this.isElytraBreakProtectionEnabled; }
     public final boolean getIsKineticEnergyProtectionEnabled() { return this.isKineticEnergyProtectionEnabled; }
     public final boolean getIsEmergencyDeployEnabled() { return this.isEmergencyDeployEnabled; }
+    public final boolean getIsFireworkBoostingDisabled() { return this.isFireworkBoostingDisabled; }
+    public final boolean getIsRiptideLaunchDisabled() { return this.isRiptideLaunchDisabled; }
 
     public final boolean getIsGlobalFlightDisabled() {
         return this.isGlobalFlightDisabled;

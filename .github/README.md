@@ -1,6 +1,5 @@
-
-
-## PLEASE READ THE RESOURCE OVERVIEW BEFORE DOWNLOADING THE PLUGIN TO SEE IF THIS PLUGIN FITS YOUR NEEDS. IF YOU HAVE ANY QUESTIONS, JOIN MY [DISCORD](https://discord.com/invite/Y99qmZRVe6) SERVER AND CREATE A TICKET.
+> [!NOTE]
+> PLEASE READ THE RESOURCE OVERVIEW BEFORE DOWNLOADING THE PLUGIN TO SEE IF THIS PLUGIN FITS YOUR NEEDS. IF YOU HAVE ANY QUESTIONS, JOIN MY [DISCORD](https://discord.com/invite/Y99qmZRVe6) SERVER AND CREATE A TICKET.
 
 [Spigot](https://www.spigotmc.org/resources/126002/) | [Modrinth](https://modrinth.com/plugin/elytraessentials) | [Discord](https://discord.com/invite/Y99qmZRVe6) | [Wiki](https://github.com/bruno-medeiros1/elytra-essentials/wiki)
 
@@ -101,7 +100,7 @@ compileOnly 'com.github.bruno-medeiros1:ElytraEssentials:v1.9.1' // Replace with
 }
 ```
 > [!IMPORTANT]
-> You must use <scope>provided</scope> (for Maven) or compileOnly (for Gradle). This ensures that ElytraEssentials is not bundled inside your plugin's JAR file.
+> You must use `<scope>provided</scope>` (for Maven) or `compileOnly` (for Gradle). This ensures that ElytraEssentials is not bundled inside your plugin's JAR file.
 
 
 ### Getting the API Instance

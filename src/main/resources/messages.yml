@@ -17,6 +17,8 @@ feature-not-enabled: "&cThis feature is not enabled."
 not-enough-xp: "&cYou don't have enough experience levels."
 not-enough-money: "&cYou don't have enough money."
 fall-protection-enabled: "&fFall Protection: &a&lEnabled"
+firework-boost-disabled: "&cFirework boosting is disabled."
+riptide-launch-disabled: "&cRiptide launching is disabled."
 
 # Reload Command Message
 reload-start: "&eReloading ElytraEssentials... Please wait."

@@ -34,6 +34,14 @@ general:
   # The minimum fall distance (in blocks) is verified by the plugin.
   emergency-deploy: false # [Default: false]
 
+  # Set to true to prevent players from using firework rockets to boost while gliding.
+  disable-firework-boosting: false # [Default: false]
+
+  # Set to true to prevent players from launching themselves with Riptide tridents
+  # while they are wearing an elytra. This does not affect normal, ground-based
+  # Riptide movement when an elytra is not equipped.
+  disable-riptide-launch: false # [Default: false]
+
 armored-elytra:
   enabled: true # [Default: true]
 

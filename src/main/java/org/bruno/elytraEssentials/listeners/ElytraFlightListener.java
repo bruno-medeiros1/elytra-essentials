@@ -8,6 +8,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityToggleGlideEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -25,8 +26,8 @@ public class ElytraFlightListener implements Listener
     }
 
     @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
+    public void onPlayerJoin(PlayerJoinEvent e) {
+        Player player = e.getPlayer();
 
         statsHandler.loadPlayerStats(player);
         effectsHandler.loadPlayerActiveEffect(player);
@@ -34,8 +35,8 @@ public class ElytraFlightListener implements Listener
     }
 
     @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) {
-        Player player = event.getPlayer();
+    public void onPlayerQuit(PlayerQuitEvent e) {
+        Player player = e.getPlayer();
 
         statsHandler.savePlayerStats(player);
         effectsHandler.clearPlayerActiveEffect(player);
@@ -43,14 +44,14 @@ public class ElytraFlightListener implements Listener
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onPlayerGlide(EntityToggleGlideEvent event) {
-        if (!(event.getEntity() instanceof Player player)) return;
+    public void onPlayerGlide(EntityToggleGlideEvent e) {
+        if (!(e.getEntity() instanceof Player player)) return;
 
-        statsHandler.setGliding(player, event.isGliding());
-        if (event.isGliding()) {
+        statsHandler.setGliding(player, e.isGliding());
+        if (e.isGliding()) {
             boolean shouldCancel = flightHandler.onGlideStartAttempt(player);
             if (shouldCancel) {
-                event.setCancelled(true);
+                e.setCancelled(true);
             }
         } else {
             flightHandler.handleGlideEnd(player);
@@ -58,7 +59,12 @@ public class ElytraFlightListener implements Listener
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onPlayerMove(PlayerMoveEvent event) {
-        flightHandler.handlePlayerMove(event);
+    public void onPlayerMove(PlayerMoveEvent e) {
+        flightHandler.handlePlayerMove(e);
+    }
+
+    @EventHandler
+    public void onPlayerInteract(PlayerInteractEvent e) {
+        flightHandler.handleVanillaMechanics(e);
     }
 }

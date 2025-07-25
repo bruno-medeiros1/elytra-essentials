@@ -12,6 +12,8 @@ public final class MessagesHandler {
     private String notEnoughXP;
     private String notEnoughMoney;
     private String fallProtectionEnabled;
+    private String fireworkBoostDisabled;
+    private String riptideLaunchDisabled;
 
     private String reloadStart;
     private String reloadSuccess;
@@ -88,6 +90,8 @@ public final class MessagesHandler {
         this.notEnoughXP = fileConfiguration.getString("not-enough-xp", "&cYou do not have enough experience levels.");
         this.notEnoughMoney = fileConfiguration.getString("not-enough-money", "&cYou don't have enough money.");
         this.fallProtectionEnabled = fileConfiguration.getString("fall-protection-enabled", "&fFall Protection: &a&lEnabled");
+        this.fireworkBoostDisabled = fileConfiguration.getString("firework-boost-disabled", "&cFirework boosting is disabled.");
+        this.riptideLaunchDisabled = fileConfiguration.getString("riptide-launch-disabled", "&cRiptide launching is disabled.");
 
         // Reload Command Messages
         this.reloadStart = fileConfiguration.getString("reload-start", "&eReloading ElytraEssentials... Please wait.");
@@ -161,6 +165,8 @@ public final class MessagesHandler {
     public String getNotEnoughXP() { return this.notEnoughXP; }
     public String getNotEnoughMoney() { return notEnoughMoney; }
     public String getFallProtectionEnabled() { return this.fallProtectionEnabled; }
+    public String getFireworkBoostDisabled() { return this.fireworkBoostDisabled; }
+    public String getRiptideLaunchDisabled() { return this.riptideLaunchDisabled; }
 
     // Reload Command Messages
     public String getReloadStartMessage() { return this.reloadStart; }
