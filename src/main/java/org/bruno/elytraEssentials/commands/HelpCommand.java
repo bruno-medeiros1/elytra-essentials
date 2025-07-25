@@ -56,6 +56,10 @@ public class HelpCommand implements SubCommand {
         allCommands.add(new HelpEntry("/ee importdb <file> --confirm", "Restores a database backup.", Constants.Permissions.CMD_IMPORT_DB));
 
         allCommands.add(new HelpEntry("/ee achievements", "Opens the achievements GUI.", Constants.Permissions.CMD_ACHIEVEMENTS));
+
+        allCommands.add(new HelpEntry("/ee tandem invite <player>", "Invite a player to fly with you.", Constants.Permissions.CMD_TANDEM_INVITE));
+        allCommands.add(new HelpEntry("/ee tandem accept", "Accept a pending tandem flight invitation.", Constants.Permissions.CMD_TANDEM_ACCEPT));
+        allCommands.add(new HelpEntry("/ee tandem leave", "Dismount from a tandem flight. Also the same as sneaking while tandem flying.", Constants.Permissions.CMD_TANDEM_LEAVE));
     }
 
     @Override

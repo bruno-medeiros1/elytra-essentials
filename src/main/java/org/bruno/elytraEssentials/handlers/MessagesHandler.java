@@ -39,6 +39,7 @@ public final class MessagesHandler {
 
     private String newPRLongestFlight;
 
+    // Shop & Effects Messages
     private String purchaseSuccessful;
     private String effectSelected;
     private String effectDeselected;
@@ -49,22 +50,46 @@ public final class MessagesHandler {
     private String noActiveEffectToClear;
     public String giveEffectSuccess;
 
+    // Armored Elytra Messages
     private String notWearingArmoredElytra;
     private String notWearingArmoredElytraRepair;
     private String armoredElytraRepairSuccess;
     private String armoredElytraAlreadyRepaired;
     private String armoredElytraBroken;
 
+    // Forge Messages
     private String forgeSuccessful;
     private String revertSuccessful;
 
+    // Emergency Deploy Messages
     private String emergencyDeploySuccess;
 
+    // Achievements Messages
     private String achievementUnlocked;
 
+    // Combat Tag Messages
     private String cannotGlideCombatTagged;
     private String combatTagged;
     private String combatTaggedExpired;
+
+    // Tandem Flight Messages
+    private String driverTandemFlightFailed;
+    private String driverTandemFlightCountdown;
+    private String driverMountedSuccess;
+    private String driverVoluntaryDismount;
+    private String driverTandemInvitationAccepted;
+    private String driverAlreadyHasPassenger;
+    private String driverInvitationExpired;
+    private String driverInvitationSent;
+    private String passengerTandemFlightFailed;
+    private String passengerMountedSuccess;
+    private String passengerVoluntaryDismount;
+    private String passengerTandemInvitationAccepted;
+    private String passengerInvitationExpired;
+    private String dismountCountdown;
+    private String mountingCountdown;
+    private String driverNotAvailable;
+    private String noPendingInvitation;
 
     public MessagesHandler(FileConfiguration fileConfiguration) {
         this.fileConfiguration = fileConfiguration;
@@ -155,6 +180,25 @@ public final class MessagesHandler {
         this.cannotGlideCombatTagged = fileConfiguration.getString("cannot-glide-combat-tagged", "&cYou cannot glide while in combat!");
         this.combatTagged = fileConfiguration.getString("combat-tagged", "&cCombat Tagged! Time Left: &6{0}");
         this.combatTaggedExpired = fileConfiguration.getString("combat-tagged-expired", "&cYour combat tag has expired.");
+
+        // Tandem Flight Messages
+        this.driverTandemFlightFailed = fileConfiguration.getString("driver-tandem-flight-failed", "&cYou failed to take off in time. Your passenger has been dismounted!");
+        this.driverTandemFlightCountdown = fileConfiguration.getString("driver-tandem-flight-countdown", "&eYou have {0} seconds to take off!");
+        this.driverMountedSuccess = fileConfiguration.getString("driver-mounted-success", "&a{0} has mounted onto you!");
+        this.driverVoluntaryDismount = fileConfiguration.getString("driver-voluntary-dismount", "&e{0} has dismounted.");
+        this.driverTandemInvitationAccepted = fileConfiguration.getString("driver-tandem-invitation-accepted", "&a{0} accepted! Mounting in {1} seconds...");
+        this.driverAlreadyHasPassenger = fileConfiguration.getString("driver-already-has-passenger", "&cYou already have a passenger.");
+        this.driverInvitationExpired = fileConfiguration.getString("driver-invitation-expired", "&cYour tandem flight invitation to {0} has expired.");
+        this.driverInvitationSent = fileConfiguration.getString("driver-invitation-sent", "&aYou have invited {0} to a tandem flight!");
+        this.driverNotAvailable = fileConfiguration.getString("driver-not-available", "&cThe player who invited you is no longer available.");
+        this.passengerTandemFlightFailed = fileConfiguration.getString("passenger-tandem-flight-failed", "&cYour driver failed to take off in time.");
+        this.passengerMountedSuccess = fileConfiguration.getString("passenger-mounted-success", "&aYou have mounted onto {0}!");
+        this.passengerVoluntaryDismount = fileConfiguration.getString("passenger-voluntary-dismount", "&eYou have dismounted.");
+        this.passengerTandemInvitationAccepted = fileConfiguration.getString("passenger-tandem-invitation-accepted", "&aAccepted! Mounting in {0} seconds...");
+        this.passengerInvitationExpired = fileConfiguration.getString("passenger-invitation-expired", "&cYour tandem flight invitation from {0} has expired.");
+        this.dismountCountdown = fileConfiguration.getString("dismount-countdown", "&cDismounting in &6{0}&c...");
+        this.mountingCountdown = fileConfiguration.getString("mounting-countdown", "&eMounting in &6{0}&e...");
+        this.noPendingInvitation = fileConfiguration.getString("no-pending-invitation", "&cYou don't have a pending tandem flight invitation.");
     }
 
     // General Messages
@@ -230,4 +274,23 @@ public final class MessagesHandler {
     public String getCannotGlideCombatTagged() { return cannotGlideCombatTagged; }
     public String getCombatTagged() { return combatTagged; }
     public String getCombatTaggedExpired() { return combatTaggedExpired; }
+
+    // Tandem Flight
+    public String getDriverTandemFlightFailed() { return driverTandemFlightFailed; }
+    public String getDriverTandemFlightCountdown() { return driverTandemFlightCountdown; }
+    public String getDriverMountedSuccess() { return driverMountedSuccess; }
+    public String getDriverVoluntaryDismount() { return driverVoluntaryDismount; }
+    public String getDriverTandemInvitationAccepted() { return driverTandemInvitationAccepted; }
+    public String getDriverAlreadyHasPassenger() { return driverAlreadyHasPassenger; }
+    public String getDriverInvitationExpired() { return driverInvitationExpired; }
+    public String getDriverInvitationSent() { return driverInvitationSent; }
+    public String getDriverNotAvailable() { return driverNotAvailable; }
+    public String getPassengerTandemFlightFailed() { return passengerTandemFlightFailed; }
+    public String getPassengerMountedSuccess() { return passengerMountedSuccess; }
+    public String getPassengerVoluntaryDismount() { return passengerVoluntaryDismount; }
+    public String getPassengerTandemInvitationAccepted() { return passengerTandemInvitationAccepted; }
+    public String getPassengerInvitationExpired() { return passengerInvitationExpired; }
+    public String getDismountCountdown() { return dismountCountdown; }
+    public String getMountingCountdown() { return mountingCountdown; }
+    public String getNoPendingInvitation() { return noPendingInvitation; }
 }

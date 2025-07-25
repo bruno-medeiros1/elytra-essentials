@@ -98,6 +98,9 @@ public final class Constants {
         public static final String CMD_REPAIR = "elytraessentials.command.armor.repair";
         public static final String CMD_IMPORT_DB = "elytraessentials.command.importdb";
         public static final String CMD_ACHIEVEMENTS = "elytraessentials.command.achievements";
+        public static final String CMD_TANDEM_INVITE = "elytraessentials.command.tandem.invite";
+        public static final String CMD_TANDEM_ACCEPT = "elytraessentials.command.tandem.accept";
+        public static final String CMD_TANDEM_LEAVE = "elytraessentials.command.tandem.leave";
 
         // Bypass Permissions
         public static final String BYPASS_SPEED_LIMIT = "elytraessentials.bypass.speedlimit";
@@ -143,6 +146,7 @@ public final class Constants {
         public static final String SUPER_BOOST = "elytraessentials.elytra.superboost";
         public static final String CHARGED_JUMP = "elytraessentials.elytra.chargedjump";
         public static final String AUTO_DEPLOY = "elytraessentials.elytra.autodeploy";
+        public static final String TANDEM_FLIGHT = "elytraessentials.elytra.tandemflight";
     }
 
     public static final class Effects {

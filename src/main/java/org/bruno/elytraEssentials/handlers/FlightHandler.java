@@ -269,8 +269,11 @@ public class FlightHandler {
                     messagesHelper.sendPlayerMessage(target, message);
                 });
             }
-            foliaHelper.runTaskOnMainThread(() ->
-                    messagesHelper.sendCommandSenderMessage(sender, "&aRemoved " + TimeHelper.formatFlightTime(actualAmountRemoved) + " of flight time from " + Bukkit.getOfflinePlayer(playerId).getName() + "."));
+
+            if (sender != null) {
+                foliaHelper.runTaskOnMainThread(() ->
+                        messagesHelper.sendCommandSenderMessage(sender, "&aRemoved " + TimeHelper.formatFlightTime(actualAmountRemoved) + " of flight time from " + Bukkit.getOfflinePlayer(playerId).getName() + "."));
+            }
         } catch (SQLException e) {
             handleSqlException(sender, "remove flight time", playerId, e);
         }
@@ -332,12 +335,21 @@ public class FlightHandler {
                 if (chestplate != null && chestplate.getType() == Material.ELYTRA) {
                     // Riptide only works in water or rain.
                     if (player.isInWaterOrRain()) {
-                        event.setCancelled(true);
+                        event.setCancelled(true);   // TODO (b.med): This doesn't work on <1.20 versions, handle it differently.
                         messagesHelper.sendPlayerMessage(player, messagesHandler.getRiptideLaunchDisabled());
                     }
                 }
             }
         }
+    }
+
+    /**
+     * Grants a player temporary immunity from fall damage.
+     * @param player The player to protect.
+     */
+    public void protectPlayerFromFall(Player player) {
+        noFallDamagePlayers.add(player.getUniqueId());
+        foliaHelper.runTaskLater(player, () -> noFallDamagePlayers.remove(player.getUniqueId()), 60L); // 3 seconds of protection
     }
 
     public void clearFlightTime(UUID playerId, CommandSender sender) {

@@ -84,6 +84,7 @@ public class ElytraEssentialsCommand implements CommandExecutor, TabCompleter {
             if (PermissionsHelper.hasArmorPermission(sender)) completions.add("armor");
             if (PermissionsHelper.hasImportDbPermission(sender)) completions.add("importdb");
             if (PermissionsHelper.hasAchievementsPermission(sender)) completions.add("achievements");
+            if (PermissionsHelper.hasTandemInvitePermission(sender)) completions.add("tandem");
 
             // Return suggestions that start with what the player has already typed
             return completions.stream()

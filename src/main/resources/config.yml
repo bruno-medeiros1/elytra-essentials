@@ -154,3 +154,22 @@ flight:
     # Set to true to only disable elytra from player-inflicted damage.
     # Set to false to disable elytra from ANY damage source (players, mobs, environment).
     player-damage-only: true  # [Default: true]
+
+  tandem:
+    # Set to true to enable the tandem flight (passenger system) feature.
+    enabled: true # [Default: true]
+
+    # How many seconds a player has to accept a /tandem invite before it expires.
+    invite-timeout: 30 # [Default: 30 seconds]
+
+    # Multiplier for flight time cost when carrying a passenger.
+    # 2.0 means the driver consumes flight time twice as fast.
+    # 1.0 means no extra cost (minimum value).
+    flight-time-cost-multiplier: 2.0 # [Default: 2.0]
+
+    # Protect passengers from fall damage when they are dismounted mid-air.
+    protect-passenger-fall-damage: true # [Default: true]
+
+    # How many seconds to count down before mounting a passenger after they accept.
+    # Set to 0 to disable the countdown and mount instantly.
+    mount-countdown: 3 # [Default: 3]

@@ -155,6 +155,24 @@ public final class PermissionsHelper {
                 sender.hasPermission(Constants.Permissions.CMD_STATS_RESET);
     }
 
+    public static boolean hasTandemInvitePermission(CommandSender sender) {
+        return sender.hasPermission(Constants.Permissions.ALL) ||
+                sender.hasPermission(Constants.Permissions.ALL_COMMANDS) ||
+                sender.hasPermission(Constants.Permissions.CMD_TANDEM_INVITE);
+    }
+
+    public static boolean hasTandemAcceptPermission(CommandSender sender) {
+        return sender.hasPermission(Constants.Permissions.ALL) ||
+                sender.hasPermission(Constants.Permissions.ALL_COMMANDS) ||
+                sender.hasPermission(Constants.Permissions.CMD_TANDEM_ACCEPT);
+    }
+
+    public static boolean hasTandemLeavePermission(CommandSender sender) {
+        return sender.hasPermission(Constants.Permissions.ALL) ||
+                sender.hasPermission(Constants.Permissions.ALL_COMMANDS) ||
+                sender.hasPermission(Constants.Permissions.CMD_TANDEM_LEAVE);
+    }
+
     //</editor-fold>
 
     //<editor-fold desc="FEATURE PERMISSIONS (Player-Specific)">
@@ -189,5 +207,9 @@ public final class PermissionsHelper {
                 player.hasPermission(Constants.Permissions.AUTO_DEPLOY);
     }
 
+    public static boolean hasTandemFlightPermission(Player player) {
+        return player.hasPermission(Constants.Permissions.ALL) ||
+                player.hasPermission(Constants.Permissions.TANDEM_FLIGHT);
+    }
     //</editor-fold>
 }

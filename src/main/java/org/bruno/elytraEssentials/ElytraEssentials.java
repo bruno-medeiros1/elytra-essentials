@@ -62,6 +62,7 @@ public final class ElytraEssentials extends JavaPlugin {
     private PluginInfoHandler pluginInfoHandler;
     private UpdaterHandler updaterHandler;
     private MessagesHandler messagesHandler;
+    private TandemHandler tandemHandler;
 
     private MessagesHelper messagesHelper;
     private FileHelper fileHelper;
@@ -120,6 +121,7 @@ public final class ElytraEssentials extends JavaPlugin {
         if (achievementsHandler != null) achievementsHandler.start();
         if (flightHandler != null) flightHandler.start();
         if (combatTagHandler != null) combatTagHandler.start();
+        if (tandemHandler != null) tandemHandler.start();
     }
 
     public void reload() {
@@ -200,6 +202,8 @@ public final class ElytraEssentials extends JavaPlugin {
         this.achievementsGuiHandler = new AchievementsGuiHandler(getLogger(), this.databaseHandler, this.foliaHelper, this.messagesHelper,
                 this.achievementsHandler, this.statsHandler);
 
+        this.tandemHandler = new TandemHandler(this.configHandler, this.messagesHelper, this.foliaHelper, this.flightHandler, this.messagesHandler);
+
         this.updaterHandler = new UpdaterHandler(getLogger(), this.foliaHelper, this.configHandler, this.pluginInfoHandler);
     }
 
@@ -221,6 +225,7 @@ public final class ElytraEssentials extends JavaPlugin {
         var combatTagListener = new CombatTagListener(this.combatTagHandler);
         var damageListener = new DamageListener(this.flightHandler, this.statsHandler, this.armoredElytraHandler);
         var guiListener = new GuiListener(this.shopGuiHandler, this.forgeGuiHandler, this.effectsGuiHandler, this.achievementsGuiHandler);
+        var tandemListener = new TandemListener(this.tandemHandler);
 
         // Register all listeners instances
         Bukkit.getPluginManager().registerEvents(elytraFlightListener, this);
@@ -231,6 +236,7 @@ public final class ElytraEssentials extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(combatTagListener, this);
         Bukkit.getPluginManager().registerEvents(damageListener, this);
         Bukkit.getPluginManager().registerEvents(guiListener, this);
+        Bukkit.getPluginManager().registerEvents(tandemListener, this);
     }
 
     private void setupCommands() {
@@ -247,6 +253,7 @@ public final class ElytraEssentials extends JavaPlugin {
         var armorCommand = new ArmorCommand(this, this.messagesHelper, this.economy, this.configHandler, this.messagesHandler);
         var importDbCommand = new ImportDbCommand(this, messagesHandler, this.messagesHelper, this.databaseHandler);
         var achievementsCommand = new AchievementsCommand(this.achievementsGuiHandler, this.messagesHelper, this.messagesHandler);
+        var tandemCommand = new TandemCommand(this.tandemHandler, this.messagesHelper, this.messagesHandler, this.configHandler);
 
         ElytraEssentialsCommand mainCommand = new ElytraEssentialsCommand(getLogger(), this.messagesHelper);
         mainCommand.registerSubCommand("help", helpCommand);
@@ -260,6 +267,7 @@ public final class ElytraEssentials extends JavaPlugin {
         mainCommand.registerSubCommand("armor", armorCommand);
         mainCommand.registerSubCommand("importdb", importDbCommand);
         mainCommand.registerSubCommand("achievements", achievementsCommand);
+        mainCommand.registerSubCommand("tandem", tandemCommand);
 
         Objects.requireNonNull(getCommand("ee")).setExecutor(mainCommand);
         Objects.requireNonNull(getCommand("ee")).setTabCompleter(mainCommand);
@@ -319,6 +327,9 @@ public final class ElytraEssentials extends JavaPlugin {
 
         if (combatTagHandler != null)
             combatTagHandler.shutdown();
+
+        if (tandemHandler != null)
+            tandemHandler.shutdown();
 
         if (flightHandler != null)
             flightHandler.shutdown();

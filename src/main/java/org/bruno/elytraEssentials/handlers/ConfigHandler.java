@@ -68,6 +68,13 @@ public class ConfigHandler {
     private boolean isCombatTagPreventFallDamageEnabled;
     private boolean isCombatTagPlayerDamageOnlyEnabled;
 
+    //  Tandem Flight
+    private boolean isTandemFlightEnabled;
+    private int tandemInviteTimeout;
+    private double tandemFlightTimeCostMultiplier;
+    private boolean tandemFallDamageProtection;
+    private int tandemMountCountdown;
+
     public ConfigHandler(FileConfiguration fileConfiguration, Logger logger) {
         this.fileConfiguration = fileConfiguration;
         this.logger = logger;
@@ -143,6 +150,12 @@ public class ConfigHandler {
         this.combatTagCooldown = this.fileConfiguration.getInt("flight.combat-tag.duration", 10);
         this.isCombatTagPreventFallDamageEnabled = this.fileConfiguration.getBoolean("flight.combat-tag.prevent-fall-damage", true);
         this.isCombatTagPlayerDamageOnlyEnabled = this.fileConfiguration.getBoolean("flight.combat-tag.player-damage-only", true);
+
+        this.isTandemFlightEnabled = this.fileConfiguration.getBoolean("flight.tandem.enabled", true);
+        this.tandemInviteTimeout = this.fileConfiguration.getInt("flight.tandem.invite-timeout", 30);
+        this.tandemFlightTimeCostMultiplier = this.fileConfiguration.getDouble("flight.tandem.flight-time-cost-multiplier", 2.0);
+        this.tandemFallDamageProtection = this.fileConfiguration.getBoolean("flight.tandem.fall-damage-protection", true);
+        this.tandemMountCountdown = this.fileConfiguration.getInt("flight.tandem.mount-countdown", 3);
     }
 
     /**
@@ -213,4 +226,10 @@ public class ConfigHandler {
     public final int getCombatTagCooldown() { return this.combatTagCooldown; }
     public final boolean getIsCombatTagPreventFallDamageEnabled() { return this.isCombatTagPreventFallDamageEnabled; }
     public final boolean getIsCombatTagPlayerDamageOnlyEnabled() { return this.isCombatTagPlayerDamageOnlyEnabled; }
+
+    public final boolean getIsTandemFlightEnabled() { return this.isTandemFlightEnabled; }
+    public final int getTandemInviteTimeout() { return this.tandemInviteTimeout; }
+    public final double getTandemFlightTimeCostMultiplier() { return this.tandemFlightTimeCostMultiplier; }
+    public final boolean getTandemFallDamageProtection() { return this.tandemFallDamageProtection; }
+    public final int getTandemMountCountdown() { return this.tandemMountCountdown; }
 }

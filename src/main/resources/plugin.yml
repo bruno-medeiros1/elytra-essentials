@@ -78,6 +78,15 @@ permissions:
           elytraessentials.command.achievements:
             default: true
             description: "Allows opening the achievements GUI."
+          elytraessentials.command.tandem.invite:
+            default: true
+            description: "Allows inviting a player to fly with you."
+          elytraessentials.command.tandem.accept:
+            default: true
+            description: "Allows accepting a pending tandem flight invitation."
+          elytraessentials.command.tandem.leave:
+            default: true
+            description: "Allows dismounting from a tandem flight."
 
       elytraessentials.bypass.*:
         description: "Allows bypassing all plugin restrictions and limits."
@@ -197,3 +206,6 @@ permissions:
       elytraessentials.elytra.autodeploy:
         default: op
         description: "Enables the emergency elytra auto-deploy feature."
+      elytraessentials.elytra.tandemflight:
+        default: op
+        description: "Allows flying with a passenger using the Tandem Flight feature."
