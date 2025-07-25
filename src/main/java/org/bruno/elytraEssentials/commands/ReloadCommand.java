@@ -4,12 +4,11 @@ import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.handlers.MessagesHandler;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
-import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bukkit.command.CommandSender;
 
 import java.util.logging.Level;
 
-public class ReloadCommand implements ISubCommand {
+public class ReloadCommand implements SubCommand {
 
     private final ElytraEssentials plugin;
     private final MessagesHelper messagesHelper;

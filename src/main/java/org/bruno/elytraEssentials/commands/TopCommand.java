@@ -9,7 +9,6 @@ import org.bruno.elytraEssentials.handlers.MessagesHandler;
 import org.bruno.elytraEssentials.handlers.StatsHandler;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
-import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
@@ -18,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class TopCommand implements ISubCommand {
+public class TopCommand implements SubCommand {
     private final StatsHandler statsHandler;
     private final MessagesHelper messagesHelper;
     private final MessagesHandler messagesHandler;

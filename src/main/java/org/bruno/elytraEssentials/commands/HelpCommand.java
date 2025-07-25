@@ -5,7 +5,6 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bruno.elytraEssentials.ElytraEssentials;
-import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bruno.elytraEssentials.utils.Constants;
 import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
@@ -16,7 +15,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class HelpCommand implements ISubCommand {
+public class HelpCommand implements SubCommand {
 
     private final ElytraEssentials plugin;
     private final List<HelpEntry> allCommands = new ArrayList<>();

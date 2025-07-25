@@ -5,7 +5,6 @@ import org.bruno.elytraEssentials.handlers.DatabaseHandler;
 import org.bruno.elytraEssentials.handlers.MessagesHandler;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
-import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bruno.elytraEssentials.utils.Constants;
 import org.bukkit.command.CommandSender;
 
@@ -13,7 +12,7 @@ import java.io.File;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class ImportDbCommand implements ISubCommand {
+public class ImportDbCommand implements SubCommand {
     private final ElytraEssentials plugin;
     private final MessagesHandler messagesHandler;
     private final MessagesHelper messagesHelper;

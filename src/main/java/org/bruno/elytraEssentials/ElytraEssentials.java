@@ -17,6 +17,8 @@ package org.bruno.elytraEssentials;
  */
 
 import net.milkbowl.vault.economy.Economy;
+import org.bruno.elytraEssentials.api.ElytraEssentialsAPI;
+import org.bruno.elytraEssentials.api.ElytraEssentialsAPIImpl;
 import org.bruno.elytraEssentials.commands.*;
 import org.bruno.elytraEssentials.gui.GuiListener;
 import org.bruno.elytraEssentials.handlers.*;
@@ -33,6 +35,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.RegisteredServiceProvider;
+import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bstats.bukkit.Metrics;
 
@@ -81,6 +84,7 @@ public final class ElytraEssentials extends JavaPlugin {
     public void onEnable() {
         try {
             setupComponents();
+            setupAPI();
             setupListeners();
             setupCommands();
 
@@ -259,6 +263,12 @@ public final class ElytraEssentials extends JavaPlugin {
 
         Objects.requireNonNull(getCommand("ee")).setExecutor(mainCommand);
         Objects.requireNonNull(getCommand("ee")).setTabCompleter(mainCommand);
+    }
+
+    private void setupAPI() {
+        ElytraEssentialsAPI api = new ElytraEssentialsAPIImpl(this.flightHandler, this.effectsHandler);
+        getServer().getServicesManager().register(ElytraEssentialsAPI.class, api, this, ServicePriority.Normal);
+        getLogger().info("ElytraEssentials API has been successfully registered.");
     }
 
     private void setupEconomy() {

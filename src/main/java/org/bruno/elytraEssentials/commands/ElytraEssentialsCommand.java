@@ -1,9 +1,7 @@
 package org.bruno.elytraEssentials.commands;
 
-import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
-import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -21,14 +19,14 @@ public class ElytraEssentialsCommand implements CommandExecutor, TabCompleter {
     private final Logger logger;
     private final MessagesHelper messagesHelper;
 
-    private final Map<String, ISubCommand> subCommands = new HashMap<>();
+    private final Map<String, SubCommand> subCommands = new HashMap<>();
 
     public ElytraEssentialsCommand(Logger logger, MessagesHelper messagesHelper) {
         this.logger = logger;
         this.messagesHelper = messagesHelper;
     }
 
-    public void registerSubCommand(String name, ISubCommand command) {
+    public void registerSubCommand(String name, SubCommand command) {
         subCommands.put(name, command);
     }
 
@@ -46,7 +44,7 @@ public class ElytraEssentialsCommand implements CommandExecutor, TabCompleter {
         }
 
         String subCommandName = args[0].toLowerCase();
-        ISubCommand commandHandler = subCommands.get(subCommandName);
+        SubCommand commandHandler = subCommands.get(subCommandName);
 
         if (commandHandler == null) {
             messagesHelper.sendCommandSenderMessage(sender,"&cUnknown subcommand. Use /ee help for available commands.");
@@ -95,7 +93,7 @@ public class ElytraEssentialsCommand implements CommandExecutor, TabCompleter {
         } else if (args.length > 1) {
             // Player is typing arguments for a subcommand
             String subCommandName = args[0].toLowerCase();
-            ISubCommand subCommand = subCommands.get(subCommandName);
+            SubCommand subCommand = subCommands.get(subCommandName);
 
             if (subCommand != null) {
                 // Pass only the relevant arguments to the subcommand's completer

@@ -7,7 +7,6 @@ import org.bruno.elytraEssentials.handlers.MessagesHandler;
 import org.bruno.elytraEssentials.helpers.FoliaHelper;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
-import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bruno.elytraEssentials.utils.ElytraEffect;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
@@ -18,7 +17,7 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class EffectsCommand implements ISubCommand {
+public class EffectsCommand implements SubCommand {
     private final Logger logger;
     private final EffectsGuiHandler effectsGuiHandler;
     private final EffectsHandler effectsHandler;

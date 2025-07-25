@@ -4,10 +4,10 @@
 
 [Spigot](https://www.spigotmc.org/resources/126002/) | [Modrinth](https://modrinth.com/plugin/elytraessentials) | [Discord](https://discord.com/invite/Y99qmZRVe6) | [Wiki](https://github.com/bruno-medeiros1/elytra-essentials/wiki)
 
-### ElytraEssentials
+## ElytraEssentials
 It's a plugin compatible with **Spigot**, **Paper**, **Purpur**, and **Folia** servers designed to enhance the Elytra flying experience in Minecraft. It transforms the vanilla elytra experience into a fully customizable and engaging system. From flight mechanics and cosmetic effects to player stats and leaderboards, this plugin gives you complete control over how players traverse your world.
 
-### Features
+## Features
 - Set, manage, and recover player flight time with admin commands.
 - Configure global or per-world flight speed limits.
 - Disable elytra usage globally, in specific worlds, or prevent equipping them.
@@ -31,10 +31,10 @@ It's a plugin compatible with **Spigot**, **Paper**, **Purpur**, and **Folia** s
 - It supports Minecraft version 1.18.x through 1.21.x.
 - Folia Support
 
-### Showcase
+## Showcase
 Check this section of the wiki for a showcase of the plugin: [Showcase](https://github.com/bruno-medeiros1/elytra-essentials/wiki/Showcase)
 
-### Installation Guide
+## Installation Guide
 Setting up ElytraEssentials is designed to be as simple as possible.
 1. Download the latest release of ElytraEssentials, based on your server version, from the release section.
 2. Place the downloaded .jar file into your server’s `/plugins` folder.
@@ -44,16 +44,17 @@ Setting up ElytraEssentials is designed to be as simple as possible.
 4. Restart your server. This will generate the default configuration files in the `plugins/ElytraEssentials/` folder.
 
 
-### Update Guide
+## Update Guide
 For most updates that include bug fixes and small feature additions, you do not need to reset your configuration files.
 1. Stop your server.
 2. Delete the old `ElytraEssentials-x.x.x.jar` file from your `/plugins` folder.
 3. Place the new, downloaded .jar file into your `/plugins` folder and remove the old one.
 4. Start your server. Your existing `config.yml`, `messages.yml`, `shop.yml`, and `achievements.yml` will be used automatically.
 
-However, always check the changelog before updating. It will state if a configuration reset is necessary. If a reset is recommended, back up your existing `plugins/ElytraEssentials` folder and delete the necessary configuration files. The database folder is not recommended to be deleted since it will erase your player's data
+> [!WARNING]
+> Always check the changelog before updating. It will state if a configuration reset is necessary. If a reset is recommended, back up your existing `plugins/ElytraEssentials` folder and delete the necessary configuration files. The database folder is not recommended to be deleted since it will erase your player's data
 
-### Configuration
+## Configuration
 By default, the plugin is configured to work "out of the box" using a local SQLite database file, requiring no extra setup.
 1. Database (Optional): If you want to use a dedicated MySQL database, stop your server and edit the config.yml file:
    - Change storage type from SQLITE to MYSQL.
@@ -62,10 +63,94 @@ By default, the plugin is configured to work "out of the box" using a local SQLi
 3. Reload: After making changes, you can use the command /ee reload to apply them without needing a full server restart.
 
 
-### Support
-If you have a question or need support regarding the plugin, join my [Discord](https://discord.com/invite/Y99qmZRVe6) server and create a ticket.
+## API for Developers
+ElytraEssentials provides a simple and powerful API that allows other plugins to interact with its features. 
+To use the API, you need to add ElytraEssentials as a dependency to your project. This is easily done using JitPack.
 
-### Statistics
+### Maven Setup
+Add the JitPack repository and the ElytraEssentials dependency to your pom.xml:
+
+```
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
+```
+```
+<dependencies>
+    <dependency>
+        <groupId>com.github.bruno-medeiros1</groupId>
+        <artifactId>ElytraEssentials</artifactId>
+        <version>v1.9.1</version> <!-- Replace with the desired release tag -->
+        <scope>provided</scope>
+    </dependency>
+</dependencies>
+```
+
+### Gradle Setup
+Add the JitPack repository and the ElytraEssentials dependency to your `build.gradle`:
+```
+repositories {
+maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+compileOnly 'com.github.bruno-medeiros1:ElytraEssentials:v1.9.1' // Replace with the desired release tag
+}
+```
+> [!IMPORTANT]
+> You must use <scope>provided</scope> (for Maven) or compileOnly (for Gradle). This ensures that ElytraEssentials is not bundled inside your plugin's JAR file.
+
+
+### Getting the API Instance
+After adding the dependency, you need to get the API instance from Bukkit's ServicesManager. It's best to do this in your plugin's onEnable() method.
+
+```
+import org.bruno.elytraEssentials.api.ElytraEssentialsAPI;
+import org.bukkit.plugin.RegisteredServiceProvider;
+
+public class YourPlugin extends JavaPlugin {
+
+    private ElytraEssentialsAPI elytraApi;
+
+    @Override
+    public void onEnable() {
+        if (!setupElytraEssentialsAPI()) {
+            getLogger().severe("ElytraEssentials API not found! This plugin requires ElytraEssentials to function.");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+
+        // You can now use the API!
+        getLogger().info("Successfully hooked into the ElytraEssentials API.");
+    }
+
+    private boolean setupElytraEssentialsAPI() {
+        RegisteredServiceProvider<ElytraEssentialsAPI> provider = getServer().getServicesManager().getRegistration(ElytraEssentialsAPI.class);
+        if (provider != null) {
+            this.elytraApi = provider.getProvider();
+        }
+        return this.elytraApi != null;
+    }
+
+    // Example of using the API
+    public void checkPlayerFlightTime(Player player) {
+        if (this.elytraApi == null) return;
+
+        int flightTime = elytraApi.getFlightTime(player.getUniqueId());
+        String activeEffect = elytraApi.getActiveEffectKey(player.getUniqueId());
+
+        player.sendMessage("Your flight time is: " + flightTime + " seconds.");
+        if (activeEffect != null) {
+            player.sendMessage("Your active effect is: " + activeEffect);
+        }
+    }
+}
+```
+
+## Statistics
 ![STATS](https://bstats.org/signatures/bukkit/elytraessentials.svg)
 
 To guide future development and improvements, this plugin utilises bStats to gather anonymous statistics on its usage. This helps me track the total server count, assess version compatibility needs, and see which features are most valued by the community.
@@ -74,5 +159,5 @@ You can view all of this information openly on the public dashboard: https://bst
 
 If you prefer to disable bStats, you can manage this setting for your entire server within the plugins/bStats/config.yml configuration file.
 
-### License
+## License
 Distributed under the GNU GPL v3 License. See [LICENSE](https://github.com/bruno-medeiros1/elytra-essentials/blob/master/.github/LICENSE) for more information.

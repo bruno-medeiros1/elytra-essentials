@@ -75,7 +75,7 @@ jobs:
       - name: Generate Release Body
         run: |
           echo "### Supported Versions" >> release_body.md
-          echo "\`ElytraEssentials-${{ github.ref_name }}-modern.jar\`: For Minecraft 1.21+ (JAVA 21)" >> release_body.md
+          echo "\`ElytraEssentials-${{ github.ref_name }}-modern.jar\`: For Minecraft 1.20.2+ - 1.21.X (JAVA 21)" >> release_body.md
           echo "\`ElytraEssentials-${{ github.ref_name }}-legacy.jar\`: For Minecraft 1.18.x - 1.20.4 (JAVA 17)" >> release_body.md
           echo "" >> release_body.md
           echo "---" >> release_body.md

@@ -4,12 +4,11 @@ import org.bruno.elytraEssentials.gui.shop.ShopGuiHandler;
 import org.bruno.elytraEssentials.handlers.MessagesHandler;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
-import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class ShopCommand implements ISubCommand {
+public class ShopCommand implements SubCommand {
     private final ShopGuiHandler shopGuiHandler;
     private final MessagesHelper messagesHelper;
     private final MessagesHandler messagesHandler;

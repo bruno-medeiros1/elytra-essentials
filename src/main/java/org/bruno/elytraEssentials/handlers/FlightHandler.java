@@ -248,7 +248,7 @@ public class FlightHandler {
         }
     }
 
-    public void removeFlightTime(UUID playerId, int secondsToRemove, CommandSender feedbackRecipient) {
+    public void removeFlightTime(UUID playerId, int secondsToRemove, CommandSender sender) {
         try {
             int currentFlightTime = databaseHandler.getPlayerFlightTime(playerId);
             // Ensure flight time doesn't go below zero
@@ -267,13 +267,13 @@ public class FlightHandler {
                 });
             }
             foliaHelper.runTaskOnMainThread(() ->
-                    messagesHelper.sendCommandSenderMessage(feedbackRecipient, "&aRemoved " + TimeHelper.formatFlightTime(actualAmountRemoved) + " of flight time from " + Bukkit.getOfflinePlayer(playerId).getName() + "."));
+                    messagesHelper.sendCommandSenderMessage(sender, "&aRemoved " + TimeHelper.formatFlightTime(actualAmountRemoved) + " of flight time from " + Bukkit.getOfflinePlayer(playerId).getName() + "."));
         } catch (SQLException e) {
-            handleSqlException(feedbackRecipient, "remove flight time", playerId, e);
+            handleSqlException(sender, "remove flight time", playerId, e);
         }
     }
 
-    public void setFlightTime(UUID playerId, int secondsToSet, CommandSender feedbackRecipient) {
+    public void setFlightTime(UUID playerId, int secondsToSet, CommandSender sender) {
         try {
             int maxTimeLimit = configHandler.getMaxTimeLimit();
             // Cap the amount at the max limit if one is set
@@ -291,13 +291,13 @@ public class FlightHandler {
                 });
             }
             foliaHelper.runTaskOnMainThread(() ->
-                    messagesHelper.sendCommandSenderMessage(feedbackRecipient, "&aSet " + Bukkit.getOfflinePlayer(playerId).getName() + "'s flight time to " + TimeHelper.formatFlightTime(finalAmount)));
+                    messagesHelper.sendCommandSenderMessage(sender, "&aSet " + Bukkit.getOfflinePlayer(playerId).getName() + "'s flight time to " + TimeHelper.formatFlightTime(finalAmount)));
         } catch (SQLException e) {
-            handleSqlException(feedbackRecipient, "set flight time", playerId, e);
+            handleSqlException(sender, "set flight time", playerId, e);
         }
     }
 
-    public void clearFlightTime(UUID playerId, CommandSender feedbackRecipient) {
+    public void clearFlightTime(UUID playerId, CommandSender sender) {
         try {
             databaseHandler.setPlayerFlightTime(playerId, 0);
 
@@ -317,10 +317,10 @@ public class FlightHandler {
 
             // Send a confirmation message back to the command sender.
             foliaHelper.runTaskOnMainThread(() ->
-                    messagesHelper.sendCommandSenderMessage(feedbackRecipient, "&aCleared all flight time for " + target.getName() + "."));
+                    messagesHelper.sendCommandSenderMessage(sender, "&aCleared all flight time for " + target.getName() + "."));
 
         } catch (SQLException e) {
-            handleSqlException(feedbackRecipient, "clear flight time", playerId, e);
+            handleSqlException(sender, "clear flight time", playerId, e);
         }
     }
 

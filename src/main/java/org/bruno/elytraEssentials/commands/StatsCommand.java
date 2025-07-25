@@ -3,7 +3,6 @@ package org.bruno.elytraEssentials.commands;
 import org.bruno.elytraEssentials.handlers.MessagesHandler;
 import org.bruno.elytraEssentials.handlers.StatsHandler;
 import org.bruno.elytraEssentials.helpers.*;
-import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
@@ -13,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class StatsCommand implements ISubCommand {
+public class StatsCommand implements SubCommand {
     private final StatsHandler statsHandler;
     private final MessagesHelper messagesHelper;
     private final MessagesHandler messagesHandler;

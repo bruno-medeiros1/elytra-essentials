@@ -11,7 +11,6 @@ import org.bruno.elytraEssentials.handlers.ConfigHandler;
 import org.bruno.elytraEssentials.handlers.MessagesHandler;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
-import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bruno.elytraEssentials.utils.Constants;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -30,7 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ArmorCommand implements ISubCommand {
+public class ArmorCommand implements SubCommand {
     private final ElytraEssentials plugin;
     private final Economy economy;
     private final MessagesHelper messagesHelper;

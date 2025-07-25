@@ -4,12 +4,11 @@ import org.bruno.elytraEssentials.gui.achievements.AchievementsGuiHandler;
 import org.bruno.elytraEssentials.handlers.MessagesHandler;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
-import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bruno.elytraEssentials.utils.StatType;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class AchievementsCommand implements ISubCommand {
+public class AchievementsCommand implements SubCommand {
     private final AchievementsGuiHandler achievementsGuiHandler;
     private final MessagesHelper messagesHelper;
     private final MessagesHandler messagesHandler;

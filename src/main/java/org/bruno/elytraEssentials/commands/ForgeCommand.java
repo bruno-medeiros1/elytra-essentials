@@ -5,12 +5,11 @@ import org.bruno.elytraEssentials.gui.forge.ForgeGuiHandler;
 import org.bruno.elytraEssentials.handlers.MessagesHandler;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
-import org.bruno.elytraEssentials.interfaces.ISubCommand;
 import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class ForgeCommand implements ISubCommand {
+public class ForgeCommand implements SubCommand {
 
     private final ForgeGuiHandler forgeGuiHandler;
     private final ConfigHandler configHandler;
