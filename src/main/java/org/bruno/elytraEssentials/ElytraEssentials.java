@@ -84,6 +84,7 @@ public final class ElytraEssentials extends JavaPlugin {
     @Override
     public void onEnable() {
         try {
+            setupEconomy();
             setupComponents();
             setupAPI();
             setupListeners();
@@ -208,7 +209,6 @@ public final class ElytraEssentials extends JavaPlugin {
     }
 
     private void setupIntegrations() {
-        setupEconomy();
         new Metrics(this, Constants.Integrations.BSTATS_ID);
         updaterHandler.performCheck();
     }
