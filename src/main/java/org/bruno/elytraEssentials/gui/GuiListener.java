@@ -8,10 +8,13 @@ import org.bruno.elytraEssentials.gui.achievements.AchievementsGuiHandler;
 import org.bruno.elytraEssentials.gui.effects.EffectsGuiHandler;
 import org.bruno.elytraEssentials.gui.forge.ForgeGuiHandler;
 import org.bruno.elytraEssentials.gui.shop.ShopGuiHandler;
+import org.bruno.elytraEssentials.gui.upgrades.UpgradeGuiHandler;
+import org.bruno.elytraEssentials.gui.upgrades.UpgradeHolder;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 public class GuiListener implements Listener {
@@ -20,12 +23,15 @@ public class GuiListener implements Listener {
     private final ForgeGuiHandler forgeGuiHandler;
     private final EffectsGuiHandler effectsGuiHandler;
     private final AchievementsGuiHandler achievementsGuiHandler;
+    private final UpgradeGuiHandler upgradeGuiHandler;
 
-    public GuiListener(ShopGuiHandler shopGuiHandler, ForgeGuiHandler forgeGuiHandler, EffectsGuiHandler effectsGuiHandler, AchievementsGuiHandler achievementsGuiHandler) {
+    public GuiListener(ShopGuiHandler shopGuiHandler, ForgeGuiHandler forgeGuiHandler, EffectsGuiHandler effectsGuiHandler, AchievementsGuiHandler achievementsGuiHandler,
+                       UpgradeGuiHandler upgradeGuiHandler) {
         this.shopGuiHandler = shopGuiHandler;
         this.forgeGuiHandler = forgeGuiHandler;
         this.effectsGuiHandler = effectsGuiHandler;
         this.achievementsGuiHandler = achievementsGuiHandler;
+        this.upgradeGuiHandler = upgradeGuiHandler;
     }
 
     @EventHandler
@@ -46,6 +52,9 @@ public class GuiListener implements Listener {
         else if (event.getInventory().getHolder() instanceof AchievementsHolder) {
             achievementsGuiHandler.handleClick(event);
         }
+        else if (event.getInventory().getHolder() instanceof UpgradeHolder) {
+            upgradeGuiHandler.handleClick(event);
+        }
     }
 
     @EventHandler
@@ -55,5 +64,12 @@ public class GuiListener implements Listener {
         shopGuiHandler.clearPlayerData(player);
         forgeGuiHandler.clearPlayerData(player);
         achievementsGuiHandler.clearPlayerData(player);
+    }
+
+    @EventHandler
+    public void onInventoryClose(InventoryCloseEvent event) {
+        if (event.getInventory().getHolder() instanceof ForgeHolder) {
+            forgeGuiHandler.handleClose(event);
+        }
     }
 }

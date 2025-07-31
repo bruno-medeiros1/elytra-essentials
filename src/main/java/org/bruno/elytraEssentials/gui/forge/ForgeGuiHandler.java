@@ -13,6 +13,7 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
@@ -131,6 +132,16 @@ public class ForgeGuiHandler {
         processedAction.remove(player.getUniqueId());
     }
 
+    public void handleClose(InventoryCloseEvent event){
+        Player player = (Player) event.getPlayer();
+
+        if (processedAction.remove(player.getUniqueId()))
+            return;
+
+        Inventory forge = event.getInventory();
+        returnAllItems(forge, player);
+    }
+
     /**
      * Schedules a result update using the Folia-safe helper.
      */
@@ -143,6 +154,7 @@ public class ForgeGuiHandler {
         returnItemToPlayer(player, forge.getItem(Constants.GUI.FORGE_ELYTRA_SLOT));
         returnItemToPlayer(player, forge.getItem(Constants.GUI.FORGE_ARMOR_SLOT));
         returnItemToPlayer(player, forge.getItem(Constants.GUI.FORGE_RESULT_SLOT));
+        player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.8f, 0.8f);
     }
 
     private void returnItemToPlayer(Player player, ItemStack item) {
@@ -272,8 +284,6 @@ public class ForgeGuiHandler {
         forge.setItem(Constants.GUI.FORGE_ELYTRA_SLOT, null);
         forge.setItem(Constants.GUI.FORGE_ARMOR_SLOT, null);
         forge.setItem(Constants.GUI.FORGE_RESULT_SLOT, null);
-
-        player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.8f, 0.8f);
     }
 
     private void displayRevertedItems(Inventory forge, ItemStack armoredElytra) {
