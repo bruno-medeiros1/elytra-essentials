@@ -307,7 +307,7 @@ public final class ElytraEssentials extends JavaPlugin {
 
     private void registerPlaceholders() {
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
-            this.elytraStatsExpansion = new ElytraEssentialsPlaceholders(this.flightHandler, this.statsHandler, this.effectsHandler, this.databaseHandler, this.configHandler, this.pluginInfoHandler);
+            this.elytraStatsExpansion = new ElytraEssentialsPlaceholders(this.flightHandler, this.statsHandler, this.configHandler, this.pluginInfoHandler);
             this.elytraStatsExpansion.register();
             getLogger().info("Successfully hooked into PlaceholderAPI.");
         } else {

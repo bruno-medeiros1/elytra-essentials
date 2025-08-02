@@ -1,30 +1,22 @@
 package org.bruno.elytraEssentials.placeholders;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
-import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.handlers.*;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.helpers.TimeHelper;
-import org.bruno.elytraEssentials.utils.PlayerStats;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-
-import java.sql.SQLException;
 
 public class ElytraEssentialsPlaceholders extends PlaceholderExpansion {
     private final FlightHandler flightHandler;
     private final StatsHandler statsHandler;
-    private final EffectsHandler effectsHandler;
-    private final DatabaseHandler databaseHandler;
     private final ConfigHandler configHandler;
     private final PluginInfoHandler pluginInfoHandler;
 
-    public ElytraEssentialsPlaceholders(FlightHandler flightHandler, StatsHandler statsHandler,EffectsHandler effectsHandler,
-                                        DatabaseHandler databaseHandler, ConfigHandler configHandler, PluginInfoHandler pluginInfoHandler) {
+    public ElytraEssentialsPlaceholders(FlightHandler flightHandler, StatsHandler statsHandler, ConfigHandler configHandler,
+                                        PluginInfoHandler pluginInfoHandler) {
         this.flightHandler = flightHandler;
         this.statsHandler = statsHandler;
-        this.effectsHandler = effectsHandler;
-        this.databaseHandler = databaseHandler;
         this.configHandler = configHandler;
         this.pluginInfoHandler = pluginInfoHandler;
     }
@@ -90,31 +82,8 @@ public class ElytraEssentialsPlaceholders extends PlaceholderExpansion {
                     return String.format("%.1f km/h", avgSpeedKmh);
                 }
                 return "0.0 km/h";
-
-            // Boost Stats
-            case "boosts_used":
-                return String.valueOf(stats.getBoostsUsed());
-            case "super_boosts_used":
-                return String.valueOf(stats.getSuperBoostsUsed());
-            case "total_boosts":
-                return String.valueOf(stats.getBoostsUsed() + stats.getSuperBoostsUsed());
-
-            // Other Stats
-            case "saves":
-                return String.valueOf(stats.getPluginSaves());
-            case "active_effect":
-                String activeEffect = effectsHandler.getActiveEffect(player.getUniqueId());
-                return (activeEffect != null) ? activeEffect : "None";
-            case "effects_owned":
-                try {
-                    return String.valueOf(databaseHandler.getOwnedEffectKeys(player.getUniqueId()).size());
-                } catch (SQLException e) {
-                    return "Error";
-                }
-            case "effects_total":
-                return String.valueOf(effectsHandler.getEffectsRegistry().size());
         }
 
-        return null; // Let PlaceholderAPI know the placeholder was not found
+        return null;
     }
 }
