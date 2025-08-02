@@ -28,7 +28,8 @@ public class ArmoredElytraListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent e) {
-        if (configHandler.getIsArmoredElytraEnabled() || !(e.getWhoClicked() instanceof Player player)) return;
+        if (!configHandler.getIsArmoredElytraEnabled() || !(e.getWhoClicked() instanceof Player player))
+            return;
 
         if (e.getSlotType() == InventoryType.SlotType.ARMOR || e.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
             armoredElytraHandler.scheduleArmorCheck(player);
@@ -37,34 +38,46 @@ public class ArmoredElytraListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerInteract(PlayerInteractEvent e) {
-        if (configHandler.getIsArmoredElytraEnabled() || (e.getAction() != Action.RIGHT_CLICK_AIR && e.getAction() != Action.RIGHT_CLICK_BLOCK)) return;
+        if (!configHandler.getIsArmoredElytraEnabled() || (e.getAction() != Action.RIGHT_CLICK_AIR && e.getAction() != Action.RIGHT_CLICK_BLOCK))
+            return;
+
         armoredElytraHandler.scheduleArmorCheck(e.getPlayer());
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerDeath(PlayerDeathEvent event) {
-        if (configHandler.getIsArmoredElytraEnabled()) return;
+        if (!configHandler.getIsArmoredElytraEnabled())
+            return;
+
         armoredElytraHandler.removeArmorAttributes(event.getEntity());
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onItemBreak(PlayerItemBreakEvent event) {
-        if (configHandler.getIsArmoredElytraEnabled()) return;
+        if (!configHandler.getIsArmoredElytraEnabled())
+            return;
+
         armoredElytraHandler.removeArmorAttributes(event.getPlayer());
     }
 
     @EventHandler public void onPlayerJoin(PlayerJoinEvent event) {
-        if (configHandler.getIsArmoredElytraEnabled()) return;
+        if (!configHandler.getIsArmoredElytraEnabled())
+            return;
+
         armoredElytraHandler.scheduleArmorCheck(event.getPlayer());
     }
 
     @EventHandler public void onPlayerRespawn(PlayerRespawnEvent event) {
-        if (configHandler.getIsArmoredElytraEnabled()) return;
+        if (!configHandler.getIsArmoredElytraEnabled())
+            return;
+
         armoredElytraHandler.scheduleArmorCheck(event.getPlayer());
     }
 
     @EventHandler public void onDispense(BlockDispenseArmorEvent event) {
-        if (configHandler.getIsArmoredElytraEnabled() || !(event.getTargetEntity() instanceof Player p)) return;
+        if (!configHandler.getIsArmoredElytraEnabled() || !(event.getTargetEntity() instanceof Player p))
+            return;
+
         armoredElytraHandler.scheduleArmorCheck(p);
     }
 }
