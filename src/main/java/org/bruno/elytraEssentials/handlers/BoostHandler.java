@@ -27,12 +27,14 @@ import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class BoostHandler {
-    private static final long MINIMUM_SPAM_DELAY_MS = 50; // The absolute minimum cooldown
-    private static final double BOOST_MULTIPLIER = 0.5;
-    private static final double SUPER_BOOST_MULTIPLIER = 1.0;
+    private static final long MINIMUM_SPAM_DELAY_MS = 50;
+    private static final double BOOST_FORCE = 0.05;
+    private static final double SUPER_BOOST_FORCE = 0.08;
+    private static final int BOOST_DURATION_TICKS = 20;
 
     private final ElytraEssentials plugin;
     private final FoliaHelper foliaHelper;
@@ -42,7 +44,6 @@ public class BoostHandler {
     private final ConfigHandler configHandler;
     private final MessagesHandler messagesHandler;
     private final UpgradeHandler upgradeHandler;
-    private final ArmoredElytraHelper armoredElytraHelper;
 
     private FlightHandler flightHandler;
 
@@ -52,6 +53,7 @@ public class BoostHandler {
     private final Map<UUID, Long> boostMessageExpirations = new ConcurrentHashMap<>();
     private final Map<UUID, CancellableTask> chargingTasks = new ConcurrentHashMap<>();
     private final Map<UUID, BossBar> chargeBossBars = new ConcurrentHashMap<>();
+    private final Map<UUID, CancellableTask> activeBoostTasks = new ConcurrentHashMap<>();
 
     private final Random random = new Random();
 
@@ -66,7 +68,6 @@ public class BoostHandler {
         this.configHandler = configHandler;
         this.messagesHandler = messagesHandler;
         this.upgradeHandler = upgradeHandler;
-        this.armoredElytraHelper = armoredElytraHelper;
     }
 
     public void setFlightHandler(FlightHandler flightHandler) {
@@ -150,50 +151,68 @@ public class BoostHandler {
     private void handleInAirBoost(Player player) {
         if (!configHandler.getIsBoostEnabled()) return;
         if (!PermissionsHelper.hasElytraBoostPermission(player) && !PermissionsHelper.hasElytraSuperBoostPermission(player)) return;
-
-        ItemStack itemInHand = player.getInventory().getItemInMainHand();
-        Material configuredMaterial = Material.valueOf(configHandler.getBoostItem());
-        if (itemInHand.getType() != configuredMaterial) return;
-
         if (isOnCooldown(player)) return;
 
         PlayerStats stats = statsHandler.getStats(player);
-        double boostMultiplier;
+        double baseForce;
         boolean isSuperBoost = player.isSneaking();
 
         if (isSuperBoost) {
-            if (!PermissionsHelper.hasElytraSuperBoostPermission(player)) return;
+            if (!PermissionsHelper.hasElytraSuperBoostPermission(player))
+                return;
+
             stats.incrementSuperBoostsUsed();
-            boostMultiplier = SUPER_BOOST_MULTIPLIER;
+            baseForce = SUPER_BOOST_FORCE;
         } else {
-            if (!PermissionsHelper.hasElytraBoostPermission(player)) return;
+            if (!PermissionsHelper.hasElytraBoostPermission(player))
+                return;
+
             stats.incrementBoostsUsed();
-            boostMultiplier = BOOST_MULTIPLIER;
+            baseForce = BOOST_FORCE;
         }
 
-        double finalMultiplier = boostMultiplier;
-
-        // Apply Boost Power Upgrade
         ItemStack chestplate = player.getInventory().getChestplate();
-        if (armoredElytraHelper.isArmoredElytra(chestplate)) {
-            double bonusPowerPercent = upgradeHandler.getBonusBoostPower(chestplate);
-            finalMultiplier = boostMultiplier * (1 + (bonusPowerPercent / 100.0));
-        }
+        double bonusPowerPercent = upgradeHandler.getBonusBoostPower(chestplate);
+        double finalForce = baseForce * (1 + (bonusPowerPercent / 100.0));
 
         cooldowns.put(player.getUniqueId(), System.currentTimeMillis());
 
-        Vector direction = player.getLocation().getDirection();
-        Vector boost = direction.multiply(finalMultiplier);
-        player.setVelocity(player.getVelocity().add(boost));
+        cancelBoost(player.getUniqueId()); // Cancel any previous boost to allow chain-boosting
+
+        final AtomicInteger ticksRemaining = new AtomicInteger(BOOST_DURATION_TICKS);
+        CancellableTask boostTask = foliaHelper.runTaskTimerForEntity(player, () -> {
+            if (!player.isOnline() || !player.isGliding() || ticksRemaining.getAndDecrement() <= 0) {
+                cancelBoost(player.getUniqueId());
+                return;
+            }
+
+            Vector direction = player.getLocation().getDirection();
+            Vector boost = direction.multiply(finalForce);
+            player.setVelocity(player.getVelocity().add(boost));
+
+            if (isSuperBoost) {
+                player.getWorld().spawnParticle(Particle.CLOUD, player.getLocation(), 2, 0.1, 0.1, 0.1, 0.05);
+            } else {
+                player.getWorld().spawnParticle(Particle.CLOUD, player.getLocation(), 1, 0.1, 0.1, 0.1, 0.05);
+            }
+
+        }, 1L, 1L);
+
+        activeBoostTasks.put(player.getUniqueId(), boostTask);
 
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_LAUNCH, 1.0f, 1.0f);
 
         if (isSuperBoost) {
             superBoostMessageExpirations.put(player.getUniqueId(), System.currentTimeMillis() + 1000);
-            player.getWorld().spawnParticle(Particle.CLOUD, player.getLocation(), 40, 0.5, 0.5, 0.5, 0.1);
         } else {
             boostMessageExpirations.put(player.getUniqueId(), System.currentTimeMillis() + 1000);
-            player.getWorld().spawnParticle(Particle.CLOUD, player.getLocation(), 20, 0.5, 0.5, 0.5, 0.1);
+        }
+    }
+
+    private void cancelBoost(UUID playerId) {
+        CancellableTask task = activeBoostTasks.remove(playerId);
+        if (task != null) {
+            task.cancel();
         }
     }
 
