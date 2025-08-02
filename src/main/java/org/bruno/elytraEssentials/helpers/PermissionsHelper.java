@@ -173,6 +173,12 @@ public final class PermissionsHelper {
                 sender.hasPermission(Constants.Permissions.CMD_TANDEM_LEAVE);
     }
 
+    public static boolean hasUpgradePermission(CommandSender sender) {
+        return sender.hasPermission(Constants.Permissions.ALL) ||
+                sender.hasPermission(Constants.Permissions.ALL_COMMANDS) ||
+                sender.hasPermission(Constants.Permissions.CMD_UPGRADE);
+    }
+
     //</editor-fold>
 
     //<editor-fold desc="FEATURE PERMISSIONS (Player-Specific)">

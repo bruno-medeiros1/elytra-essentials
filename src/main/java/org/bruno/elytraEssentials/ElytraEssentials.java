@@ -21,6 +21,7 @@ import org.bruno.elytraEssentials.api.ElytraEssentialsAPI;
 import org.bruno.elytraEssentials.api.ElytraEssentialsAPIImpl;
 import org.bruno.elytraEssentials.commands.*;
 import org.bruno.elytraEssentials.gui.GuiListener;
+import org.bruno.elytraEssentials.gui.upgrade.UpgradeGuiHandler;
 import org.bruno.elytraEssentials.handlers.*;
 import org.bruno.elytraEssentials.gui.achievements.AchievementsGuiHandler;
 import org.bruno.elytraEssentials.gui.effects.EffectsGuiHandler;
@@ -63,6 +64,8 @@ public final class ElytraEssentials extends JavaPlugin {
     private UpdaterHandler updaterHandler;
     private MessagesHandler messagesHandler;
     private TandemHandler tandemHandler;
+    private UpgradeGuiHandler upgradeGuiHandler;
+    private UpgradeHandler upgradeHandler;
 
     private MessagesHelper messagesHelper;
     private FileHelper fileHelper;
@@ -175,6 +178,7 @@ public final class ElytraEssentials extends JavaPlugin {
         databaseHandler.initialize();
 
         // Handlers Initialization
+        this.upgradeHandler = new UpgradeHandler(this);
         this.tpsHandler = new TpsHandler(this.foliaHelper, this.messagesHelper);
         this.effectsHandler = new EffectsHandler(this, fileHelper.getShopConfig(), this.foliaHelper, this.databaseHandler,
                 this.messagesHelper, this.serverVersion, this.economy, this.tpsHandler, this.messagesHandler, getLogger());
@@ -184,16 +188,17 @@ public final class ElytraEssentials extends JavaPlugin {
                 this.messagesHelper, this.fileHelper.getAchievementsConfig(), getLogger(), this.messagesHandler);
 
         this.boostHandler = new BoostHandler(this, this.foliaHelper, this.messagesHelper, this.serverVersion,
-                this.statsHandler, this.configHandler, this.messagesHandler);
+                this.statsHandler, this.configHandler, this.messagesHandler, this.upgradeHandler, this.armoredElytraHelper);
         this.flightHandler = new FlightHandler(getLogger(), this.configHandler, this.effectsHandler, this.boostHandler,
-                this.foliaHelper, this.messagesHelper, this.databaseHandler, this.statsHandler, this.messagesHandler);
+                this.foliaHelper, this.messagesHelper, this.databaseHandler, this.statsHandler, this.messagesHandler,
+                this.upgradeHandler, armoredElytraHelper);
         this.boostHandler.setFlightHandler(this.flightHandler);
 
         this.recoveryHandler = new RecoveryHandler(this.flightHandler, this.configHandler, this.foliaHelper);
         this.combatTagHandler = new CombatTagHandler(this.configHandler, this.messagesHelper, this.foliaHelper, this.messagesHandler);
         this.elytraEquipHandler = new ElytraEquipHandler(this.configHandler, this.messagesHelper, this.foliaHelper, this.messagesHandler);
         this.armoredElytraHandler = new ArmoredElytraHandler(this, this.configHandler, this.foliaHelper, this.armoredElytraHelper,
-                this.messagesHelper, this.messagesHandler);
+                this.messagesHelper, this.messagesHandler, this.upgradeHandler);
 
         this.effectsGuiHandler = new EffectsGuiHandler(this, this.effectsHandler, this.databaseHandler, this.foliaHelper, this.messagesHelper, getLogger());
         this.shopGuiHandler = new ShopGuiHandler(this, this.effectsHandler, this.effectsGuiHandler, getLogger());
@@ -202,6 +207,8 @@ public final class ElytraEssentials extends JavaPlugin {
                 this.messagesHandler, this.messagesHelper);
         this.achievementsGuiHandler = new AchievementsGuiHandler(getLogger(), this.databaseHandler, this.foliaHelper, this.messagesHelper,
                 this.achievementsHandler, this.statsHandler);
+        this.upgradeGuiHandler = new UpgradeGuiHandler(this, this.armoredElytraHelper, this.configHandler,
+                this.messagesHelper, this.economy, this.armoredElytraHandler);
 
         this.tandemHandler = new TandemHandler(this.configHandler, this.messagesHelper, this.foliaHelper, this.flightHandler, this.messagesHandler);
 
@@ -223,8 +230,8 @@ public final class ElytraEssentials extends JavaPlugin {
         var elytraUpdaterListener = new ElytraUpdaterListener(this.messagesHelper, this.pluginInfoHandler.getLatestVersion(), this.configHandler, this.pluginInfoHandler);
         var armoredElytraListener = new ArmoredElytraListener(this.armoredElytraHandler, this.configHandler);
         var combatTagListener = new CombatTagListener(this.combatTagHandler);
-        var damageListener = new DamageListener(this.flightHandler, this.statsHandler, this.armoredElytraHandler);
-        var guiListener = new GuiListener(this.shopGuiHandler, this.forgeGuiHandler, this.effectsGuiHandler, this.achievementsGuiHandler);
+        var damageListener = new DamageListener(this.flightHandler, this.statsHandler, this.armoredElytraHandler, this.upgradeHandler);
+        var guiListener = new GuiListener(this.shopGuiHandler, this.forgeGuiHandler, this.effectsGuiHandler, this.achievementsGuiHandler, this.upgradeGuiHandler);
         var tandemListener = new TandemListener(this.tandemHandler);
 
         // Register all listeners instances
@@ -250,10 +257,11 @@ public final class ElytraEssentials extends JavaPlugin {
         var statsCommand = new StatsCommand(this.statsHandler, this.messagesHelper, this.messagesHandler);
         var topCommand = new TopCommand(this.statsHandler, this.messagesHelper, this.messagesHandler);
         var forgeCommand = new ForgeCommand(this.forgeGuiHandler, this.configHandler, this.messagesHelper, this.messagesHandler);
-        var armorCommand = new ArmorCommand(this, this.messagesHelper, this.economy, this.configHandler, this.messagesHandler);
+        var armorCommand = new ArmorCommand(this, this.messagesHelper, this.economy, this.configHandler, this.messagesHandler, this.armoredElytraHelper);
         var importDbCommand = new ImportDbCommand(this, messagesHandler, this.messagesHelper, this.databaseHandler);
         var achievementsCommand = new AchievementsCommand(this.achievementsGuiHandler, this.messagesHelper, this.messagesHandler);
         var tandemCommand = new TandemCommand(this.tandemHandler, this.messagesHelper, this.messagesHandler, this.configHandler);
+        var upgradeCommand = new UpgradeCommand(this.upgradeGuiHandler, this.armoredElytraHelper, this.messagesHelper, this.messagesHandler);
 
         ElytraEssentialsCommand mainCommand = new ElytraEssentialsCommand(getLogger(), this.messagesHelper);
         mainCommand.registerSubCommand("help", helpCommand);
@@ -268,6 +276,7 @@ public final class ElytraEssentials extends JavaPlugin {
         mainCommand.registerSubCommand("importdb", importDbCommand);
         mainCommand.registerSubCommand("achievements", achievementsCommand);
         mainCommand.registerSubCommand("tandem", tandemCommand);
+        mainCommand.registerSubCommand("upgrade", upgradeCommand);
 
         Objects.requireNonNull(getCommand("ee")).setExecutor(mainCommand);
         Objects.requireNonNull(getCommand("ee")).setTabCompleter(mainCommand);

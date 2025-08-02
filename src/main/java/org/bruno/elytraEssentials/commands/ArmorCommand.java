@@ -9,12 +9,16 @@ import net.milkbowl.vault.economy.Economy;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.handlers.ConfigHandler;
 import org.bruno.elytraEssentials.handlers.MessagesHandler;
+import org.bruno.elytraEssentials.helpers.ArmoredElytraHelper;
+import org.bruno.elytraEssentials.helpers.ColorHelper;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
 import org.bruno.elytraEssentials.utils.Constants;
+import org.bruno.elytraEssentials.utils.UpgradeType;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -35,15 +39,17 @@ public class ArmorCommand implements SubCommand {
     private final MessagesHelper messagesHelper;
     private final ConfigHandler configHandler;
     private final MessagesHandler messagesHandler;
+    private final ArmoredElytraHelper armoredElytraHelper;
 
     public ArmorCommand(ElytraEssentials plugin, MessagesHelper messagesHelper, Economy economy, ConfigHandler configHandler,
-                        MessagesHandler messagesHandler) {
+                        MessagesHandler messagesHandler, ArmoredElytraHelper armoredElytraHelper) {
         this.plugin = plugin;
 
         this.messagesHelper = messagesHelper;
         this.economy = economy;
         this.configHandler = configHandler;
         this.messagesHandler = messagesHandler;
+        this.armoredElytraHelper = armoredElytraHelper;
     }
 
     @Override
@@ -94,8 +100,13 @@ public class ArmorCommand implements SubCommand {
         int timesShattered = container.getOrDefault(new NamespacedKey(plugin, Constants.NBT.PLATING_SHATTERED_TAG), PersistentDataType.INTEGER, 0);
         String forgedBy = container.getOrDefault(new NamespacedKey(plugin, Constants.NBT.FORGED_BY_TAG), PersistentDataType.STRING, "§kUnknown");
 
+        AttributeInstance armorAttr = armoredElytraHelper.getArmorAttribute(player);
+        AttributeInstance toughnessAttr = armoredElytraHelper.getToughnessAttribute(player);
+        double armorPoints = armorAttr != null ? armorAttr.getValue() : 0;
+        double armorToughness = toughnessAttr != null ? toughnessAttr.getValue() : 0;
+
         //  Build and send the interactive message
-        sendArmorInfoMessage(player, currentDurability, maxDurability, materialName, damageAbsorbed, timesShattered, forgedBy, container);
+        sendArmorInfoMessage(player, currentDurability, maxDurability, materialName, damageAbsorbed, timesShattered, forgedBy, container, armorPoints, armorToughness);
     }
 
     private void handleRepairCommand(CommandSender sender) {
@@ -223,12 +234,10 @@ public class ArmorCommand implements SubCommand {
         return List.of();
     }
 
-    private void sendArmorInfoMessage(Player player, int currentDurability, int maxDurability, String materialName, double damageAbsorbed, int timesShattered, String forgedBy, PersistentDataContainer container) {
+    private void sendArmorInfoMessage(Player player, int currentDurability, int maxDurability, String materialName, double damageAbsorbed, int timesShattered,
+                                      String forgedBy, PersistentDataContainer container, double armorPoints, double armorToughness) {
         String primaryColor = "§b";
-        String secondaryColor = "§3";
         String textColor = "§7";
-        String valueColor = "§f";
-        String arrow = "» ";
 
         player.sendMessage(primaryColor + "§m----------------------------------------------------");
         player.sendMessage("");
@@ -236,12 +245,12 @@ public class ArmorCommand implements SubCommand {
         player.sendMessage("");
 
         // Build the "Armor Plating" line with an interactive button if needed
-        TextComponent platingTitle = new TextComponent(TextComponent.fromLegacyText(secondaryColor + arrow + textColor + "Armor Plating "));
+        TextComponent platingTitle = new TextComponent(TextComponent.fromLegacyText("§6Armor Plating: "));
         if (currentDurability < maxDurability) {
             double repairMoneyCost = configHandler.getRepairCostMoney();
             int repairXpCost = configHandler.getRepairCostXpLevels();
 
-            TextComponent repairButton = new TextComponent("§b[Repair]");
+            TextComponent repairButton = new TextComponent("§e[Repair]");
             repairButton.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/ee armor repair"));
 
             BaseComponent[] hoverText = new TextComponent[]{
@@ -256,66 +265,49 @@ public class ArmorCommand implements SubCommand {
         player.spigot().sendMessage(platingTitle);
 
         // Display Armor Plating Durability with the visual bar
-        player.sendMessage(createDurabilityBar(currentDurability, maxDurability));
+        player.sendMessage(armoredElytraHelper.getDurabilityBarString(currentDurability, maxDurability));
 
         player.sendMessage("");
-        player.sendMessage(secondaryColor + arrow + textColor + "Base Material: " + valueColor + getCapitalizedName(materialName));
+        player.sendMessage(" §f▪ §7Base Material: §f" + getCapitalizedName(materialName));
 
+        // Armor Stats
+        player.sendMessage("");
+        player.sendMessage(ColorHelper.parse("&#0067FFArmor Stats:"));
+        player.sendMessage(ColorHelper.parse(String.format(" §f▪ §7Armor: &#B0D0FF+%.1f", armorPoints)));
+        if (armorToughness > 0) {
+            player.sendMessage(ColorHelper.parse(String.format(" &f▪ &7Armor Toughness: &#B0D0FF+%.1f", armorToughness)));
+        }
+
+        // Armor Enchantments
         List<String> enchantmentLines = getEnchantmentLines(container);
         if (!enchantmentLines.isEmpty()) {
             player.sendMessage("");
-            player.sendMessage(secondaryColor + "Stored Enchantments:");
+            player.sendMessage("§dEnchantments:");
             for (String line : enchantmentLines) {
                 player.sendMessage(line);
             }
         }
 
-        player.sendMessage("");
-        player.sendMessage(secondaryColor + "§lItem History:");
-        double damageInHearts = damageAbsorbed / 2.0;
-        player.sendMessage(String.format(" %s- %sTotal Damage Absorbed: %s%.1f ❤", "§f", textColor, "§a", damageInHearts));
-        player.sendMessage(String.format(" %s- %sTimes Plating Shattered: %s%d", "§f", textColor, "§c", timesShattered));
-        player.sendMessage(String.format(" %s- %sForged By: %s%s", "§f", textColor, "§b", forgedBy));
-
-        player.sendMessage("");
-        player.sendMessage(primaryColor + "§m----------------------------------------------------");
-    }
-
-    private String createDurabilityBar(int current, int max) {
-        // Ensure we don't divide by zero if max durability is 0 for some reason
-        double percentage = (max > 0) ? (double) current / max : 0;
-
-        // Determine the color based on the percentage
-        String barColor;
-        if (percentage == 1) {
-            barColor = "§a"; // Full health
-        } else if (percentage > 0.5) {
-            barColor = "§e"; // Medium health
-        } else if (percentage > 0.2) {
-            barColor = "§c"; // Low health
-        } else {
-            barColor = "§4"; // Critically low health
-        }
-
-        int totalSegments = 28; // The total width of the bar in characters
-        int filledSegments = (int) (totalSegments * percentage);
-
-        // Build the string for the bar itself
-        StringBuilder bar = new StringBuilder();
-        bar.append(barColor);
-        for (int i = 0; i < totalSegments; i++) {
-            if (i < filledSegments) {
-                bar.append("▆"); // Filled segment
-            } else {
-                // Use a gray color for the empty part of the bar
-                bar.append("§f▆");
+        // Armor Upgrades
+        List<String> upgradeLines = getUpgradeLines(container);
+        if (!upgradeLines.isEmpty()) {
+            player.sendMessage("");
+            player.sendMessage("§cUpgrades:");
+            for (String line : upgradeLines) {
+                player.sendMessage(line);
             }
         }
 
-        double displayPercentage = percentage * 100.0;
-        bar.append(String.format(" %s§l%.2f%%", barColor, displayPercentage));
+        // Item History
+        player.sendMessage("");
+        player.sendMessage("§bItem History:");
+        double damageInHearts = damageAbsorbed / 2.0;
+        player.sendMessage(String.format(" %s▪ %sTotal Damage Absorbed: %s%.1f ❤", "§f", textColor, "§b", damageInHearts));
+        player.sendMessage(String.format(" %s▪ %sTimes Plating Shattered: %s%d", "§f", textColor, "§b", timesShattered));
+        player.sendMessage(String.format(" %s▪ %sForged By: %s%s", "§f", textColor, "§b", forgedBy));
 
-        return bar.toString();
+        player.sendMessage("");
+        player.sendMessage(primaryColor + "§m----------------------------------------------------");
     }
 
     private boolean isArmoredElytra(ItemStack item) {
@@ -349,11 +341,25 @@ public class ArmorCommand implements SubCommand {
         // Build the lore lines from the clean map
         if (!displayEnchants.isEmpty()) {
             for (Map.Entry<Enchantment, Integer> entry : displayEnchants.entrySet()) {
-                lines.add(String.format("§3» §b%s %d", getCapitalizedName(entry.getKey().getKey().getKey()), entry.getValue()));
+                lines.add(String.format(" §f▪ §7%s %d", getCapitalizedName(entry.getKey().getKey().getKey()), entry.getValue()));
             }
         }
 
         return lines;
+    }
+
+    private List<String> getUpgradeLines(PersistentDataContainer container) {
+        List<String> upgradeLines = new ArrayList<>();
+        for (UpgradeType type : UpgradeType.values()) {
+            NamespacedKey key = new NamespacedKey(plugin, type.getKey());
+            int level = container.getOrDefault(key, PersistentDataType.INTEGER, 0);
+            if (level > 0) {
+                double bonus = level * type.getValuePerLevel();
+                String bonusString = String.format("%.1f", bonus).replace(".0", "");
+                upgradeLines.add(ColorHelper.parse(" &f▪ &7" + type.getDisplayName() + ": &#FFBFBFLevel " + level + " &7(&4+" + bonusString + type.getSuffix() + "&7)"));
+            }
+        }
+        return upgradeLines;
     }
 
     private String getCapitalizedName(String name) {

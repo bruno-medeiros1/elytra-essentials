@@ -4,10 +4,7 @@ import org.bruno.elytraEssentials.helpers.*;
 import org.bruno.elytraEssentials.utils.CancellableTask;
 import org.bruno.elytraEssentials.utils.Constants;
 import org.bruno.elytraEssentials.utils.PlayerStats;
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -44,6 +41,8 @@ public class FlightHandler {
     private final DatabaseHandler databaseHandler;
     private final StatsHandler statsHandler;
     private final MessagesHandler messagesHandler;
+    private final UpgradeHandler upgradeHandler;
+    private final ArmoredElytraHelper armoredElytraHelper;
 
     private final Map<UUID, Integer> flightTimeData = new ConcurrentHashMap<>();
     private final Map<UUID, BossBar> flightBossBars = new ConcurrentHashMap<>();
@@ -51,12 +50,14 @@ public class FlightHandler {
     private final Set<UUID> noFallDamagePlayers = ConcurrentHashMap.newKeySet(); // Thread-safe set
     private final Map<UUID, Integer> initialFlightTime = new ConcurrentHashMap<>();
     private final Map<UUID, Long> deployCooldowns = new ConcurrentHashMap<>();
-
-    private CancellableTask globalFlightTask;
     private final Map<UUID, CancellableTask> activeFlightTasks = new HashMap<>();
 
+    private CancellableTask globalFlightTask;
+    private final Random random = new Random();
+
     public FlightHandler(Logger logger, ConfigHandler configHandler, EffectsHandler effectsHandler, BoostHandler boostHandler, FoliaHelper foliaHelper,
-                         MessagesHelper messagesHelper, DatabaseHandler databaseHandler, StatsHandler statsHandler, MessagesHandler messagesHandler) {
+                         MessagesHelper messagesHelper, DatabaseHandler databaseHandler, StatsHandler statsHandler, MessagesHandler messagesHandler,
+                         UpgradeHandler upgradeHandler, ArmoredElytraHelper armoredElytraHelper) {
         this.logger = logger;
         this.configHandler = configHandler;
         this.effectsHandler = effectsHandler;
@@ -66,6 +67,8 @@ public class FlightHandler {
         this.databaseHandler = databaseHandler;
         this.statsHandler = statsHandler;
         this.messagesHandler = messagesHandler;
+        this.upgradeHandler = upgradeHandler;
+        this.armoredElytraHelper = armoredElytraHelper;
     }
 
     public void start() {
@@ -159,7 +162,7 @@ public class FlightHandler {
         // If all checks pass, proceed with normal glide setup
         currentFlightDistances.put(player.getUniqueId(), 0.0);
         if (configHandler.getIsTimeLimitEnabled()) {
-            createBossBar(player);
+            createFlightTimeBossBar(player);
             if (foliaHelper.isFolia()) {
                 startTrackingPlayer(player);
             }
@@ -172,7 +175,7 @@ public class FlightHandler {
         PlayerStats stats = statsHandler.getStats(player);
         double flightDistance = currentFlightDistances.getOrDefault(player.getUniqueId(), 0.0);
 
-        if (flightDistance > stats.getLongestFlight()) {
+        if (flightDistance > 0 && flightDistance > stats.getLongestFlight()) {
             stats.setLongestFlight(flightDistance);
             String message = messagesHandler.getNewPRLongestFlightMessage().replace("{0}", String.format("%.0f", flightDistance));
             messagesHelper.sendPlayerMessage(player, message);
@@ -191,7 +194,8 @@ public class FlightHandler {
         handleEmergencyDeploy(player);
 
         if (!player.isGliding()) {
-            if (flightBossBars.containsKey(player.getUniqueId())) removeBossBar(player);
+            if (flightBossBars.containsKey(player.getUniqueId()))
+                removeBossBar(player);
             return;
         }
 
@@ -388,12 +392,11 @@ public class FlightHandler {
     // This is the global loop for Spigot/Paper
     private void handleGlobalFlightTimeCountdown() {
         for (Player player : Bukkit.getOnlinePlayers()) {
-            boolean isFlying = player.isGliding() && !PermissionsHelper.playerBypassTimeLimit(player);
-            if (isFlying) {
-                if (!flightBossBars.containsKey(player.getUniqueId())) createBossBar(player);
+            if (player.isGliding() && !PermissionsHelper.playerBypassTimeLimit(player)) {
+                if (!flightBossBars.containsKey(player.getUniqueId()))
+                    createFlightTimeBossBar(player);
+
                 updatePlayerFlight(player);
-            } else {
-                if (flightBossBars.containsKey(player.getUniqueId())) removeBossBar(player);
             }
         }
     }
@@ -405,6 +408,15 @@ public class FlightHandler {
             }
             removeBossBar(player);
             return;
+        }
+
+        ItemStack chestplate = player.getInventory().getChestplate();
+        if (armoredElytraHelper.isArmoredElytra(chestplate)){
+            double efficiencyChance = upgradeHandler.getFlightEfficiencyChance(chestplate);
+            if (efficiencyChance > 0 && random.nextDouble() * 100 < efficiencyChance) {
+                updateBossBar(player, flightTimeData.getOrDefault(player.getUniqueId(), 0));
+                return; // Skip time consumption for this tick
+            }
         }
 
         int currentFlightTime = flightTimeData.getOrDefault(player.getUniqueId(), 0);
@@ -444,6 +456,13 @@ public class FlightHandler {
 
         // Enforce speed limits
         double worldMaxSpeed = configHandler.getPerWorldSpeedLimits().getOrDefault(player.getWorld().getName(), configHandler.getDefaultSpeedLimit());
+
+        ItemStack chestplate = player.getInventory().getChestplate();
+        if (armoredElytraHelper.isArmoredElytra(chestplate)) {
+            double bonusSpeed = upgradeHandler.getBonusSpeed(chestplate);
+            worldMaxSpeed += bonusSpeed;
+        }
+
         if (!PermissionsHelper.playerBypassSpeedLimit(player) && configHandler.getIsSpeedLimitEnabled() && realSpeed > worldMaxSpeed) {
             finalSpeed = worldMaxSpeed;
             player.setVelocity(velocity.normalize().multiply(worldMaxSpeed / METERS_PER_SECOND_TO_KMH / TICKS_IN_ONE_SECOND));
@@ -553,8 +572,8 @@ public class FlightHandler {
         }
     }
 
-    private void createBossBar(Player player) {
-        if (!configHandler.getIsTimeLimitEnabled() || flightBossBars.containsKey(player.getUniqueId())) return;
+    private void createFlightTimeBossBar(Player player) {
+        if (flightBossBars.containsKey(player.getUniqueId())) return;
 
         if (PermissionsHelper.playerBypassTimeLimit(player)) {
             String message = messagesHandler.getElytraFlightTimeBypass();
@@ -564,8 +583,7 @@ public class FlightHandler {
         } else {
             int flightTime = flightTimeData.getOrDefault(player.getUniqueId(), 0);
             if (flightTime > 0) {
-                String message = messagesHandler.getElytraTimeLimitMessage()
-                        .replace("{0}", TimeHelper.formatFlightTime(flightTime));
+                String message = messagesHandler.getElytraTimeLimitMessage().replace("{0}", TimeHelper.formatFlightTime(flightTime));
                 BossBar bossBar = Bukkit.createBossBar(ColorHelper.parse(message), BarColor.GREEN, BarStyle.SOLID);
                 bossBar.addPlayer(player);
                 flightBossBars.put(player.getUniqueId(), bossBar);

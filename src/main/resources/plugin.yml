@@ -1,7 +1,7 @@
 main: org.bruno.elytraEssentials.ElytraEssentials
 author: CodingMaestro
 name: ElytraEssentials
-version: 2.0.0
+version: 2.1.0
 api-version: '1.18'
 load: STARTUP
 folia-supported: true
@@ -87,6 +87,9 @@ permissions:
           elytraessentials.command.tandem.leave:
             default: true
             description: "Allows dismounting from a tandem flight."
+          elytraessentials.command.upgrade:
+            default: op
+            description: "Allows open the GUI to upgrade armored elytra."
 
       elytraessentials.bypass.*:
         description: "Allows bypassing all plugin restrictions and limits."

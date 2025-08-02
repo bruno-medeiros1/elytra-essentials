@@ -51,6 +51,9 @@ public class ArmoredElytraHelper {
     public ItemStack createArmoredElytra(ItemStack elytra, ItemStack chestplate, Player player) {
         ItemStack armoredElytra = new ItemStack(Material.ELYTRA);
         ItemMeta meta = armoredElytra.getItemMeta();
+        ItemMeta chestplateMeta = chestplate.getItemMeta();
+
+        if (meta == null || chestplateMeta == null) return armoredElytra;
 
         if (elytra.getItemMeta() instanceof Damageable sourceDamage && meta instanceof Damageable targetDamage) {
             targetDamage.setDamage(sourceDamage.getDamage());
@@ -66,63 +69,63 @@ public class ArmoredElytraHelper {
         int armorPoints = getArmorPoints(armorType);
         int armorToughness = getArmorToughness(armorType);
 
-        if (meta != null) {
-            meta.setDisplayName("§b§lArmored Elytra");
-            List<String> lore = new ArrayList<>();
-            lore.add("§7A fusion of flight and protection.");
-            lore.add("");
-            lore.add("§6Armor Stats:");
-            lore.add(String.format(" §f- §7Armor: §a+%d", armorPoints));
-            if (armorToughness > 0) {
-                lore.add(String.format(" §f- §7Armor Toughness: §a+%d", armorToughness));
-            }
-            lore.add("");
-            lore.add(String.format("§6Armor Plating: §a%d / %d", currentArmorDurability, maxArmorDurability));
-
-            Map<Enchantment, Integer> displayEnchants = new HashMap<>(chestplate.getEnchantments());
-            elytra.getEnchantments().forEach((enchant, level) -> displayEnchants.merge(enchant, level, Integer::max));
-
-            if (!displayEnchants.isEmpty()) {
-                lore.add("");
-                lore.add("§dEnchantments:");
-            }
-            for (Map.Entry<Enchantment, Integer> entry : displayEnchants.entrySet()) {
-                lore.add(String.format(" §f- §7%s %d", getCapitalizedName(entry.getKey().getKey().getKey()), entry.getValue()));
-            }
-            meta.setLore(lore);
-
-            elytra.getEnchantments().forEach((enchant, level) -> {
-                String normalizedKey = getStandardEnchantmentKey(enchant);
-                NamespacedKey key = new NamespacedKey(plugin, "elytra_enchant_" + normalizedKey);
-                meta.getPersistentDataContainer().set(key, PersistentDataType.INTEGER, level);
-            });
-
-            chestplate.getEnchantments().forEach((enchant, level) -> {
-                String normalizedKey = getStandardEnchantmentKey(enchant);
-                NamespacedKey key = new NamespacedKey(plugin, "chestplate_enchant_" + normalizedKey);
-                meta.getPersistentDataContainer().set(key, PersistentDataType.INTEGER, level);
-            });
-
-            // Apply combined enchantments to the actual item
-            displayEnchants.forEach((enchant, level) -> {
-                meta.addEnchant(enchant, level, true);
-            });
-
-            meta.addEnchant(Enchantment.LURE, 1, true);
-            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-
-            meta.getPersistentDataContainer().set(armoredElytraKey, PersistentDataType.BYTE, (byte) 1);
-            meta.getPersistentDataContainer().set(durabilityKey, PersistentDataType.INTEGER, currentArmorDurability);
-            meta.getPersistentDataContainer().set(maxDurabilityKey, PersistentDataType.INTEGER, maxArmorDurability);
-            meta.getPersistentDataContainer().set(materialKey, PersistentDataType.STRING, chestplate.getType().name());
-            meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.FORGED_BY_TAG), PersistentDataType.STRING, player.getName());
-            meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.DAMAGE_ABSORBED_TAG), PersistentDataType.FLOAT, 0.0f);
-            meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.PLATING_SHATTERED_TAG), PersistentDataType.INTEGER, 0);
-
-            meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.PREVIEW_ITEM_TAG), PersistentDataType.BYTE, (byte) 1);
-
-            armoredElytra.setItemMeta(meta);
+        meta.setDisplayName("§b§lArmored Elytra");
+        List<String> lore = new ArrayList<>();
+        lore.add("§7A fusion of flight and protection.");
+        lore.add("");
+        lore.add("§6Armor Plating:");
+        lore.add(getDurabilityBarString(currentArmorDurability, maxArmorDurability));
+        lore.add("");
+        lore.add(ColorHelper.parse("&#0067FFArmor Stats:"));
+        lore.add(ColorHelper.parse(String.format(" §f▪ §7Armor: &#B0D0FF+%d", armorPoints)));
+        if (armorToughness > 0) {
+            lore.add(ColorHelper.parse(String.format(" &f▪ &7Armor Toughness: &#B0D0FF+%d", armorToughness)));
         }
+
+        Map<Enchantment, Integer> displayEnchants = new HashMap<>(chestplate.getEnchantments());
+        elytra.getEnchantments().forEach((enchant, level) -> displayEnchants.merge(enchant, level, Integer::max));
+
+        if (!displayEnchants.isEmpty()) {
+            lore.add("");
+            lore.add("§dEnchantments:");
+        }
+        for (Map.Entry<Enchantment, Integer> entry : displayEnchants.entrySet()) {
+            lore.add(String.format(" §f▪ §7%s %d", getCapitalizedName(entry.getKey().getKey().getKey()), entry.getValue()));
+        }
+        meta.setLore(lore);
+
+        elytra.getEnchantments().forEach((enchant, level) -> {
+            String normalizedKey = getStandardEnchantmentKey(enchant);
+            NamespacedKey key = new NamespacedKey(plugin, "elytra_enchant_" + normalizedKey);
+            meta.getPersistentDataContainer().set(key, PersistentDataType.INTEGER, level);
+        });
+
+        chestplate.getEnchantments().forEach((enchant, level) -> {
+            String normalizedKey = getStandardEnchantmentKey(enchant);
+            NamespacedKey key = new NamespacedKey(plugin, "chestplate_enchant_" + normalizedKey);
+            meta.getPersistentDataContainer().set(key, PersistentDataType.INTEGER, level);
+        });
+
+        // Apply combined enchantments to the actual item
+        displayEnchants.forEach((enchant, level) -> {
+            meta.addEnchant(enchant, level, true);
+        });
+
+        meta.addEnchant(Enchantment.LURE, 1, true);
+        meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+
+        meta.getPersistentDataContainer().set(armoredElytraKey, PersistentDataType.BYTE, (byte) 1);
+        meta.getPersistentDataContainer().set(durabilityKey, PersistentDataType.INTEGER, currentArmorDurability);
+        meta.getPersistentDataContainer().set(maxDurabilityKey, PersistentDataType.INTEGER, maxArmorDurability);
+        meta.getPersistentDataContainer().set(materialKey, PersistentDataType.STRING, chestplate.getType().name());
+        meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.FORGED_BY_TAG), PersistentDataType.STRING, player.getName());
+        meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.DAMAGE_ABSORBED_TAG), PersistentDataType.FLOAT, 0.0f);
+        meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.PLATING_SHATTERED_TAG), PersistentDataType.INTEGER, 0);
+
+        meta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.PREVIEW_ITEM_TAG), PersistentDataType.BYTE, (byte) 1);
+
+        armoredElytra.setItemMeta(meta);
+
         return armoredElytra;
     }
 
@@ -267,7 +270,7 @@ public class ArmoredElytraHelper {
         return player.getAttribute(attribute);
     }
 
-    public void setArmorModifier(Player player, NamespacedKey key, int armorPoints) {
+    public void setArmorModifier(Player player, NamespacedKey key, double armorPoints) {
         AttributeInstance armorAttr = getArmorAttribute(player);
         if (armorAttr == null) return;
 
@@ -305,7 +308,7 @@ public class ArmoredElytraHelper {
         }
     }
 
-    public void setToughnessModifier(Player player, NamespacedKey key, int toughnessPoints) {
+    public void setToughnessModifier(Player player, NamespacedKey key, double toughnessPoints) {
         AttributeInstance toughnessAttr = getToughnessAttribute(player);
         if (toughnessAttr == null) return;
 
@@ -387,6 +390,43 @@ public class ArmoredElytraHelper {
                 }
             }
         }
+    }
+
+    public String getDurabilityBarString(int current, int max) {
+        // Ensure we don't divide by zero if max durability is 0 for some reason
+        double percentage = (max > 0) ? (double) current / max : 0;
+
+        // Determine the color based on the percentage
+        String barColor;
+        if (percentage == 1) {
+            barColor = "§a"; // Full health
+        } else if (percentage > 0.5) {
+            barColor = "§e"; // Medium health
+        } else if (percentage > 0.2) {
+            barColor = "§c"; // Low health
+        } else {
+            barColor = "§4"; // Critically low health
+        }
+
+        int totalSegments = 28; // The total width of the bar in characters
+        int filledSegments = (int) (totalSegments * percentage);
+
+        // Build the string for the bar itself
+        StringBuilder bar = new StringBuilder();
+        bar.append(barColor);
+        for (int i = 0; i < totalSegments; i++) {
+            if (i < filledSegments) {
+                bar.append("▆"); // Filled segment
+            } else {
+                // Use a gray color for the empty part of the bar
+                bar.append("§f▆");
+            }
+        }
+
+        double displayPercentage = percentage * 100.0;
+        bar.append(String.format(" %s§l%.2f%%", barColor, displayPercentage));
+
+        return bar.toString();
     }
 
     private AttributeModifier createModifier(NamespacedKey key, double amount, String name, AttributeModifier.Operation op) {

@@ -27,6 +27,9 @@ It's a plugin compatible with **Spigot**, **Paper**, **Purpur**, and **Folia** s
 - Configurable combat tag system to disable elytra on damage.
 - Emergency deploy will automatically equip an elytra in the player's inventory if it falls, preventing them from dying.
 - Fully configurable achievements and rewards system with integrated GUI (/ee achievements)
+- Tandem Flight System integrated, allowing you to fly with a friend and explore together.
+- Disable Riptide launch or fireworks boosting.
+- Transform your Armored Elytra into an endgame item with over 7 unique, permanent upgrades!
 - It supports Minecraft version 1.18.x through 1.21.x.
 - Folia Support
 
@@ -63,91 +66,8 @@ By default, the plugin is configured to work "out of the box" using a local SQLi
 
 
 ## API for Developers
-ElytraEssentials provides a simple and powerful API that allows other plugins to interact with its features. 
-To use the API, you need to add ElytraEssentials as a dependency to your project. This is easily done using JitPack.
+Check this section of the wiki for a explanation on how to use the API of ElytraEssentials: [API For Developers](https://github.com/bruno-medeiros1/elytra-essentials/wiki/API-For-Developers)
 
-### Maven Setup
-Add the JitPack repository and the ElytraEssentials dependency to your pom.xml:
-
-```
-<repositories>
-    <repository>
-        <id>jitpack.io</id>
-        <url>https://jitpack.io</url>
-    </repository>
-</repositories>
-```
-```
-<dependencies>
-    <dependency>
-        <groupId>com.github.bruno-medeiros1</groupId>
-        <artifactId>ElytraEssentials</artifactId>
-        <version>v1.9.1</version> <!-- Replace with the desired release tag -->
-        <scope>provided</scope>
-    </dependency>
-</dependencies>
-```
-
-### Gradle Setup
-Add the JitPack repository and the ElytraEssentials dependency to your `build.gradle`:
-```
-repositories {
-maven { url 'https://jitpack.io' }
-}
-
-dependencies {
-compileOnly 'com.github.bruno-medeiros1:ElytraEssentials:v1.9.1' // Replace with the desired release tag
-}
-```
-> [!IMPORTANT]
-> You must use `<scope>provided</scope>` (for Maven) or `compileOnly` (for Gradle). This ensures that ElytraEssentials is not bundled inside your plugin's JAR file.
-
-
-### Getting the API Instance
-After adding the dependency, you need to get the API instance from Bukkit's ServicesManager. It's best to do this in your plugin's onEnable() method.
-
-```
-import org.bruno.elytraEssentials.api.ElytraEssentialsAPI;
-import org.bukkit.plugin.RegisteredServiceProvider;
-
-public class YourPlugin extends JavaPlugin {
-
-    private ElytraEssentialsAPI elytraApi;
-
-    @Override
-    public void onEnable() {
-        if (!setupElytraEssentialsAPI()) {
-            getLogger().severe("ElytraEssentials API not found! This plugin requires ElytraEssentials to function.");
-            getServer().getPluginManager().disablePlugin(this);
-            return;
-        }
-
-        // You can now use the API!
-        getLogger().info("Successfully hooked into the ElytraEssentials API.");
-    }
-
-    private boolean setupElytraEssentialsAPI() {
-        RegisteredServiceProvider<ElytraEssentialsAPI> provider = getServer().getServicesManager().getRegistration(ElytraEssentialsAPI.class);
-        if (provider != null) {
-            this.elytraApi = provider.getProvider();
-        }
-        return this.elytraApi != null;
-    }
-
-    // Example of using the API
-    public void checkPlayerFlightTime(Player player) {
-        if (this.elytraApi == null) return;
-
-        int flightTime = elytraApi.getFlightTime(player.getUniqueId());
-        String activeEffect = elytraApi.getActiveEffectKey(player.getUniqueId());
-
-        player.sendMessage("Your flight time is: " + flightTime + " seconds.");
-        if (activeEffect != null) {
-            player.sendMessage("Your active effect is: " + activeEffect);
-        }
-    }
-}
-```
 
 ## Statistics
 ![STATS](https://bstats.org/signatures/bukkit/elytraessentials.svg)

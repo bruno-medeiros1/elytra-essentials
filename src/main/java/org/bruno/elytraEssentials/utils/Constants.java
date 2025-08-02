@@ -70,6 +70,10 @@ public final class Constants {
         public static final int ACHIEVEMENTS_PAGE_INFO_SLOT = 49;
         public static final int ACHIEVEMENTS_NEXT_PAGE_SLOT = 50;
         public static final int ACHIEVEMENTS_CLOSE_SLOT = 53;
+
+        // Upgrade GUI Constants
+        public static final int UPGRADE_INVENTORY_SIZE = 45;
+        public static final int UPGRADE_CLOSE_SLOT = 44;
     }
 
     public static final class Permissions {
@@ -101,6 +105,7 @@ public final class Constants {
         public static final String CMD_TANDEM_INVITE = "elytraessentials.command.tandem.invite";
         public static final String CMD_TANDEM_ACCEPT = "elytraessentials.command.tandem.accept";
         public static final String CMD_TANDEM_LEAVE = "elytraessentials.command.tandem.leave";
+        public static final String CMD_UPGRADE = "elytraessentials.command.upgrade";
 
         // Bypass Permissions
         public static final String BYPASS_SPEED_LIMIT = "elytraessentials.bypass.speedlimit";
@@ -209,6 +214,14 @@ public final class Constants {
 
         public static final String EFFECT_KEY = "effect_key";
         public static final String EFFECT_PERMISSION_KEY = "effect_permission_key";
+
+        public static final String MAX_VELOCITY_UPGRADE_TAG = "max_velocity_upgrade";
+        public static final String FLIGHT_EFFICIENCY_UPGRADE_TAG = "flight_efficiency_upgrade";
+        public static final String BOOST_POWER_UPGRADE_TAG = "boost_power_upgrade";
+        public static final String ARMOR_DURABILITY_UPGRADE_TAG = "armor_durability_upgrade";
+        public static final String KINETIC_RESISTANCE_UPGRADE_TAG = "kinetic_resistance_upgrade";
+        public static final String ARMOR_PROTECTION_UPGRADE_TAG = "armor_protection_upgrade";
+        public static final String ARMOR_TOUGHNESS_UPGRADE_TAG = "armor_toughness_upgrade";
     }
 
     public static final class Skull {

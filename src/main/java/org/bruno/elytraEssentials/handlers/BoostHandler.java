@@ -1,6 +1,7 @@
 package org.bruno.elytraEssentials.handlers;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
+import org.bruno.elytraEssentials.helpers.ArmoredElytraHelper;
 import org.bruno.elytraEssentials.helpers.FoliaHelper;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.helpers.PermissionsHelper;
@@ -40,6 +41,9 @@ public class BoostHandler {
     private final StatsHandler statsHandler;
     private final ConfigHandler configHandler;
     private final MessagesHandler messagesHandler;
+    private final UpgradeHandler upgradeHandler;
+    private final ArmoredElytraHelper armoredElytraHelper;
+
     private FlightHandler flightHandler;
 
     private final Map<UUID, Long> cooldowns = new ConcurrentHashMap<>();
@@ -52,7 +56,7 @@ public class BoostHandler {
     private final Random random = new Random();
 
     public BoostHandler(ElytraEssentials plugin, FoliaHelper foliaHelper, MessagesHelper messagesHelper, ServerVersion serverVersion, StatsHandler statsHandler,
-                        ConfigHandler configHandler, MessagesHandler messagesHandler) {
+                        ConfigHandler configHandler, MessagesHandler messagesHandler, UpgradeHandler upgradeHandler, ArmoredElytraHelper armoredElytraHelper) {
         this.plugin = plugin;
 
         this.foliaHelper = foliaHelper;
@@ -61,6 +65,8 @@ public class BoostHandler {
         this.statsHandler = statsHandler;
         this.configHandler = configHandler;
         this.messagesHandler = messagesHandler;
+        this.upgradeHandler = upgradeHandler;
+        this.armoredElytraHelper = armoredElytraHelper;
     }
 
     public void setFlightHandler(FlightHandler flightHandler) {
@@ -165,10 +171,19 @@ public class BoostHandler {
             boostMultiplier = BOOST_MULTIPLIER;
         }
 
+        double finalMultiplier = boostMultiplier;
+
+        // Apply Boost Power Upgrade
+        ItemStack chestplate = player.getInventory().getChestplate();
+        if (armoredElytraHelper.isArmoredElytra(chestplate)) {
+            double bonusPowerPercent = upgradeHandler.getBonusBoostPower(chestplate);
+            finalMultiplier = boostMultiplier * (1 + (bonusPowerPercent / 100.0));
+        }
+
         cooldowns.put(player.getUniqueId(), System.currentTimeMillis());
 
         Vector direction = player.getLocation().getDirection();
-        Vector boost = direction.multiply(boostMultiplier);
+        Vector boost = direction.multiply(finalMultiplier);
         player.setVelocity(player.getVelocity().add(boost));
 
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_LAUNCH, 1.0f, 1.0f);

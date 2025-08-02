@@ -2,10 +2,12 @@ package org.bruno.elytraEssentials.handlers;
 
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.helpers.ArmoredElytraHelper;
+import org.bruno.elytraEssentials.helpers.ColorHelper;
 import org.bruno.elytraEssentials.helpers.FoliaHelper;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
 import org.bruno.elytraEssentials.utils.Constants;
 import org.bruno.elytraEssentials.utils.ServerVersion;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
@@ -27,6 +29,7 @@ public class ArmoredElytraHandler {
     private final ArmoredElytraHelper armoredElytraHelper;
     private final MessagesHelper messagesHelper;
     private final MessagesHandler messagesHandler;
+    private final UpgradeHandler upgradeHandler;
 
     private final NamespacedKey armoredElytraKey;
     private final NamespacedKey toughnessElytraKey;
@@ -35,13 +38,14 @@ public class ArmoredElytraHandler {
     private final NamespacedKey maxDurabilityKey;
 
     public ArmoredElytraHandler(ElytraEssentials plugin, ConfigHandler configHandler, FoliaHelper foliaHelper, ArmoredElytraHelper armoredElytraHelper,
-                                MessagesHelper messagesHelper, MessagesHandler messagesHandler) {
+                                MessagesHelper messagesHelper, MessagesHandler messagesHandler, UpgradeHandler upgradeHandler) {
         this.plugin = plugin;
         this.configHandler = configHandler;
         this.foliaHelper = foliaHelper;
         this.armoredElytraHelper = armoredElytraHelper;
         this.messagesHelper = messagesHelper;
         this.messagesHandler = messagesHandler;
+        this.upgradeHandler = upgradeHandler;
 
         this.armoredElytraKey = new NamespacedKey(plugin, Constants.NBT.ARMORED_ELYTRA_TAG);
         this.toughnessElytraKey = new NamespacedKey(plugin, Constants.NBT.ARMOR_DURABILITY_TAG);
@@ -59,7 +63,7 @@ public class ArmoredElytraHandler {
         if (!configHandler.getIsArmoredElytraEnabled()) return;
 
         ItemStack chestplate = player.getInventory().getChestplate();
-        if (!isArmoredElytra(chestplate)) return;
+        if (!armoredElytraHelper.isArmoredElytra(chestplate)) return;
 
         ItemMeta meta = chestplate.getItemMeta();
         if (meta == null) return;
@@ -114,31 +118,58 @@ public class ArmoredElytraHandler {
         // Always remove old attributes first to ensure a clean state.
         removeArmorAttributes(player);
 
-        if (!configHandler.getIsArmoredElytraEnabled()) return;
-
-        if (isArmoredElytra(chestplate)) {
+        if (armoredElytraHelper.isArmoredElytra(chestplate)) {
             ItemMeta meta = chestplate.getItemMeta();
             if (meta == null) return;
 
             int currentDurability = meta.getPersistentDataContainer().getOrDefault(durabilityKey, PersistentDataType.INTEGER, 0);
             if (currentDurability > 0) {
-                applyArmorAttributes(player, chestplate);
+                applyUpgradedAttributes(player, chestplate);
             }
         }
     }
 
-    private void applyArmorAttributes(Player player, ItemStack armoredElytra) {
+    public void applyUpgradedAttributes(Player player, ItemStack armoredElytra) {
+        ItemMeta meta = armoredElytra.getItemMeta();
+        if (meta == null) return;
+        PersistentDataContainer container = meta.getPersistentDataContainer();
+
         Material armorType = getArmorMaterialFromNbt(armoredElytra);
         if (armorType == null) return;
 
-        int armorPoints = getArmorPoints(armorType);
-        int armorToughness = getArmorToughness(armorType);
+        // Get Base Stats from the material
+        int baseArmor  = getArmorPoints(armorType);
+        int baseToughness  = getArmorToughness(armorType);
+        int baseMaxDurability = armorType.getMaxDurability();
 
-        if (armorPoints > 0) {
-            armoredElytraHelper.setArmorModifier(player, armoredElytraKey, armorPoints);
+        // Get Bonus Stats from Upgrades
+        double bonusArmor = upgradeHandler.getBonusArmor(armoredElytra);
+        double bonusToughness = upgradeHandler.getBonusToughness(armoredElytra);
+        int bonusDurability = upgradeHandler.getBonusArmorDurability(armoredElytra);
+
+        // Define how much each upgrade level gives
+        double finalArmor = baseArmor + bonusArmor;
+        double finalToughness = baseToughness + bonusToughness;
+        int finalMaxDurability = baseMaxDurability + bonusDurability;
+
+        // Update Max Durability NBT if Necessary
+        int currentMax = container.getOrDefault(maxDurabilityKey, PersistentDataType.INTEGER, 0);
+        if (currentMax < finalMaxDurability) {
+            container.set(maxDurabilityKey, PersistentDataType.INTEGER, finalMaxDurability);
         }
-        if (armorToughness > 0) {
-            armoredElytraHelper.setToughnessModifier(player, toughnessElytraKey, armorToughness);
+
+        updateArmorLore(meta, finalArmor);
+        updateToughnessLore(meta, finalToughness);
+        updateDurabilityLore(meta);
+        armoredElytra.setItemMeta(meta);
+
+        // Apply the final, combined attributes
+        if (finalArmor > 0) {
+            armoredElytraHelper.setArmorModifier(player, armoredElytraKey, finalArmor);
+        }
+
+        if (finalToughness > 0) {
+            armoredElytraHelper.setToughnessModifier(player, toughnessElytraKey, finalToughness);
         }
     }
 
@@ -155,6 +186,17 @@ public class ArmoredElytraHandler {
         List<String> lore = meta.getLore();
         if (lore == null) lore = new ArrayList<>();
 
+        String durabilityBar = armoredElytraHelper.getDurabilityBarString(current, max);
+        int barIndex = -1;
+        for (int i = 0; i < lore.size(); i++) {
+            if (lore.get(i).contains("▆")) {
+                barIndex = i;
+            }
+        }
+        if (barIndex != -1) {
+            lore.set(barIndex, durabilityBar);
+        }
+
         double percentage = (max > 0) ? (double) current / max : 0;
         String durabilityColor;
         if (percentage == 1){
@@ -166,8 +208,8 @@ public class ArmoredElytraHandler {
         } else {
             durabilityColor = "§4";
         }
-        String durabilityLine = String.format("§6Armor Plating: %s%d §7/ §a%d", durabilityColor, current, max);
 
+        String durabilityLine = String.format("§6Armor Plating: %s%d §7/ §a%d", durabilityColor, current, max);
         boolean found = false;
         for (int i = 0; i < lore.size(); i++) {
             if (lore.get(i).contains("Armor Plating:")) {
@@ -178,6 +220,49 @@ public class ArmoredElytraHandler {
         }
         if (!found) { // Should not happen, but a good safety check.
             lore.add(durabilityLine);
+        }
+
+        meta.setLore(lore);
+    }
+
+    private void updateArmorLore(ItemMeta meta, double finalArmor) {
+        List<String> lore = meta.getLore();
+        if (lore == null) return;
+
+        String armorLine = ColorHelper.parse(String.format(" §f▪ §7Armor: &#B0D0FF+%.1f", finalArmor));
+
+        for (int i = 0; i < lore.size(); i++) {
+            if (lore.get(i).contains("Armor:")) {
+                lore.set(i, armorLine);
+                meta.setLore(lore);
+                return;
+            }
+        }
+    }
+
+    private void updateToughnessLore(ItemMeta meta, double finalToughness) {
+        List<String> lore = meta.getLore();
+        if (lore == null) return;
+
+        String toughnessLine = ColorHelper.parse(String.format(" &f▪ &7Armor Toughness: &#B0D0FF+%.1f", finalToughness));
+        boolean found = false;
+
+        for (int i = 0; i < lore.size(); i++) {
+            if (lore.get(i).contains("Armor Toughness:")) {
+                lore.set(i, toughnessLine);
+                found = true;
+                break;
+            }
+        }
+
+        // If the toughness line didn't exist but toughness is now > 0, add it.
+        if (!found && finalToughness > 0) {
+            for (int i = 0; i < lore.size(); i++) {
+                if (lore.get(i).contains("Armor:")) {
+                    lore.add(i + 1, toughnessLine);
+                    break;
+                }
+            }
         }
 
         meta.setLore(lore);
@@ -247,13 +332,6 @@ public class ArmoredElytraHandler {
     private int getLevel(PersistentDataContainer container, String key) {
         NamespacedKey namespacedKey = new NamespacedKey(plugin, key.toLowerCase()); // Normalize if needed
         return container.getOrDefault(namespacedKey, PersistentDataType.INTEGER, 0);
-    }
-
-    private boolean isArmoredElytra(ItemStack item) {
-        if (item == null || item.getType() != Material.ELYTRA) return false;
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null) return false;
-        return meta.getPersistentDataContainer().has(armoredElytraKey, PersistentDataType.BYTE);
     }
 
     private Material getArmorMaterialFromNbt(ItemStack armoredElytra) {
