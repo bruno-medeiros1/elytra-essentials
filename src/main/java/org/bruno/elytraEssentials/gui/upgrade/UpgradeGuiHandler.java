@@ -228,8 +228,6 @@ public class UpgradeGuiHandler {
         // Update NBT data for the upgrade
         container.set(key, PersistentDataType.INTEGER, currentLevel + 1);
         elytra.setItemMeta(elytraMeta);
-        Bukkit.getLogger().info("elytraMeta" + elytra.getItemMeta());
-
         updateElytraLore(elytra);
 
         // Immediately apply the new upgrades to the elytra after the purchase if applicable
@@ -243,7 +241,6 @@ public class UpgradeGuiHandler {
 
 
         player.getInventory().setChestplate(elytra);
-        Bukkit.getLogger().info("elytraMeta" + elytra.getItemMeta());
 
         messagesHelper.sendPlayerMessage(player, "&aSuccessfully upgraded " + upgradeType.getDisplayName() + " to Level " + (currentLevel + 1) + "!");
         player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_USE, 1.0f, 1.2f);
