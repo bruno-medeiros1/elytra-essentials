@@ -1,14 +1,15 @@
 package org.bruno.elytraEssentials.gui.forge;
 
+import net.milkbowl.vault.economy.Economy;
+import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.handlers.ConfigHandler;
 import org.bruno.elytraEssentials.handlers.MessagesHandler;
-import org.bruno.elytraEssentials.helpers.ArmoredElytraHelper;
-import org.bruno.elytraEssentials.helpers.FoliaHelper;
-import org.bruno.elytraEssentials.helpers.GuiHelper;
-import org.bruno.elytraEssentials.helpers.MessagesHelper;
+import org.bruno.elytraEssentials.helpers.*;
 import org.bruno.elytraEssentials.utils.Constants;
+import org.bruno.elytraEssentials.utils.UpgradeType;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryAction;
@@ -16,27 +17,34 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ForgeGuiHandler {
+    private final ElytraEssentials plugin;
     private final ConfigHandler configHandler;
     private final ArmoredElytraHelper armoredElytraHelper;
     private final FoliaHelper foliaHelper;
     private final MessagesHandler messagesHandler;
     private final MessagesHelper messagesHelper;
+    private final Economy economy;
 
     // Use a thread-safe set for Folia compatibility
     private final Set<UUID> processedAction = ConcurrentHashMap.newKeySet();
 
     public ForgeGuiHandler(ConfigHandler configHandler, ArmoredElytraHelper armoredElytraHelper, FoliaHelper foliaHelper,
-                           MessagesHandler messagesHandler, MessagesHelper messagesHelper) {
+                           MessagesHandler messagesHandler, MessagesHelper messagesHelper, Economy economy, ElytraEssentials plugin) {
+        this.plugin = plugin;
         this.configHandler = configHandler;
         this.armoredElytraHelper = armoredElytraHelper;
         this.foliaHelper = foliaHelper;
         this.messagesHandler = messagesHandler;
         this.messagesHelper = messagesHelper;
+        this.economy = economy;
     }
 
     /**
@@ -60,12 +68,21 @@ public class ForgeGuiHandler {
 
         // Place the instructional anvil item at the bottom
         ItemStack infoAnvil = GuiHelper.createGuiItem(Material.ANVIL,
-                "§eElytra Forging",
-                "§7Place an §aelytra §7in the left slot",
-                "§7and a §achestplate §7in the right slot.",
-                "§7The result will appear in the middle."
+                "§6§lElytra Forge",
+                "§7Combine an elytra with a chestplate to create",
+                "§7a powerful new item, or place an Armored Elytra",
+                "§7in the middle slot to revert it back.",
+                "",
+                "§f▪ §eForge: §7Place items in the side slots.",
+                "§f▪ §eRevert: §7Place an Armored Elytra in the middle."
         );
         forge.setItem(Constants.GUI.FORGE_INFO_ANVIL_SLOT, infoAnvil);
+
+        // Place informational and action items
+        if (economy != null) {
+            forge.setItem(Constants.GUI.FORGE_HEAD_SLOT, GuiHelper.createPlayerHead(player, "§6Your Balance", "§e$" + String.format("%,.2f", economy.getBalance(player))));
+        }
+        forge.setItem(Constants.GUI.FORGE_CLOSE_SLOT, GuiHelper.createCloseButton());
 
         // Open the GUI for the player
         player.openInventory(forge);
@@ -115,8 +132,15 @@ public class ForgeGuiHandler {
                 case Constants.GUI.FORGE_CANCEL_SLOT:
                     event.setCancelled(true);
                     if (clickedItem != null && (clickedItem.getType() == Material.PLAYER_HEAD || clickedItem.getType() == Material.RED_STAINED_GLASS_PANE)) {
+                        player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.8f, 0.8f);
                         handleCancelClick(topInventory, player);
                     }
+                    break;
+                case Constants.GUI.FORGE_CLOSE_SLOT:
+                    event.setCancelled(true);
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.8f, 0.8f);
+                    handleCancelClick(topInventory, player);
+                    player.closeInventory();
                     break;
                 default:
                     event.setCancelled(true);
@@ -154,7 +178,6 @@ public class ForgeGuiHandler {
         returnItemToPlayer(player, forge.getItem(Constants.GUI.FORGE_ELYTRA_SLOT));
         returnItemToPlayer(player, forge.getItem(Constants.GUI.FORGE_ARMOR_SLOT));
         returnItemToPlayer(player, forge.getItem(Constants.GUI.FORGE_RESULT_SLOT));
-        player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.8f, 0.8f);
     }
 
     private void returnItemToPlayer(Player player, ItemStack item) {
@@ -219,12 +242,12 @@ public class ForgeGuiHandler {
 
         if (isRevertible) {
             displayRevertedItems(forge, middleSlot);
-            showActionButtons(forge, "Revert");
+            showActionButtons(forge, "Revert", middleSlot);
         } else if (isCraftable) {
             if (elytraSlot == null) return;
             ItemStack armoredElytra = armoredElytraHelper.createArmoredElytra(elytraSlot, armorSlot, player);
             forge.setItem(Constants.GUI.FORGE_RESULT_SLOT, armoredElytra);
-            showActionButtons(forge, "Forge");
+            showActionButtons(forge, "Forge", null);
         } else {
             // Not a valid recipe. Clear any preview items.
             if (armoredElytraHelper.isPreviewItem(forge.getItem(Constants.GUI.FORGE_RESULT_SLOT))) {
@@ -243,9 +266,29 @@ public class ForgeGuiHandler {
         }
     }
 
-    private void showActionButtons(Inventory forge, String action) {
+    private void showActionButtons(Inventory forge, String action, ItemStack armoredElytra) {
         List<String> lore = new ArrayList<>();
         lore.add("§7Click to complete the process.");
+
+        if ("Revert".equals(action) && armoredElytra != null && armoredElytra.hasItemMeta()) {
+            ItemMeta meta = armoredElytra.getItemMeta();
+            if (meta != null) {
+                PersistentDataContainer container = meta.getPersistentDataContainer();
+                boolean hasUpgrades = false;
+                for (UpgradeType type : UpgradeType.values()) {
+                    if (container.has(new NamespacedKey(plugin, type.getKey()), PersistentDataType.INTEGER)) {
+                        hasUpgrades = true;
+                        break;
+                    }
+                }
+                if (hasUpgrades) {
+                    lore.add("");
+                    lore.add(ColorHelper.parse("&c&lWARNING:"));
+                    lore.add(ColorHelper.parse("&#FFBFBFThis item has upgrades that will be"));
+                    lore.add(ColorHelper.parse("&#FFBFBFpermanently lost upon reverting!"));
+                }
+            }
+        }
 
         double moneyCost = configHandler.getForgeCostMoney();
         int xpCost = configHandler.getForgeCostXpLevels();
@@ -253,8 +296,8 @@ public class ForgeGuiHandler {
         if (moneyCost > 0 || xpCost > 0) {
             lore.add("");
             lore.add("§6Requirements:");
-            if (moneyCost > 0) lore.add(String.format(" §f- §e$%.2f", moneyCost));
-            if (xpCost > 0) lore.add(String.format(" §f- §b%d Levels", xpCost));
+            if (moneyCost > 0) lore.add(String.format(" §f▪ §e$%.2f", moneyCost));
+            if (xpCost > 0) lore.add(String.format(" §f▪ §e%d Levels", xpCost));
         }
 
         ItemStack confirmButton = GuiHelper.createAcceptButton(action, lore);

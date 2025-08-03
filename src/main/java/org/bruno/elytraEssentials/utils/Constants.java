@@ -51,6 +51,8 @@ public final class Constants {
         public static final int FORGE_INFO_ANVIL_SLOT = 31;
         public static final int FORGE_CANCEL_SLOT = 30;
         public static final int FORGE_CONFIRM_SLOT = 32;
+        public static final int FORGE_CLOSE_SLOT = 35;
+        public static final int FORGE_HEAD_SLOT = 27;
 
         // Achievements GUI Constants
         public static final int ACHIEVEMENTS_INVENTORY_SIZE = 54;

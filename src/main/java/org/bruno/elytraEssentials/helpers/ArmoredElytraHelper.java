@@ -3,6 +3,7 @@ package org.bruno.elytraEssentials.helpers;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.utils.Constants;
 import org.bruno.elytraEssentials.utils.ServerVersion;
+import org.bruno.elytraEssentials.utils.UpgradeType;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
@@ -188,6 +189,9 @@ public class ArmoredElytraHelper {
                 }
             }
             elytraMeta.getPersistentDataContainer().set(new NamespacedKey(plugin, Constants.NBT.PREVIEW_ITEM_TAG), PersistentDataType.BYTE, (byte) 1);
+
+            // Removes all custom NBT data.
+            removeCustomNbt(elytraMeta.getPersistentDataContainer());
 
             plainElytra.setItemMeta(elytraMeta);
         }
@@ -506,5 +510,21 @@ public class ArmoredElytraHelper {
         }
 
         return key;
+    }
+
+    private void removeCustomNbt(PersistentDataContainer container) {
+        // Remove all upgrade tags
+        for (UpgradeType type : UpgradeType.values()) {
+            container.remove(new NamespacedKey(plugin, type.getKey()));
+        }
+
+        // Remove all other custom tags
+        container.remove(armoredElytraKey);
+        container.remove(materialKey);
+        container.remove(durabilityKey);
+        container.remove(maxDurabilityKey);
+        container.remove(new NamespacedKey(plugin, Constants.NBT.FORGED_BY_TAG));
+        container.remove(new NamespacedKey(plugin, Constants.NBT.DAMAGE_ABSORBED_TAG));
+        container.remove(new NamespacedKey(plugin, Constants.NBT.PLATING_SHATTERED_TAG));
     }
 }

@@ -204,7 +204,7 @@ public final class ElytraEssentials extends JavaPlugin {
         this.shopGuiHandler = new ShopGuiHandler(this, this.effectsHandler, this.effectsGuiHandler, getLogger());
         this.effectsGuiHandler.setShopGuiHandler(this.shopGuiHandler);
         this.forgeGuiHandler = new ForgeGuiHandler(this.configHandler, this.armoredElytraHelper, this.foliaHelper,
-                this.messagesHandler, this.messagesHelper);
+                this.messagesHandler, this.messagesHelper, this.economy, this);
         this.achievementsGuiHandler = new AchievementsGuiHandler(getLogger(), this.databaseHandler, this.foliaHelper, this.messagesHelper,
                 this.achievementsHandler, this.statsHandler);
         this.upgradeGuiHandler = new UpgradeGuiHandler(this, this.armoredElytraHelper, this.configHandler,
