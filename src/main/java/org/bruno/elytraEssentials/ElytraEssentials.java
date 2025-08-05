@@ -227,7 +227,7 @@ public final class ElytraEssentials extends JavaPlugin {
         var elytraFlightListener = new ElytraFlightListener(this.flightHandler, this.statsHandler, this.effectsHandler);
         var elytraBoostListener = new BoostListener(this.boostHandler);
         var elytraEquipListener = new ElytraEquipListener(this.elytraEquipHandler);
-        var elytraUpdaterListener = new ElytraUpdaterListener(this.messagesHelper, this.pluginInfoHandler.getLatestVersion(), this.configHandler, this.pluginInfoHandler);
+        var elytraUpdaterListener = new ElytraUpdaterListener(this.messagesHelper, this.configHandler, this.pluginInfoHandler);
         var armoredElytraListener = new ArmoredElytraListener(this.armoredElytraHandler, this.configHandler);
         var combatTagListener = new CombatTagListener(this.combatTagHandler);
         var damageListener = new DamageListener(this.flightHandler, this.statsHandler, this.armoredElytraHandler, this.upgradeHandler);

@@ -11,13 +11,11 @@ import org.bukkit.event.player.PlayerJoinEvent;
 
 public class ElytraUpdaterListener implements Listener {
     private final MessagesHelper messagesHelper;
-    private final String latestVersion;
     private final ConfigHandler configHandler;
     private final PluginInfoHandler pluginInfoHandler;
 
-    public ElytraUpdaterListener(MessagesHelper messagesHelper, String latestVersion, ConfigHandler configHandler, PluginInfoHandler pluginInfoHandler) {
+    public ElytraUpdaterListener(MessagesHelper messagesHelper, ConfigHandler configHandler, PluginInfoHandler pluginInfoHandler) {
         this.messagesHelper = messagesHelper;
-        this.latestVersion = latestVersion;
         this.configHandler = configHandler;
         this.pluginInfoHandler = pluginInfoHandler;
     }
@@ -30,7 +28,7 @@ public class ElytraUpdaterListener implements Listener {
         // Check for updates and send the interactive notification
         Player player = event.getPlayer();
         if (PermissionsHelper.hasUpdateNotifyPermission(player) && pluginInfoHandler.isUpdateAvailable()) {
-            messagesHelper.sendUpdateNotification(player, latestVersion);
+            messagesHelper.sendUpdateNotification(player, pluginInfoHandler.getLatestVersion());
         }
     }
 }

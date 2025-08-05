@@ -33,6 +33,7 @@ public class ElytraEssentialsCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length == 0) {
+            // TODO: Review this try-catch block. It doesn't seem to be necessary to catch SQLException here.
             try {
                 subCommands.get("help").execute(sender, new String[0]);
             } catch (SQLException e) {
