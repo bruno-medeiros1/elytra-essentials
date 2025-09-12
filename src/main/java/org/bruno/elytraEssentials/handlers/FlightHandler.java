@@ -199,6 +199,7 @@ public class FlightHandler {
             return;
         }
 
+        handleLiquidGlide(player);
         handleSpeedometer(player);
         handleDurabilityProtection(player);
         handleDistanceTracking(player, event);
@@ -621,6 +622,14 @@ public class FlightHandler {
         BossBar bossBar = flightBossBars.remove(player.getUniqueId());
         if (bossBar != null) {
             bossBar.removeAll();
+        }
+    }
+
+    private void handleLiquidGlide(Player player) {
+        if (!configHandler.getIsLiquidGlideEnabled()) {
+            if (player.getLocation().getBlock().isLiquid()) {
+                player.setGliding(false);
+            }
         }
     }
 }

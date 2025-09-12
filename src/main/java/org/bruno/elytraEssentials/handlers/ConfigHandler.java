@@ -21,6 +21,7 @@ public class ConfigHandler {
     private boolean isEmergencyDeployEnabled;
     private boolean isFireworkBoostingDisabled;
     private boolean isRiptideLaunchDisabled;
+    private boolean isLiquidGlideEnabled;
 
     // Flight section
     private boolean isGlobalFlightDisabled;
@@ -92,6 +93,7 @@ public class ConfigHandler {
         this.isEmergencyDeployEnabled = this.fileConfiguration.getBoolean("general.emergency-deploy", false);
         this.isFireworkBoostingDisabled = this.fileConfiguration.getBoolean("general.disable-firework-boosting", false);
         this.isRiptideLaunchDisabled = this.fileConfiguration.getBoolean("general.disable-riptide-launch", false);
+        this.isLiquidGlideEnabled = this.fileConfiguration.getBoolean("general.allow-liquid-glide", true);
 
         this.isGlobalFlightDisabled = this.fileConfiguration.getBoolean("flight.disable-global", false);
         this.disabledWorlds = this.fileConfiguration.getStringList("flight.disabled-worlds");
@@ -181,6 +183,7 @@ public class ConfigHandler {
     public final boolean getIsEmergencyDeployEnabled() { return this.isEmergencyDeployEnabled; }
     public final boolean getIsFireworkBoostingDisabled() { return this.isFireworkBoostingDisabled; }
     public final boolean getIsRiptideLaunchDisabled() { return this.isRiptideLaunchDisabled; }
+    public final boolean getIsLiquidGlideEnabled() { return this.isLiquidGlideEnabled; }
 
     public final boolean getIsGlobalFlightDisabled() {
         return this.isGlobalFlightDisabled;

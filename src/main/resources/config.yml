@@ -23,7 +23,7 @@ general:
   # Players or groups with the permission 'elytraessentials.bypass.equipment' can bypass this restriction.
   disable-elytra-equipment: false # [Default: false]
 
-  # Set to true to prevent players from taking fall damage when their elytra breaks mid-air.
+  # Set to true to prevent players from taking fall damage when their elytra breaks midair.
   elytra-break-protection: false # [Default: false]
 
   # Set to true to prevent players from dying when they fly into a wall at high speed.
@@ -39,8 +39,12 @@ general:
 
   # Set to true to prevent players from launching themselves with Riptide tridents
   # while they are wearing an elytra. This does not affect normal, ground-based
-  # Riptide movement when an elytra is not equipped.
+  # Riptide movement when an elytra are not equipped.
   disable-riptide-launch: false # [Default: false]
+
+  # Allow players to continue gliding when they touch liquids (water or lava).
+  # If false, gliding will be cancelled on contact with water or lava.
+  allow-liquid-glide: true # Default: true
 
 armored-elytra:
   enabled: true # [Default: true]
