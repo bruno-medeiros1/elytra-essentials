@@ -133,7 +133,7 @@ public class ConfigHandler {
         this.host = this.fileConfiguration.getString("storage.mysql.host", "localhost");
         this.port = this.fileConfiguration.getInt("storage.mysql.port", 3306);
         this.database = this.fileConfiguration.getString("storage.mysql.database", "elytraessentials");
-        this.username = this.fileConfiguration.getString("storage.mysql.user", "root");
+        this.username = this.fileConfiguration.getString("storage.mysql.username", "root");
         this.password = this.fileConfiguration.getString("storage.mysql.password", "");
 
         this.isBoostEnabled = this.fileConfiguration.getBoolean("flight.boost.enabled", true);
