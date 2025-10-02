@@ -1,38 +1,69 @@
----
-name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
-assignees: ''
+name: Bug Report
+description: Unwanted behavior that was not intended or expected.
+labels: ["Bug"]
+assignees: bruno-medeiros1
+body:
+- type: input
+  attributes:
+  label: Server Version
+  description: Version and type of server software where the resource is installed.
+  placeholder: Paper 1.21
+  validations:
+  required: true
 
----
+- type: input
+  attributes:
+  label: Plugin Version
+  description: The name of the plugin jar displaying the full version used.
+  placeholder: ElytraEssentials-v2.1.1-modern
+  validations:
+  required: true
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+- type: textarea
+  attributes:
+  label: Describe The Bug
+  description: A clear and concise description of what you see.
+  placeholder: After joining the server I see a bunch of red text appear in the console window.
+  validations:
+  required: true
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+- type: textarea
+  attributes:
+  label: Expected Behavior
+  description: A clear and concise description of what you expected to happen.
+  placeholder: There shouldn't be any red text in the console window.
+  validations:
+  required: true
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+- type: textarea
+  attributes:
+  label: Steps To Reproduce
+  description: What to do in order to reproduce this issue.
+  placeholder: |
+  1. Go to '...'
+  2. Click on '....'
+  3. Scroll down to '....'
+  4. See the error.
+  validations:
+  required: true
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+- type: textarea
+  attributes:
+  label: Additional Info
+  description: Any other info you want to provide, such as screenshots (highly recommended).
+  validations:
+  required: false
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
-
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
-
-**Additional context**
-Add any other context about the problem here.
+- type: checkboxes
+  attributes:
+  label: Checklist
+  description: Let's make sure this report is valid.
+  options:
+  - label: I am running latest version of this resource.
+  required: true
+  - label: I have read the wiki to make sure it's not an issue with configuration.
+  required: true
+  - label: I ticked all of these boxes without actually reading them.
+  required: false
+  - label: I have checked that my bug report is unique and a previous report does not exist.
+  required: true
