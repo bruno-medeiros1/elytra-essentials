@@ -11,11 +11,11 @@
     <description>A plugin enhancing Elytra flight with a customizable experience for your server</description>
     <url>https://www.spigotmc.org/resources/elytraessentials.126002/</url>
 
-    <version>2.1.1</version>
+    <version>2.2.0</version>
 
     <properties>
         <java.version>21</java.version>
-        <paper.api.version>1.21.8-R0.1-SNAPSHOT</paper.api.version>
+        <paper.api.version>1.21.9-R0.1-SNAPSHOT</paper.api.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <build.profile.suffix>modern</build.profile.suffix>
     </properties>
