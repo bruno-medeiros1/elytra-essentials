@@ -468,7 +468,7 @@ public class BoostHandler {
             fallingBlock.setHurtEntities(false);
             fallingBlock.setCancelDrop(true);
 
-            // Give each block an outward "explosion" velocity ---
+            // Give each block an outward "explosion" velocity
             Vector direction = loc.clone().add(0.5, 0, 0.5).toVector().subtract(center.toVector()).normalize();
             double explosionStrength = 0.15;
             double upwardPop = 0.3 + (0.4 - 0.3) * random.nextDouble(); // Random value between 0.3 and 0.4
@@ -479,13 +479,12 @@ public class BoostHandler {
             // Temporarily remove the original block
             block.setType(Material.AIR);
 
-            // Schedule the block to be restored after the animation is over
+            // Schedule the block to be restored after 0.5s
             foliaHelper.runTaskLater(player, () -> {
-                // Check if the block is still air before placing it back to avoid replacing player-placed blocks
-                if (loc.getBlock().getType() == Material.AIR) {
+                if (loc.getBlock().getType() == Material.AIR || loc.getBlock().getType() == Material.WATER || loc.getBlock().getType() == Material.LAVA) {
                     loc.getBlock().setBlockData(blockData, false); // false to prevent physics updates
                 }
-            }, 10L); // Restore after 0.5 second
+            }, 10L);
         }
     }
 }
