@@ -33,6 +33,7 @@ public class DatabaseHandler {
 
     private enum StorageType { SQLITE, MYSQL }
     private StorageType storageType;
+    private String prefix;
 
     private String host;
     private int port;
@@ -72,6 +73,9 @@ public class DatabaseHandler {
         }
         logger.info("Database connection established.");
         initializeTables();
+
+        // Run migration if old tables exist
+        migrateOldTables();
     }
 
     public boolean isConnected() {
@@ -97,6 +101,8 @@ public class DatabaseHandler {
             logger.warning("Invalid storage type '" + typeFromConfig + "' in config.yml. Defaulting to SQLITE.");
             this.storageType = StorageType.SQLITE;
         }
+
+        this.prefix = configHandler.getPrefix();
 
         if (this.storageType == StorageType.MYSQL) {
             this.host = configHandler.getHost();
@@ -649,6 +655,36 @@ public class DatabaseHandler {
 
     //</editor-fold>
 
+    private void migrateOldTables() throws SQLException {
+        migrateIfNeeded(Constants.Database.Tables.ELYTRA_FLIGHT_TIME, applyPrefix(Constants.Database.Tables.ELYTRA_FLIGHT_TIME));
+        migrateIfNeeded(Constants.Database.Tables.OWNED_EFFECTS, applyPrefix(Constants.Database.Tables.OWNED_EFFECTS));
+        migrateIfNeeded(Constants.Database.Tables.PLAYER_STATS, applyPrefix(Constants.Database.Tables.PLAYER_STATS));
+        migrateIfNeeded(Constants.Database.Tables.PLAYER_ACHIEVEMENTS, applyPrefix(Constants.Database.Tables.PLAYER_ACHIEVEMENTS));
+    }
+
+    private void migrateIfNeeded(String oldTable, String newTable) throws SQLException {
+        if (tableExists(oldTable) && !tableExists(newTable)) {
+            logger.info("Migrating data from old table: " + oldTable + " → " + newTable);
+
+            // Ensure new table exists
+            executeTableQuery(newTable);
+
+            // Copy data
+            try (Statement stmt = connection.createStatement()) {
+                stmt.executeUpdate("INSERT INTO " + newTable + " SELECT * FROM " + oldTable + ";");
+            }
+
+            logger.info("Migration complete for table: " + oldTable);
+        }
+    }
+
+    private boolean tableExists(String tableName) throws SQLException {
+        DatabaseMetaData meta = connection.getMetaData();
+        try (ResultSet rs = meta.getTables(null, null, tableName, null)) {
+            return rs.next();
+        }
+    }
+
     private void initializeTables() throws SQLException {
         executeTableQuery(Constants.Database.Tables.ELYTRA_FLIGHT_TIME);
         executeTableQuery(Constants.Database.Tables.OWNED_EFFECTS);
@@ -658,7 +694,7 @@ public class DatabaseHandler {
     }
 
     private void executeTableQuery(String tableName) throws SQLException {
-        String query = getCreateTableQuery(tableName);
+        String query = getCreateTableQuery(applyPrefix(tableName));
         if (query == null) {
             logger.warning("No schema found for table: " + tableName);
             return;
@@ -685,5 +721,9 @@ public class DatabaseHandler {
                     "CREATE TABLE IF NOT EXISTS " + tableName + " (player_uuid TEXT NOT NULL, achievement_id TEXT NOT NULL, unlocked_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (player_uuid, achievement_id));";
             default -> null;
         };
+    }
+
+    private String applyPrefix(String tableName) {
+        return prefix + tableName;
     }
 }

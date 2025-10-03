@@ -32,13 +32,14 @@ public class ConfigHandler {
     private boolean isTimeLimitEnabled;
     private int maxTimeLimit;
 
-    //  recovery time
+    // Recovery time
     private boolean isRecoveryEnabled;
     private int recoveryAmount;
     private int recoveryInterval;
 
-    //  Database section
+    // Database section
     private String storageType;
+    private String prefix;
     private boolean isAutoBackupEnabled;
     private int autoBackupInterval;
     private int autoBackupMaxBackups;
@@ -48,7 +49,7 @@ public class ConfigHandler {
     private String username;
     private String password;
 
-    //  Boost section
+    // Boost section
     private boolean isBoostEnabled;
     private String boostItem;
     private int boostCooldown;
@@ -56,7 +57,7 @@ public class ConfigHandler {
     private int chargeTime;
     private double jumpStrength;
 
-    //  Armored Elytra section
+    // Armored Elytra section
     private boolean isArmoredElytraEnabled;
     private double forgeCostMoney;
     private int forgeCostXpLevels;
@@ -126,6 +127,7 @@ public class ConfigHandler {
         this.recoveryInterval = this.fileConfiguration.getInt("flight.time-limit.recovery.interval", 60);
 
         this.storageType = this.fileConfiguration.getString("storage.type", "SQLITE");
+        this.prefix = this.fileConfiguration.getString("storage.prefix", "ee_");
         this.isAutoBackupEnabled = this.fileConfiguration.getBoolean("storage.auto-backup.enabled", true);
         this.autoBackupInterval = this.fileConfiguration.getInt("storage.auto-backup.interval", 60);
         this.autoBackupMaxBackups = this.fileConfiguration.getInt("storage.auto-backup.max-backups", 24);
@@ -213,6 +215,7 @@ public class ConfigHandler {
     public final String getDatabase() { return this.database; }
     public final String getUsername() { return this.username; }
     public final String getPassword() { return this.password; }
+    public final String getPrefix() { return this.prefix; }
 
     public final boolean getIsBoostEnabled() { return this.isBoostEnabled; }
     public final String getBoostItem() { return this.boostItem; }

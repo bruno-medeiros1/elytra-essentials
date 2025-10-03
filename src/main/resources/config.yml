@@ -68,6 +68,9 @@ storage:
   # Options: SQLITE (default), MYSQL
   type: SQLITE
 
+  # prefix used for the table naming
+  prefix: "ee_"
+
   auto-backup:
     # Set to true to enable automatic backups of the database.
     enabled: true # [Default: true]
@@ -78,7 +81,6 @@ storage:
     # The maximum number of backup files to keep.
     max-backups: 24 # [Default: 24 backups]
 
-  # --- MySQL Settings ---
   # These are ONLY used if 'type' is set to MYSQL.
   mysql:
     host: localhost
