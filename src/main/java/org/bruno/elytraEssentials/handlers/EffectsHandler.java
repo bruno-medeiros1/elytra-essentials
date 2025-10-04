@@ -66,17 +66,15 @@ public class EffectsHandler {
             }
 
             ElytraEffect effect = effectsRegistry.get(effectKey);
-            if (effect == null) return false;
+            if (effect == null || economy == null) return false;
 
-            if (economy != null && !economy.has(player, effect.getPrice())) {
+            if (!economy.has(player, effect.getPrice())) {
                 player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 0.8f);
                 messagesHelper.sendPlayerMessage(player, messagesHandler.getNotEnoughMoney());
                 return false;
             }
 
-            if (economy != null) {
-                economy.withdrawPlayer(player, effect.getPrice());
-            }
+            economy.withdrawPlayer(player, effect.getPrice());
             databaseHandler.addOwnedEffect(player.getUniqueId(), effectKey);
 
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 0.8f);

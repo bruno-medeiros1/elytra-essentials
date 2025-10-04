@@ -196,22 +196,69 @@ public class ForgeGuiHandler {
 
         processedAction.add(player.getUniqueId());
 
-        if (armoredElytraHelper.isPreviewItem(resultItem)) { // Crafting
-            returnItemToPlayer(player, armoredElytraHelper.createCleanCopy(resultItem));
+        double moneyCost = configHandler.getForgeCostMoney();
+        int xpCost = configHandler.getForgeCostXpLevels();
+
+        boolean isCrafting = armoredElytraHelper.isPreviewItem(resultItem);
+        boolean isReverting = armoredElytraHelper.isPreviewItem(revertedElytra) && armoredElytraHelper.isPreviewItem(revertedArmor);
+
+        if (!isCrafting && !isReverting){
+            returnAllItems(forge, player);
             forge.clear();
-            player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_USE, 1.0f, 1.0f);
             player.closeInventory();
-            messagesHelper.sendPlayerMessage(player, messagesHandler.getForgeSuccessful());
+            return;
         }
-        else if (armoredElytraHelper.isPreviewItem(revertedElytra) && armoredElytraHelper.isPreviewItem(revertedArmor)) // Reverting
-        {
+
+        if (!canAfford(player, moneyCost, xpCost)){
+            returnAllItems(forge, player);
+            forge.clear();
+            player.closeInventory();
+            return;
+        }
+
+        deductCosts(player, moneyCost, xpCost);
+
+        if (isCrafting) {
+            returnItemToPlayer(player, armoredElytraHelper.createCleanCopy(resultItem));
+            player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_USE, 1.0f, 1.0f);
+            messagesHelper.sendPlayerMessage(player, messagesHandler.getForgeSuccessful());
+        } else {
             returnItemToPlayer(player, armoredElytraHelper.createCleanCopy(revertedElytra));
             returnItemToPlayer(player, armoredElytraHelper.createCleanCopy(revertedArmor));
-            forge.clear();
             player.playSound(player.getLocation(), Sound.BLOCK_GRINDSTONE_USE, 1.0f, 1.0f);
-            player.closeInventory();
             messagesHelper.sendPlayerMessage(player, messagesHandler.getRevertSuccessful());
         }
+
+        forge.clear();
+        player.closeInventory();
+    }
+
+    private boolean canAfford(Player player, double moneyCost, int xpCost) {
+        if (moneyCost > 0) {
+            if (economy == null) {
+                plugin.getLogger().warning("Economy not found while handling forge!");
+                return false;
+            }
+
+            if (!economy.has(player, moneyCost)) {
+                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 0.8f);
+                messagesHelper.sendPlayerMessage(player, messagesHandler.getNotEnoughMoney());
+                return false;
+            }
+        }
+
+        if (xpCost > 0 && player.getLevel() < xpCost) {
+            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 0.8f);
+            messagesHelper.sendPlayerMessage(player, messagesHandler.getNotEnoughXP());
+            return false;
+        }
+
+        return true;
+    }
+
+    private void deductCosts(Player player, double moneyCost, int xpCost) {
+        if (moneyCost > 0) economy.withdrawPlayer(player, moneyCost);
+        if (xpCost > 0) player.setLevel(player.getLevel() - xpCost);
     }
 
     private void handleShiftClick(ItemStack clickedItem, Inventory forge) {
