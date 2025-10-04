@@ -274,40 +274,37 @@ public class DatabaseHandler {
     //</editor-fold>
 
     public int getPlayerFlightTime(UUID uuid) throws SQLException {
-        String query = "SELECT flight_time FROM " + Constants.Database.Tables.ELYTRA_FLIGHT_TIME + " WHERE uuid = ?";
+        String tableName = applyPrefix(Constants.Database.Tables.ELYTRA_FLIGHT_TIME);
+        String query = "SELECT flight_time FROM " + tableName + " WHERE uuid = ?";
 
-        // Wrap in the conditional block for structural consistency.
-        if (storageType == StorageType.MYSQL || storageType == StorageType.SQLITE) {
-            try (PreparedStatement stmt = connection.prepareStatement(query)) {
-                stmt.setString(1, uuid.toString());
-                try (ResultSet rs = stmt.executeQuery()) {
-                    if (rs.next()) {
-                        return rs.getInt("flight_time");
-                    }
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, uuid.toString());
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("flight_time");
                 }
             }
         }
 
-        // Default to 0 if no record is found for the player.
         return 0;
     }
 
-
     public void setPlayerFlightTime(UUID uuid, int time) throws SQLException {
+        String tableName = applyPrefix(Constants.Database.Tables.ELYTRA_FLIGHT_TIME);
         String query;
+
         if (storageType == StorageType.MYSQL) {
-            query = "INSERT INTO " + Constants.Database.Tables.ELYTRA_FLIGHT_TIME + " (uuid, flight_time) VALUES (?, ?) ON DUPLICATE KEY UPDATE flight_time = ?";
+            query = "INSERT INTO " + tableName + " (uuid, flight_time) VALUES (?, ?) ON DUPLICATE KEY UPDATE flight_time = ?";
         } else {
-            query = "REPLACE INTO " + Constants.Database.Tables.ELYTRA_FLIGHT_TIME + " (uuid, flight_time) VALUES (?, ?)";
+            query = "REPLACE INTO " + tableName + " (uuid, flight_time) VALUES (?, ?)";
         }
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, uuid.toString());
             stmt.setInt(2, time);
 
-            // For the MySQL query, we need to set the third parameter for the UPDATE part
             if (storageType == StorageType.MYSQL) {
-                stmt.setInt(3, time);
+                stmt.setInt(3, time); // For ON DUPLICATE KEY UPDATE
             }
 
             stmt.executeUpdate();
@@ -315,17 +312,19 @@ public class DatabaseHandler {
     }
 
     public void addOwnedEffect(UUID playerUuid, String effectKey) throws SQLException {
+        String tableName = applyPrefix(Constants.Database.Tables.OWNED_EFFECTS);
         String query;
+
         if (storageType == StorageType.MYSQL) {
-            query = "INSERT IGNORE INTO " + Constants.Database.Tables.OWNED_EFFECTS + " (player_uuid, effect_key, is_active) VALUES (?, ?, ?)";
+            query = "INSERT IGNORE INTO " + tableName + " (player_uuid, effect_key, is_active) VALUES (?, ?, ?)";
         } else {
-            query = "INSERT OR IGNORE INTO " + Constants.Database.Tables.OWNED_EFFECTS + " (player_uuid, effect_key, is_active) VALUES (?, ?, ?)";
+            query = "INSERT OR IGNORE INTO " + tableName + " (player_uuid, effect_key, is_active) VALUES (?, ?, ?)";
         }
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, playerUuid.toString());
             stmt.setString(2, effectKey);
-            stmt.setBoolean(3, false); // A newly added effect should never be active by default
+            stmt.setBoolean(3, false); // New effects are inactive by default
             stmt.executeUpdate();
         }
     }
@@ -337,63 +336,38 @@ public class DatabaseHandler {
      * @throws SQLException If a database error occurs.
      */
     public void removeOwnedEffect(UUID playerUuid, String effectKey) throws SQLException {
-        String query = "DELETE FROM " + Constants.Database.Tables.OWNED_EFFECTS + " WHERE player_uuid = ? AND effect_key = ?";
+        String tableName = applyPrefix(Constants.Database.Tables.OWNED_EFFECTS);
+        String query = "DELETE FROM " + tableName + " WHERE player_uuid = ? AND effect_key = ?";
 
-        if (storageType == StorageType.MYSQL || storageType == StorageType.SQLITE) {
-            try (PreparedStatement stmt = connection.prepareStatement(query)) {
-                stmt.setString(1, playerUuid.toString());
-                stmt.setString(2, effectKey);
-                stmt.executeUpdate();
-            }
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, playerUuid.toString());
+            stmt.setString(2, effectKey);
+            stmt.executeUpdate();
         }
     }
 
     public void updateOwnedEffect(UUID playerId, String effectKey, boolean isActive) throws SQLException {
-        String query = "UPDATE " + Constants.Database.Tables.OWNED_EFFECTS + " SET is_active = ? WHERE player_uuid = ? AND effect_key = ?";
+        String tableName = applyPrefix(Constants.Database.Tables.OWNED_EFFECTS);
+        String query = "UPDATE " + tableName + " SET is_active = ? WHERE player_uuid = ? AND effect_key = ?";
 
-        if (storageType == StorageType.MYSQL || storageType == StorageType.SQLITE) {
-            try (PreparedStatement stmt = connection.prepareStatement(query)) {
-                stmt.setBoolean(1, isActive);
-                stmt.setString(2, playerId.toString());
-                stmt.setString(3, effectKey);
-                stmt.executeUpdate();
-            }
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setBoolean(1, isActive);
+            stmt.setString(2, playerId.toString());
+            stmt.setString(3, effectKey);
+            stmt.executeUpdate();
         }
     }
-
-
-    public boolean getIsActiveOwnedEffect(UUID playerId, String effectKey) throws SQLException {
-        String query = "SELECT is_active FROM " + Constants.Database.Tables.OWNED_EFFECTS + " WHERE player_uuid = ? AND effect_key = ?";
-
-        if (storageType == StorageType.MYSQL || storageType == StorageType.SQLITE) {
-            try (PreparedStatement stmt = connection.prepareStatement(query)) {
-                stmt.setString(1, playerId.toString());
-                stmt.setString(2, effectKey);
-
-                try (ResultSet rs = stmt.executeQuery()) {
-                    if (rs.next()) {
-                        return rs.getBoolean("is_active");
-                    }
-                }
-            }
-        }
-
-        // If no record is found, throw an exception as per the original logic.
-        throw new SQLException("No matching effect record found for player " + playerId + " with key " + effectKey);
-    }
-
 
     public List<String> getOwnedEffectKeys(UUID playerId) throws SQLException {
         List<String> ownedEffects = new ArrayList<>();
-        String query = "SELECT effect_key FROM " + Constants.Database.Tables.OWNED_EFFECTS + " WHERE player_uuid = ?";
+        String tableName = applyPrefix(Constants.Database.Tables.OWNED_EFFECTS);
+        String query = "SELECT effect_key FROM " + tableName + " WHERE player_uuid = ?";
 
-        if (storageType == StorageType.MYSQL || storageType == StorageType.SQLITE) {
-            try (PreparedStatement stmt = connection.prepareStatement(query)) {
-                stmt.setString(1, playerId.toString());
-                try (ResultSet rs = stmt.executeQuery()) {
-                    while (rs.next()) {
-                        ownedEffects.add(rs.getString(Constants.NBT.EFFECT_KEY));
-                    }
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, playerId.toString());
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    ownedEffects.add(rs.getString(Constants.NBT.EFFECT_KEY));
                 }
             }
         }
@@ -401,9 +375,9 @@ public class DatabaseHandler {
         return ownedEffects;
     }
 
-
     public String getPlayerActiveEffect(UUID playerId) throws SQLException {
-        String query = "SELECT effect_key FROM " + Constants.Database.Tables.OWNED_EFFECTS + " WHERE player_uuid = ? AND is_active = 1";
+        String tableName = applyPrefix(Constants.Database.Tables.OWNED_EFFECTS);
+        String query = "SELECT effect_key FROM " + tableName + " WHERE player_uuid = ? AND is_active = 1";
 
         if (storageType == StorageType.MYSQL || storageType == StorageType.SQLITE) {
             try (PreparedStatement stmt = connection.prepareStatement(query)) {
@@ -428,41 +402,41 @@ public class DatabaseHandler {
      * @throws SQLException If a database error occurs.
      */
     public PlayerStats getPlayerStats(UUID uuid) throws SQLException {
-        String query = "SELECT * FROM " + Constants.Database.Tables.PLAYER_STATS + " WHERE uuid = ?";
+        String tableName = applyPrefix(Constants.Database.Tables.PLAYER_STATS);
+        String query = "SELECT * FROM " + tableName + " WHERE uuid = ?";
 
-        if (storageType == StorageType.MYSQL || storageType == StorageType.SQLITE) {
-            try (PreparedStatement stmt = connection.prepareStatement(query)) {
-                stmt.setString(1, uuid.toString());
-                try (ResultSet rs = stmt.executeQuery()) {
-                    if (rs.next()) {
-                        // Player was found in the database, so we load their data.
-                        PlayerStats stats = new PlayerStats(uuid);
-                        stats.setTotalDistance(rs.getDouble("total_distance"));
-                        stats.setTotalTimeSeconds(rs.getLong("total_time_seconds"));
-                        stats.setLongestFlight(rs.getDouble("longest_flight"));
-                        stats.setBoostsUsed(rs.getInt("boosts_used"));
-                        stats.setSuperBoostsUsed(rs.getInt("super_boosts_used"));
-                        stats.setPluginSaves(rs.getInt("plugin_saves"));
-                        return stats;
-                    }
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, uuid.toString());
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    // Player found — load stats
+                    PlayerStats stats = new PlayerStats(uuid);
+                    stats.setTotalDistance(rs.getDouble("total_distance"));
+                    stats.setTotalTimeSeconds(rs.getLong("total_time_seconds"));
+                    stats.setLongestFlight(rs.getDouble("longest_flight"));
+                    stats.setBoostsUsed(rs.getInt("boosts_used"));
+                    stats.setSuperBoostsUsed(rs.getInt("super_boosts_used"));
+                    stats.setPluginSaves(rs.getInt("plugin_saves"));
+                    return stats;
                 }
             }
         }
 
-        // If no entry was found in the database for the player,
-        // we return a new, clean PlayerStats object with all values at 0.
+        // Player not found — return default stats
         return new PlayerStats(uuid);
     }
 
-
     /**
      * Resets all statistics for a given player back to their default zero values
-     * in both the stats and flight time tables.
+     * in both the stats and flight timetables.
      * @param uuid The UUID of the player to reset.
      * @throws SQLException If a database error occurs.
      */
     public void resetPlayerStats(UUID uuid) throws SQLException {
-        String resetStatsQuery = "UPDATE " + Constants.Database.Tables.PLAYER_STATS + " SET " +
+        String playerStatsTable = applyPrefix(Constants.Database.Tables.PLAYER_STATS);
+        String flightTimeTable = applyPrefix(Constants.Database.Tables.ELYTRA_FLIGHT_TIME);
+
+        String resetStatsQuery = "UPDATE " + playerStatsTable + " SET " +
                 "total_distance = 0, " +
                 "total_time_seconds = 0, " +
                 "longest_flight = 0, " +
@@ -471,27 +445,22 @@ public class DatabaseHandler {
                 "plugin_saves = 0 " +
                 "WHERE uuid = ?";
 
-        String resetFlightTimeQuery = "UPDATE " + Constants.Database.Tables.ELYTRA_FLIGHT_TIME + " SET " +
+        String resetFlightTimeQuery = "UPDATE " + flightTimeTable + " SET " +
                 "flight_time = 0 " +
                 "WHERE uuid = ?";
 
-        // Although the UPDATE syntax is the same for both, we use the if/else
-        // block to maintain our code structure and for future-proofing.
-        if (storageType == StorageType.MYSQL || storageType == StorageType.SQLITE) {
-            // Reset Player Stats Table
-            try (PreparedStatement stmt = connection.prepareStatement(resetStatsQuery)) {
-                stmt.setString(1, uuid.toString());
-                stmt.executeUpdate();
-            }
+        // Reset Player Stats Table
+        try (PreparedStatement stmt = connection.prepareStatement(resetStatsQuery)) {
+            stmt.setString(1, uuid.toString());
+            stmt.executeUpdate();
+        }
 
-            // Reset Flight Time Table
-            try (PreparedStatement stmt = connection.prepareStatement(resetFlightTimeQuery)) {
-                stmt.setString(1, uuid.toString());
-                stmt.executeUpdate();
-            }
+        // Reset Flight Time Table
+        try (PreparedStatement stmt = connection.prepareStatement(resetFlightTimeQuery)) {
+            stmt.setString(1, uuid.toString());
+            stmt.executeUpdate();
         }
     }
-
 
     /**
      * Retrieves the top N players for a specific statistic from the database.
@@ -502,24 +471,23 @@ public class DatabaseHandler {
      * @throws SQLException If a database error occurs.
      */
     public Map<UUID, Double> getTopStats(String statColumn, int limit) throws SQLException {
-        // A LinkedHashMap preserves the insertion order, which is perfect for a sorted leaderboard.
         Map<UUID, Double> topStats = new LinkedHashMap<>();
+        String tableName = applyPrefix(Constants.Database.Tables.PLAYER_STATS);
 
-        // This query selects the top players, ordering them by the specified column.
-        String query = "SELECT uuid, " + statColumn + " FROM " + Constants.Database.Tables.PLAYER_STATS + " ORDER BY " + statColumn + " DESC LIMIT ?";
+        // Query selects top players, ordered by the given stat column
+        String query = "SELECT uuid, " + statColumn + " FROM " + tableName + " ORDER BY " + statColumn + " DESC LIMIT ?";
 
-        if (storageType == StorageType.MYSQL || storageType == StorageType.SQLITE) {
-            try (PreparedStatement stmt = connection.prepareStatement(query)) {
-                stmt.setInt(1, limit); // Set the LIMIT value
-                try (ResultSet rs = stmt.executeQuery()) {
-                    while (rs.next()) {
-                        UUID uuid = UUID.fromString(rs.getString("uuid"));
-                        double value = rs.getDouble(statColumn);
-                        topStats.put(uuid, value);
-                    }
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, limit);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    UUID uuid = UUID.fromString(rs.getString("uuid"));
+                    double value = rs.getDouble(statColumn);
+                    topStats.put(uuid, value);
                 }
             }
         }
+
         return topStats;
     }
 
@@ -531,22 +499,24 @@ public class DatabaseHandler {
      * @throws SQLException If a database error occurs.
      */
     public int getPlayerRank(UUID uuid, String statColumn) throws SQLException {
-        // This query counts how many players have a better score than the target player.
-        // Adding 1 gives us the player's rank (e.g., if 0 players are better, rank is #1).
-        String query = "SELECT COUNT(*) FROM " + Constants.Database.Tables.PLAYER_STATS +
-                " WHERE " + statColumn + " > (SELECT " + statColumn + " FROM " +
-                Constants.Database.Tables.PLAYER_STATS + " WHERE uuid = ?)";
+        String tableName = applyPrefix(Constants.Database.Tables.PLAYER_STATS);
+
+        // Count how many players have a higher score than the target player
+        String query = "SELECT COUNT(*) FROM " + tableName +
+                " WHERE " + statColumn + " > (SELECT " + statColumn + " FROM " + tableName + " WHERE uuid = ?)";
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, uuid.toString());
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    return rs.getInt(1) + 1;
+                    return rs.getInt(1) + 1; // Rank is 1 + number of players better
                 }
             }
         }
-        return -1; // Indicates player not found or an error
+
+        return -1; // Player not found or error
     }
+
 
     /**
      * Saves a player's complete statistics to the database.
@@ -555,18 +525,20 @@ public class DatabaseHandler {
      * @throws SQLException If a database error occurs.
      */
     public void savePlayerStats(PlayerStats stats) throws SQLException {
+        String tableName = applyPrefix(Constants.Database.Tables.PLAYER_STATS);
         String query;
+
         if (storageType == StorageType.MYSQL) {
-            query = "INSERT INTO " + Constants.Database.Tables.PLAYER_STATS + " (uuid, total_distance, total_time_seconds, longest_flight, boosts_used, super_boosts_used, plugin_saves) " +
+            query = "INSERT INTO " + tableName + " (uuid, total_distance, total_time_seconds, longest_flight, boosts_used, super_boosts_used, plugin_saves) " +
                     "VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE " +
                     "total_distance = ?, total_time_seconds = ?, longest_flight = ?, boosts_used = ?, super_boosts_used = ?, plugin_saves = ?";
         } else {
-            query = "REPLACE INTO " + Constants.Database.Tables.PLAYER_STATS + " (uuid, total_distance, total_time_seconds, longest_flight, boosts_used, super_boosts_used, plugin_saves) " +
+            query = "REPLACE INTO " + tableName + " (uuid, total_distance, total_time_seconds, longest_flight, boosts_used, super_boosts_used, plugin_saves) " +
                     "VALUES (?, ?, ?, ?, ?, ?, ?)";
         }
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            // Set values for the query
+            // Set values for INSERT
             stmt.setString(1, stats.getUuid().toString());
             stmt.setDouble(2, stats.getTotalDistance());
             stmt.setLong(3, stats.getTotalTimeSeconds());
@@ -575,7 +547,7 @@ public class DatabaseHandler {
             stmt.setInt(6, stats.getSuperBoostsUsed());
             stmt.setInt(7, stats.getPluginSaves());
 
-            // If it's MySQL, we need to set the values again for the UPDATE part
+            // If MySQL, set values again for the UPDATE part
             if (storageType == StorageType.MYSQL) {
                 stmt.setDouble(8, stats.getTotalDistance());
                 stmt.setLong(9, stats.getTotalTimeSeconds());
@@ -599,18 +571,19 @@ public class DatabaseHandler {
      */
     public Set<String> getUnlockedAchievementIds(UUID playerUuid) throws SQLException {
         Set<String> unlockedIds = new HashSet<>();
-        String query = "SELECT achievement_id FROM " + Constants.Database.Tables.PLAYER_ACHIEVEMENTS + " WHERE player_uuid = ?";
+        String tableName = applyPrefix(Constants.Database.Tables.PLAYER_ACHIEVEMENTS);
 
-        if (storageType == StorageType.MYSQL || storageType == StorageType.SQLITE) {
-            try (PreparedStatement stmt = connection.prepareStatement(query)) {
-                stmt.setString(1, playerUuid.toString());
-                try (ResultSet rs = stmt.executeQuery()) {
-                    while (rs.next()) {
-                        unlockedIds.add(rs.getString("achievement_id"));
-                    }
+        String query = "SELECT achievement_id FROM " + tableName + " WHERE player_uuid = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, playerUuid.toString());
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    unlockedIds.add(rs.getString("achievement_id"));
                 }
             }
         }
+
         return unlockedIds;
     }
 
@@ -622,12 +595,15 @@ public class DatabaseHandler {
      * @throws SQLException If a database error occurs.
      */
     public boolean hasAchievement(UUID playerUuid, String achievementId) throws SQLException {
-        String query = "SELECT 1 FROM " + Constants.Database.Tables.PLAYER_ACHIEVEMENTS + " WHERE player_uuid = ? AND achievement_id = ? LIMIT 1";
+        String tableName = applyPrefix(Constants.Database.Tables.PLAYER_ACHIEVEMENTS);
+
+        String query = "SELECT 1 FROM " + tableName + " WHERE player_uuid = ? AND achievement_id = ? LIMIT 1";
+
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, playerUuid.toString());
             stmt.setString(2, achievementId);
             try (ResultSet rs = stmt.executeQuery()) {
-                return rs.next(); // Returns true if a row was found
+                return rs.next(); // True if a row exists
             }
         }
     }
@@ -639,11 +615,13 @@ public class DatabaseHandler {
      * @throws SQLException If a database error occurs.
      */
     public void addAchievement(UUID playerUuid, String achievementId) throws SQLException {
+        String tableName = applyPrefix(Constants.Database.Tables.PLAYER_ACHIEVEMENTS);
         String query;
+
         if (storageType == StorageType.MYSQL) {
-            query = "INSERT IGNORE INTO " + Constants.Database.Tables.PLAYER_ACHIEVEMENTS + " (player_uuid, achievement_id) VALUES (?, ?)";
+            query = "INSERT IGNORE INTO " + tableName + " (player_uuid, achievement_id) VALUES (?, ?)";
         } else {
-            query = "INSERT OR IGNORE INTO " + Constants.Database.Tables.PLAYER_ACHIEVEMENTS + " (player_uuid, achievement_id) VALUES (?, ?)";
+            query = "INSERT OR IGNORE INTO " + tableName + " (player_uuid, achievement_id) VALUES (?, ?)";
         }
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
@@ -696,7 +674,7 @@ public class DatabaseHandler {
     private void executeTableQuery(String tableName) throws SQLException {
         String query = getCreateTableQuery(applyPrefix(tableName));
         if (query == null) {
-            logger.warning("No schema found for table: " + tableName);
+            plugin.getLogger().warning("A database setup issue was detected with table: " + tableName);
             return;
         }
         try (Statement stmt = connection.createStatement()) {
@@ -706,21 +684,34 @@ public class DatabaseHandler {
 
     private String getCreateTableQuery(String tableName) {
         boolean isMysql = storageType == StorageType.MYSQL;
-        return switch (tableName) {
-            case Constants.Database.Tables.ELYTRA_FLIGHT_TIME -> isMysql ?
+
+        String lower = tableName.toLowerCase();
+
+        if (lower.contains(Constants.Database.Tables.ELYTRA_FLIGHT_TIME)) {
+            return isMysql ?
                     "CREATE TABLE IF NOT EXISTS " + tableName + " (uuid VARCHAR(36) PRIMARY KEY, flight_time INT DEFAULT 0);" :
                     "CREATE TABLE IF NOT EXISTS " + tableName + " (uuid TEXT PRIMARY KEY, flight_time INTEGER DEFAULT 0);";
-            case Constants.Database.Tables.OWNED_EFFECTS -> isMysql ?
+        }
+
+        if (lower.contains(Constants.Database.Tables.OWNED_EFFECTS)) {
+            return isMysql ?
                     "CREATE TABLE IF NOT EXISTS " + tableName + " (id INT AUTO_INCREMENT PRIMARY KEY, player_uuid VARCHAR(36) NOT NULL, effect_key VARCHAR(255) NOT NULL, is_active BOOLEAN NOT NULL DEFAULT FALSE, owned_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP);" :
                     "CREATE TABLE IF NOT EXISTS " + tableName + " (id INTEGER PRIMARY KEY AUTOINCREMENT, player_uuid TEXT NOT NULL, effect_key TEXT NOT NULL, is_active INTEGER NOT NULL DEFAULT 0, owned_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP);";
-            case Constants.Database.Tables.PLAYER_STATS -> isMysql ?
+        }
+
+        if (lower.contains(Constants.Database.Tables.PLAYER_STATS)) {
+            return isMysql ?
                     "CREATE TABLE IF NOT EXISTS " + tableName + " (uuid VARCHAR(36) PRIMARY KEY, total_distance DOUBLE DEFAULT 0, total_time_seconds BIGINT DEFAULT 0, longest_flight DOUBLE DEFAULT 0, boosts_used INT DEFAULT 0, super_boosts_used INT DEFAULT 0, plugin_saves INT DEFAULT 0);" :
                     "CREATE TABLE IF NOT EXISTS " + tableName + " (uuid TEXT PRIMARY KEY, total_distance REAL DEFAULT 0, total_time_seconds INTEGER DEFAULT 0, longest_flight REAL DEFAULT 0, boosts_used INTEGER DEFAULT 0, super_boosts_used INTEGER DEFAULT 0, plugin_saves INTEGER DEFAULT 0);";
-            case Constants.Database.Tables.PLAYER_ACHIEVEMENTS -> isMysql ?
+        }
+
+        if (lower.contains(Constants.Database.Tables.PLAYER_ACHIEVEMENTS)) {
+            return isMysql ?
                     "CREATE TABLE IF NOT EXISTS " + tableName + " (player_uuid VARCHAR(36) NOT NULL, achievement_id VARCHAR(255) NOT NULL, unlocked_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (player_uuid, achievement_id));" :
                     "CREATE TABLE IF NOT EXISTS " + tableName + " (player_uuid TEXT NOT NULL, achievement_id TEXT NOT NULL, unlocked_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (player_uuid, achievement_id));";
-            default -> null;
-        };
+        }
+
+        return null;
     }
 
     private String applyPrefix(String tableName) {
