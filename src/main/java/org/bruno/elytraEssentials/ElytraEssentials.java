@@ -140,6 +140,7 @@ public final class ElytraEssentials extends JavaPlugin {
         configHandler.reload(getConfig());
         messagesHandler.reload(fileHelper.getMessagesConfig());
         messagesHelper.setPrefix(messagesHandler.getPrefixMessage());
+        upgradeHandler.reload(fileHelper.getUpgradesConfig());
 
         // Restart all repeating tasks with the new settings
         startAllPluginTasks();
@@ -178,7 +179,7 @@ public final class ElytraEssentials extends JavaPlugin {
         databaseHandler.initialize();
 
         // Handlers Initialization
-        this.upgradeHandler = new UpgradeHandler(this);
+        this.upgradeHandler = new UpgradeHandler(this, fileHelper.getUpgradesConfig(), getLogger());
         this.tpsHandler = new TpsHandler(this.foliaHelper, this.messagesHelper);
         this.effectsHandler = new EffectsHandler(this, fileHelper.getShopConfig(), this.foliaHelper, this.databaseHandler,
                 this.messagesHelper, this.serverVersion, this.economy, this.tpsHandler, this.messagesHandler, getLogger());
@@ -208,7 +209,7 @@ public final class ElytraEssentials extends JavaPlugin {
         this.achievementsGuiHandler = new AchievementsGuiHandler(getLogger(), this.databaseHandler, this.foliaHelper, this.messagesHelper,
                 this.achievementsHandler, this.statsHandler);
         this.upgradeGuiHandler = new UpgradeGuiHandler(this, this.armoredElytraHelper, this.configHandler,
-                this.messagesHelper, this.economy, this.armoredElytraHandler);
+                this.messagesHelper, this.economy, this.armoredElytraHandler, this.upgradeHandler);
 
         this.tandemHandler = new TandemHandler(this.configHandler, this.messagesHelper, this.foliaHelper, this.flightHandler, this.messagesHandler);
 

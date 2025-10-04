@@ -1,0 +1,66 @@
+# ----------------------------------------------------
+#      ElytraEssentials - Elytra Upgrades Configuration
+# ----------------------------------------------------
+#
+# This file allows you to customize the upgrades system for Armored Elytras.
+# Players can upgrade their elytras permanently at the Upgrade Station (/ee upgrade).
+#
+# Each upgrade has a unique ID.
+# Parameters:
+#   description: Text shown in the GUI to explain the upgrade.
+#   max-level: Maximum level a player can reach for this upgrade.
+#   bonus-per-level: The benefit gained at each level.
+#   base-cost: The starting cost.
+#   cost-multiplier: The percentage level that each level will be expensive, e.g. 1.8 = 80%
+
+upgrades:
+  max_velocity:
+    description: "Increases the maximum speed limit you can\nreach while gliding. This bonus is\nadded on top of default and per-world speed limits."
+    max-level: 5
+    bonus-per-level: 10 # +10 km/h
+    base-cost: 1000
+    cost-multiplier: 1.8
+
+  # This upgrade will only appear in the GUI if the Flight Time Limit system is enabled in config.yml.
+  flight_efficiency:
+    description: "Grants a percentage chance to not consume flight\ntime each second, making your flights last\nlonger and saving a valuable resource."
+    max-level: 5
+    bonus-per-level: 5 # +5% chance
+    base-cost: 1000
+    cost-multiplier: 1.8
+
+  boost_power:
+    description: "Increases the forward thrust and acceleration\ngained from using your configured boost item."
+    max-level: 5
+    bonus-per-level: 10 # +10% boost force
+    base-cost: 1000
+    cost-multiplier: 1.8
+
+  armor_durability:
+    description: "Increases the maximum durability of the elytra's\narmor plating, allowing it to absorb more\ndamage before shattering."
+    max-level: 3
+    bonus-per-level: 50 # +50 max durability
+    base-cost: 1000
+    cost-multiplier: 1.8
+
+  # This upgrade will only appear in the GUI if the global kinetic-energy-protection feature is disabled in config.yml.
+  kinetic_resistance:
+    description: "Grants a percentage chance to completely negate\nall damage and knockback from flying into a wall."
+    max-level: 3
+    bonus-per-level: 15 # +15% chance
+    base-cost: 1000
+    cost-multiplier: 1.8
+
+  armor_protection:
+    description: "Adds a permanent bonus to the base armor points\nprovided by your Armored Elytra, increasing your overall damage reduction."
+    max-level: 2
+    bonus-per-level: 0.5 # +0.5 armor points
+    base-cost: 1000
+    cost-multiplier: 1.8
+
+  armor_toughness:
+    description: "Adds a permanent bonus to the armor toughness of \nyour Armored Elytra, which is especially effective at reducing high-damage attacks."
+    max-level: 2
+    bonus-per-level: 0.5 # +0.5 toughness points
+    base-cost: 1000
+    cost-multiplier: 1.8

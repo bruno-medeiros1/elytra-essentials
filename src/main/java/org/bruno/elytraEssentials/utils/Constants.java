@@ -188,6 +188,7 @@ public final class Constants {
         public static final String MESSAGES = "messages.yml";
         public static final String SHOP = "shop.yml";
         public static final String ACHIEVEMENTS = "achievements.yml";
+        public static final String UPGRADES = "upgrades.yml";
 
         public static final String SQLITE_DB_NAME = "elytraessentials.db";
         public static final String DB_FOLDER = "database";

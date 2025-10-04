@@ -4,8 +4,10 @@ import net.milkbowl.vault.economy.Economy;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.handlers.ArmoredElytraHandler;
 import org.bruno.elytraEssentials.handlers.ConfigHandler;
+import org.bruno.elytraEssentials.handlers.UpgradeHandler;
 import org.bruno.elytraEssentials.helpers.*;
 import org.bruno.elytraEssentials.utils.Constants;
+import org.bruno.elytraEssentials.utils.ElytraUpgrade;
 import org.bruno.elytraEssentials.utils.UpgradeType;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -30,16 +32,22 @@ public class UpgradeGuiHandler {
     private final ArmoredElytraHandler armoredElytraHandler;
     private final ConfigHandler configHandler;
     private final MessagesHelper messagesHelper;
+    private final UpgradeHandler upgradeHandler;
     private final Economy economy;
 
-    public UpgradeGuiHandler(ElytraEssentials plugin, ArmoredElytraHelper armoredElytraHelper, ConfigHandler configHandler,
-                             MessagesHelper messagesHelper, Economy economy, ArmoredElytraHandler armoredElytraHandler) {
+    public UpgradeGuiHandler(
+            ElytraEssentials plugin, ArmoredElytraHelper armoredElytraHelper,
+            ConfigHandler configHandler, MessagesHelper messagesHelper,
+            Economy economy, ArmoredElytraHandler armoredElytraHandler,
+            UpgradeHandler upgradeHandler)
+    {
         this.plugin = plugin;
         this.armoredElytraHelper = armoredElytraHelper;
         this.armoredElytraHandler = armoredElytraHandler;
         this.configHandler = configHandler;
         this.messagesHelper = messagesHelper;
         this.economy = economy;
+        this.upgradeHandler = upgradeHandler;
     }
 
     /**
@@ -114,13 +122,21 @@ public class UpgradeGuiHandler {
      * Creates the ItemStack for a single upgrade option using data from the UpgradeType enum.
      */
     private ItemStack createUpgradeItem(UpgradeType type, int currentLevel) {
-        boolean isMaxLevel = currentLevel >= type.getMaxLevel();
+        var upgradeValues = upgradeHandler.getUpgradeValues();
+        ElytraUpgrade data = upgradeValues.get(type);
+
+        int maxLevel = data != null ? data.getMaxLevel() : type.getMaxLevel();
+        double bonusPerLevel = data != null ? data.getBonusPerLevel() : type.getValuePerLevel();
+        String description = data != null ? data.getDescription() : type.getDescription();
+
+        boolean isMaxLevel = currentLevel >= maxLevel;
+
         Material material = isMaxLevel ? Material.REDSTONE_BLOCK : type.getDisplayMaterial();
 
         List<String> lore = new ArrayList<>();
 
         // Description
-        String[] descriptionLines = type.getDescription().split("\n");
+        String[] descriptionLines = description.split("\n");
         for (String line : descriptionLines) {
             lore.add("§7" + line);
         }
@@ -128,9 +144,9 @@ public class UpgradeGuiHandler {
         lore.add("§8§m--------------------");
 
         // Current Stats
-        lore.add("§7Level: §f" + currentLevel + " §7/ §f" + type.getMaxLevel());
+        lore.add("§7Level: §f" + currentLevel + " §7/ §f" + maxLevel);
         if (currentLevel > 0) {
-            double currentBonus = currentLevel * type.getValuePerLevel();
+            double currentBonus = currentLevel * bonusPerLevel;
             String currentBonusString = String.format("%.1f", currentBonus).replace(".0", "");
             lore.add(ColorHelper.parse("&7Bonus: &#FFBFBF+" + currentBonusString + type.getSuffix()));
         }
@@ -142,11 +158,11 @@ public class UpgradeGuiHandler {
         } else {
             // Next Upgrade Info
             lore.add("§cNext Upgrade:");
-            double nextBonus = (currentLevel + 1) * type.getValuePerLevel();
+            double nextBonus = (currentLevel + 1) * bonusPerLevel;
             String nextBonusString = String.format("%.1f", nextBonus).replace(".0", "");
             lore.add(ColorHelper.parse(" &f▪ &#FFBFBFLevel: " + (currentLevel + 1) + " &7(&4+" + nextBonusString + type.getSuffix() + "&7)"));
 
-            double cost = 1000 * (currentLevel + 1); // Placeholder for a configurable cost
+            double cost = data.getBaseCost() * Math.pow(data.getCostMultiplier(), currentLevel);
             lore.add(ColorHelper.parse(" §f▪ &#FFBFBFCost: §c$" + String.format("%,.0f", cost)));
             lore.add("§8§m--------------------");
             lore.add("");
@@ -206,14 +222,24 @@ public class UpgradeGuiHandler {
         NamespacedKey key = new NamespacedKey(plugin, upgradeType.getKey());
         int currentLevel = container.getOrDefault(key, PersistentDataType.INTEGER, 0);
 
-        if (currentLevel >= upgradeType.getMaxLevel()) {
+        ElytraUpgrade data = upgradeHandler.getUpgradeValues().get(upgradeType);
+        int maxLevel = data != null ? data.getMaxLevel() : upgradeType.getMaxLevel();
+        double baseCost = data != null ? data.getBaseCost() : 1000;
+        double costMultiplier = data != null ? data.getCostMultiplier() : 1.0;
+
+        // Clamp current level to maxLevel
+        currentLevel = Math.min(currentLevel, maxLevel);
+
+        if (currentLevel >= maxLevel) {
             messagesHelper.sendPlayerMessage(player, "&cThis upgrade is already at its maximum level.");
             player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
             return;
         }
 
-        double cost = 1000 * (currentLevel + 1);
-        // If an economy is present, check the player's balance and withdraw the cost.
+        // Calculate dynamic cost
+        double cost = baseCost * Math.pow(costMultiplier, currentLevel);
+
+        // Economy check
         if (economy != null) {
             if (economy.getBalance(player) < cost) {
                 messagesHelper.sendPlayerMessage(player, "&cYou don't have enough money for this upgrade.");
@@ -225,8 +251,8 @@ public class UpgradeGuiHandler {
             plugin.getLogger().warning("No Vault economy provider found. Elytra upgrades will be free.");
         }
 
-        // Update NBT data for the upgrade
-        container.set(key, PersistentDataType.INTEGER, currentLevel + 1);
+        // Apply upgrade
+        container.set(new NamespacedKey(plugin, upgradeType.getKey()), PersistentDataType.INTEGER, currentLevel + 1);
         elytra.setItemMeta(elytraMeta);
         updateElytraLore(elytra);
 

@@ -18,6 +18,7 @@ public final class FileHelper {
     private FileConfiguration messagesConfig;
     private FileConfiguration shopConfig;
     private FileConfiguration achievementsConfig;
+    private FileConfiguration upgradesConfig;
 
     public FileHelper(ElytraEssentials plugin, Logger logger) {
         this.plugin = plugin;
@@ -32,9 +33,12 @@ public final class FileHelper {
      */
     public void initialize() {
         logger.info("Loading custom configuration files...");
+
         this.messagesConfig = setupCustomFile(Constants.Files.MESSAGES);
         this.shopConfig = setupCustomFile(Constants.Files.SHOP);
         this.achievementsConfig = setupCustomFile(Constants.Files.ACHIEVEMENTS);
+        this.upgradesConfig = setupCustomFile(Constants.Files.UPGRADES);
+
         logger.info("All custom configuration files loaded successfully.");
     }
 
@@ -43,9 +47,12 @@ public final class FileHelper {
      */
     public void reloadAll() {
         logger.info("Reloading custom configuration files...");
+
         this.messagesConfig = setupCustomFile(Constants.Files.MESSAGES);
         this.shopConfig = setupCustomFile(Constants.Files.SHOP);
         this.achievementsConfig = setupCustomFile(Constants.Files.ACHIEVEMENTS);
+        this.upgradesConfig = setupCustomFile(Constants.Files.UPGRADES);
+
         logger.info("All custom files have been reloaded.");
     }
 
@@ -59,6 +66,10 @@ public final class FileHelper {
 
     public FileConfiguration getAchievementsConfig() {
         return this.achievementsConfig;
+    }
+
+    public FileConfiguration getUpgradesConfig() {
+        return this.upgradesConfig;
     }
 
     /**
