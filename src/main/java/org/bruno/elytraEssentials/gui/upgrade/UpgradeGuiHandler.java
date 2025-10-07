@@ -130,6 +130,7 @@ public class UpgradeGuiHandler {
         String description = data != null ? data.getDescription() : type.getDescription();
 
         boolean isMaxLevel = currentLevel >= maxLevel;
+        boolean exceedsMaxLevel = currentLevel > maxLevel; // scenario where server owner changed upgrade max level and someone upgraded before
 
         Material material = isMaxLevel ? Material.REDSTONE_BLOCK : type.getDisplayMaterial();
 
@@ -144,12 +145,23 @@ public class UpgradeGuiHandler {
         lore.add("§8§m--------------------");
 
         // Current Stats
-        lore.add("§7Level: §f" + currentLevel + " §7/ §f" + maxLevel);
-        if (currentLevel > 0) {
-            double currentBonus = currentLevel * bonusPerLevel;
-            String currentBonusString = String.format("%.1f", currentBonus).replace(".0", "");
-            lore.add(ColorHelper.parse("&7Bonus: &#FFBFBF+" + currentBonusString + type.getSuffix()));
+        if (exceedsMaxLevel){
+            lore.add("§7Level: §f" + maxLevel + " §7/ §f" + maxLevel);
+            if (maxLevel > 0) {
+                double currentBonus = maxLevel * bonusPerLevel;
+                String currentBonusString = String.format("%.1f", currentBonus).replace(".0", "");
+                lore.add(ColorHelper.parse("&7Bonus: &#FFBFBF+" + currentBonusString + type.getSuffix()));
+            }
         }
+        else {
+            lore.add("§7Level: §f" + currentLevel + " §7/ §f" + maxLevel);
+            if (currentLevel > 0) {
+                double currentBonus = currentLevel * bonusPerLevel;
+                String currentBonusString = String.format("%.1f", currentBonus).replace(".0", "");
+                lore.add(ColorHelper.parse("&7Bonus: &#FFBFBF+" + currentBonusString + type.getSuffix()));
+            }
+        }
+
         lore.add("");
 
         if (isMaxLevel) {
@@ -254,7 +266,7 @@ public class UpgradeGuiHandler {
         // Apply upgrade
         container.set(new NamespacedKey(plugin, upgradeType.getKey()), PersistentDataType.INTEGER, currentLevel + 1);
         elytra.setItemMeta(elytraMeta);
-        updateElytraLore(elytra);
+        updateElytraLore(elytra, player.getName());
 
         // Immediately apply the new upgrades to the elytra after the purchase if applicable
         if (upgradeType == UpgradeType.ARMOR_DURABILITY || upgradeType == UpgradeType.ARMOR_PROTECTION || upgradeType == UpgradeType.ARMOR_TOUGHNESS) {
@@ -279,7 +291,7 @@ public class UpgradeGuiHandler {
      * Rebuilds the lore of the elytra to include the new upgrade information.
      * This method now takes the ItemStack directly to ensure it reads the latest data.
      */
-    private void updateElytraLore(ItemStack elytra) {
+    private void updateElytraLore(ItemStack elytra, String playerName) {
         ItemMeta elytraMeta = elytra.getItemMeta();
         if (elytraMeta == null) return;
 
@@ -304,11 +316,28 @@ public class UpgradeGuiHandler {
         for (UpgradeType type : UpgradeType.values()) {
             NamespacedKey key = new NamespacedKey(plugin, type.getKey());
             int level = container.getOrDefault(key, PersistentDataType.INTEGER, 0);
-            if (level > 0) {
-                double bonus = level * type.getValuePerLevel();
-                String bonusString = String.format("%.1f", bonus).replace(".0", "");
-                upgradeLines.add(ColorHelper.parse(" &f▪ &7" + type.getDisplayName() + ": &#FFBFBFLevel " + level + " &7(&4+" + bonusString + type.getSuffix() + "&7)"));
+            if (level <= 0)
+                continue;
+
+            // Determine current max level for this upgrade
+            ElytraUpgrade data = upgradeHandler.getUpgradeValues().get(type);
+            int maxLevel = data != null ? data.getMaxLevel() : type.getMaxLevel();
+
+            boolean exceeded = level > maxLevel;
+            if (exceeded) {
+                // Apply fix immediately so it persists
+                container.set(key, PersistentDataType.INTEGER, maxLevel);
+                elytra.setItemMeta(elytraMeta);
+
+                plugin.getLogger().warning(String.format("Corrected elytra upgrade '%s' from '%s' (level %d > max %d). " +
+                        "This item has been updated to respect current config limits.", type.name(), playerName, level, maxLevel));
+
+                level = maxLevel;
             }
+
+            double bonus = level * type.getValuePerLevel();
+            String bonusString = String.format("%.1f", bonus).replace(".0", "");
+            upgradeLines.add(ColorHelper.parse(" &f▪ &7" + type.getDisplayName() + ": &#FFBFBFLevel " + level + " &7(&4+" + bonusString + type.getSuffix() + "&7)"));
         }
 
         if (!upgradeLines.isEmpty()) {
