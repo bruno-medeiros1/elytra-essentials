@@ -88,6 +88,31 @@ storage:
     database: elytraessentials
     username: root
     password:
+    # These settings apply to the MySQL connection pool.
+    options:
+      # Sets the maximum size of the MySQL connection pool.
+      maximum-pool-size: 10
+
+      # Sets the minimum number of idle connections that the pool will try to maintain.
+      minmium-idle: 10
+
+      # This setting controls the maximum lifetime of a connection in the pool in milliseconds.
+      maximum-lifetime: 1800000 # 30 minutes
+
+      # This setting controls how frequently the pool will 'ping' a connection in order to prevent it
+      # from being timed out by the database or network infrastructure, measured in milliseconds.
+      keepalive-time: 0
+
+      # This setting controls the maximum number of milliseconds that the plugin will wait for a
+      # connection from the pool, before timing out.
+      connection-timeout: 5000 # 5 seconds
+
+      # This setting allows you to define extra properties for connections.
+      properties:
+        useSSL: false
+        useUnicode: true
+        characterEncoding: "utf8"
+        verifyServerCertificate: false
 
 flight:
   # Completely disable Elytra flight across all worlds.
