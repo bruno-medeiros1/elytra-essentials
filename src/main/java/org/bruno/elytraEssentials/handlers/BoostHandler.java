@@ -1,5 +1,12 @@
 package org.bruno.elytraEssentials.handlers;
 
+import com.github.retrooper.packetevents.PacketEvents;
+import com.github.retrooper.packetevents.protocol.entity.type.EntityTypes;
+import com.github.retrooper.packetevents.protocol.world.states.WrappedBlockState;
+import com.github.retrooper.packetevents.util.Vector3d;
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerDestroyEntities;
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSpawnEntity;
+import io.github.retrooper.packetevents.util.SpigotConversionUtil;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.helpers.ArmoredElytraHelper;
 import org.bruno.elytraEssentials.helpers.FoliaHelper;
@@ -14,19 +21,15 @@ import org.bukkit.block.data.BlockData;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -441,50 +444,71 @@ public class BoostHandler {
      * @param player The player who is launching.
      */
     private void playLaunchAnimation(Player player) {
-        if (!configHandler.getIsLaunchAnimationEnabled()) return;
+        if (!configHandler.getIsLaunchAnimationEnabled())
+            return;
 
         Location center = player.getLocation();
-        int radius = 1; // Creates a 3x3 area
+        int radius = 1;
         List<Block> blocksToAnimate = new ArrayList<>();
 
-        // Find all solid blocks in a 3x3 area under the player
         for (int x = -radius; x <= radius; x++) {
             for (int z = -radius; z <= radius; z++) {
                 Block block = center.clone().subtract(0, 1, 0).add(x, 0, z).getBlock();
-                if (block.getType() != Material.AIR && block.getType().isSolid()) {
+                if (block.getType().isSolid()) {
                     blocksToAnimate.add(block);
                 }
             }
         }
 
-        // Animate each block
-        for (Block block : blocksToAnimate) {
-            final Location loc = block.getLocation();
-            final BlockData blockData = block.getBlockData();
-
-            // Spawn a temporary FallingBlock entity that looks like the original block
-            FallingBlock fallingBlock = loc.getWorld().spawnFallingBlock(loc.clone().add(0.5, 0.1, 0.5), blockData);
-            fallingBlock.setDropItem(false);
-            fallingBlock.setHurtEntities(false);
-            fallingBlock.setCancelDrop(true);
-
-            // Give each block an outward "explosion" velocity
-            Vector direction = loc.clone().add(0.5, 0, 0.5).toVector().subtract(center.toVector()).normalize();
-            double explosionStrength = 0.15;
-            double upwardPop = 0.3 + (0.4 - 0.3) * random.nextDouble(); // Random value between 0.3 and 0.4
-
-            Vector velocity = direction.multiply(explosionStrength).setY(upwardPop);
-            fallingBlock.setVelocity(velocity);
-
-            // Temporarily remove the original block
-            block.setType(Material.AIR);
-
-            // Schedule the block to be restored after 0.5s
-            foliaHelper.runTaskLater(player, () -> {
-                if (loc.getBlock().getType() == Material.AIR || loc.getBlock().getType() == Material.WATER || loc.getBlock().getType() == Material.LAVA) {
-                    loc.getBlock().setBlockData(blockData, false); // false to prevent physics updates
-                }
-            }, 10L);
+        if (blocksToAnimate.isEmpty()) {
+            return;
         }
+
+        for (Block block : blocksToAnimate) {
+            Location loc = block.getLocation();
+            BlockData blockData = block.getBlockData();
+
+            // Fake spawn falling block entity
+            int entityId = generateUniqueEntityId();
+
+            WrappedBlockState state = SpigotConversionUtil.fromBukkitBlockData(blockData);
+
+            WrapperPlayServerSpawnEntity spawnPacket = new WrapperPlayServerSpawnEntity(
+                entityId,
+                UUID.randomUUID(),
+                EntityTypes.FALLING_BLOCK,
+                new com.github.retrooper.packetevents.protocol.world.Location(loc.getX(), loc.getY(), loc.getZ(), 0f,0f),
+                0f,
+                state.getGlobalId(),
+                Vector3d.zero()
+            );
+
+            Vector3d motion = randomExplosionVector(loc, center);
+            spawnPacket.setVelocity(Optional.of(motion));
+
+            PacketEvents.getAPI().getPlayerManager().sendPacket(player, spawnPacket);
+
+            // Removes client side blocks after 1.5s
+            foliaHelper.runTaskLater(player, () -> {
+                WrapperPlayServerDestroyEntities destroyPacket = new WrapperPlayServerDestroyEntities(entityId);
+                PacketEvents.getAPI().getPlayerManager().sendPacket(player, destroyPacket);
+            }, 30L);
+        }
+    }
+
+    private Vector3d randomExplosionVector(Location loc, Location center) {
+        Vector direction = loc.clone().add(0.5, 0, 0.5).toVector().subtract(center.toVector()).normalize();
+
+        double explosionStrength = 0.35;
+        double upwardPop = 0.3 + ThreadLocalRandom.current().nextDouble() * 0.3; // 0.3–0.6
+
+        direction = direction.multiply(explosionStrength);
+
+        return new Vector3d(direction.getX(), upwardPop, direction.getZ());
+    }
+
+    private static int nextEntityId = 200000; // Just to avoid collisions
+    private static synchronized int generateUniqueEntityId() {
+        return nextEntityId++;
     }
 }
