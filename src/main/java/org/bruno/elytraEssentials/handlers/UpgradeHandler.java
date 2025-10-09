@@ -154,9 +154,37 @@ public class UpgradeHandler {
         if (data == null)
             data = new ElytraUpgrade(type.getMaxLevel(), type.getValuePerLevel(), type.getDescription(), 1000, 1.8);
 
-        // Clamp the level to the maxLevel just in case
+        // Clamp the level to the maxLevel to handle the scenarios where the server owner
+        // updated the upgrades section but someone had upgraded before.
         level = Math.min(level, data.getMaxLevel());
 
-        return level * data.getBonusPerLevel();
+        double bonus = level * data.getBonusPerLevel();
+
+        // Safety caps to avoid misconfigurations or NBT data injection
+        switch (type) {
+            case FLIGHT_EFFICIENCY:
+            case KINETIC_RESISTANCE:
+            case BOOST_POWER:
+                bonus = Math.min(bonus, 100.0);
+                break;
+
+            case MAX_VELOCITY:
+                bonus = Math.min(bonus, 200);
+                break;
+
+            case ARMOR_DURABILITY:
+                bonus = Math.min(bonus, 500); // TODO (b.med): review this once damage system is refactored (removing the -1 subtraction when damage occurs)
+                break;
+
+            case ARMOR_PROTECTION:
+            case ARMOR_TOUGHNESS:
+                bonus = Math.min(bonus, 20.0);
+                break;
+
+            default:
+                break;
+        }
+
+        return bonus;
     }
 }
