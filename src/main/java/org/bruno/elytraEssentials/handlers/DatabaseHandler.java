@@ -68,7 +68,7 @@ public class DatabaseHandler {
             config.setPassword(this.password);
 
             config.setMaximumPoolSize(this.databaseOptions.maximumPoolSize());
-            config.setMinimumIdle(this.databaseOptions.minmiumIdle());
+            config.setMinimumIdle(this.databaseOptions.minimumIdle());
             config.setConnectionTimeout(this.databaseOptions.connectionTimeout());
             config.setIdleTimeout(600000);   // 10 minutes
             config.setKeepaliveTime(this.databaseOptions.keepaliveTime());

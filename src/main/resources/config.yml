@@ -94,7 +94,7 @@ storage:
       maximum-pool-size: 10
 
       # Sets the minimum number of idle connections that the pool will try to maintain.
-      minmium-idle: 10
+      minimum-idle: 10
 
       # This setting controls the maximum lifetime of a connection in the pool in milliseconds.
       maximum-lifetime: 1800000 # 30 minutes

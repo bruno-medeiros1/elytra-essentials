@@ -260,7 +260,7 @@ public class ConfigHandler {
     public final int getTandemMountCountdown() { return this.tandemMountCountdown; }
     public final boolean getIsLaunchAnimationEnabled() { return this.isLaunchAnimationEnabled; }
 
-    public record DatabaseOptions(int maximumPoolSize, int minmiumIdle, int maximumLifetime, int keepaliveTime, int connectionTimeout, Map<String, Object> properties) {
+    public record DatabaseOptions(int maximumPoolSize, int minimumIdle, int maximumLifetime, int keepaliveTime, int connectionTimeout, Map<String, Object> properties) {
         public static Map<String, Object> DEFAULT_PROPERTIES = Map.of(
                 "useSSL", false,
                 "useUnicode", true,
