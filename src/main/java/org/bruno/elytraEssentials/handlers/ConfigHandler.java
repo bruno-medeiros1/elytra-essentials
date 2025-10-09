@@ -5,6 +5,8 @@ import org.bukkit.configuration.file.FileConfiguration;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Logger;
 
 public class ConfigHandler {
@@ -48,6 +50,7 @@ public class ConfigHandler {
     private String database;
     private String username;
     private String password;
+    private DatabaseOptions databaseOptions;
 
     // Boost section
     private boolean isBoostEnabled;
@@ -138,6 +141,20 @@ public class ConfigHandler {
         this.username = this.fileConfiguration.getString("storage.mysql.username", "root");
         this.password = this.fileConfiguration.getString("storage.mysql.password", "");
 
+
+        Map<String, Object> defaultProperties = DatabaseOptions.DEFAULT_PROPERTIES;
+        Map<String, Object> propertiesSection = this.fileConfiguration.getConfigurationSection("storage.mysql.options.properties").getValues(false);
+
+
+        this.databaseOptions = new DatabaseOptions(
+                this.fileConfiguration.getInt("storage.mysql.options.maximum-pool-size", 10),
+                this.fileConfiguration.getInt("storage.mysql.options.minimum-idle", 10),
+                this.fileConfiguration.getInt("storage.mysql.options.maximum-lifetime", 1800000),
+                this.fileConfiguration.getInt("storage.mysql.options.keepalive-time", 0),
+                this.fileConfiguration.getInt("storage.mysql.options.connection-timeout", 5000),
+                Objects.requireNonNullElse(propertiesSection, defaultProperties)
+        );
+
         this.isBoostEnabled = this.fileConfiguration.getBoolean("flight.boost.enabled", true);
         this.boostItem = this.fileConfiguration.getString("flight.boost.item", "FEATHER");
         this.boostCooldown = this.fileConfiguration.getInt("flight.boost.cooldown", 1000);
@@ -216,6 +233,7 @@ public class ConfigHandler {
     public final String getUsername() { return this.username; }
     public final String getPassword() { return this.password; }
     public final String getPrefix() { return this.prefix; }
+    public final DatabaseOptions getDataBaseOptions() { return this.databaseOptions; }
 
     public final boolean getIsBoostEnabled() { return this.isBoostEnabled; }
     public final String getBoostItem() { return this.boostItem; }
@@ -241,4 +259,13 @@ public class ConfigHandler {
     public final boolean getTandemFallDamageProtection() { return this.tandemFallDamageProtection; }
     public final int getTandemMountCountdown() { return this.tandemMountCountdown; }
     public final boolean getIsLaunchAnimationEnabled() { return this.isLaunchAnimationEnabled; }
+
+    public record DatabaseOptions(int maximumPoolSize, int minimumIdle, int maximumLifetime, int keepaliveTime, int connectionTimeout, Map<String, Object> properties) {
+        public static Map<String, Object> DEFAULT_PROPERTIES = Map.of(
+                "useSSL", false,
+                "useUnicode", true,
+                "characterEncoding", "utf8",
+                "verifyServerCertificate", false
+        );
+    }
 }

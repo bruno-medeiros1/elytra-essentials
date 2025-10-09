@@ -1,5 +1,8 @@
 package org.bruno.elytraEssentials.handlers;
 
+import com.google.common.base.Function;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.bruno.elytraEssentials.ElytraEssentials;
 import org.bruno.elytraEssentials.helpers.FoliaHelper;
 import org.bruno.elytraEssentials.helpers.MessagesHelper;
@@ -10,6 +13,7 @@ import org.bruno.elytraEssentials.utils.PlayerStats;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +33,7 @@ public class DatabaseHandler {
     private final MessagesHelper messagesHelper;
     private final Logger logger;
 
-    private Connection connection;
+    private HikariDataSource dataSource;
 
     private enum StorageType { SQLITE, MYSQL }
     private StorageType storageType;
@@ -40,6 +44,7 @@ public class DatabaseHandler {
     private String database;
     private String username;
     private String password;
+    private ConfigHandler.DatabaseOptions databaseOptions;
 
     private CancellableTask backupTask = null;
 
@@ -57,10 +62,23 @@ public class DatabaseHandler {
         logger.info("Using " + storageType.name() + " for data storage.");
 
         if (storageType == StorageType.MYSQL) {
-            connection = DriverManager.getConnection(
-                    "jdbc:mysql://" + this.host + ":" + this.port + "/" + this.database + "?useSSL=false",
-                    this.username, this.password
-            );
+            HikariConfig config = new HikariConfig();
+            config.setJdbcUrl("jdbc:mysql://" + this.host + ":" + this.port + "/" + this.database);
+            config.setUsername(this.username);
+            config.setPassword(this.password);
+
+            config.setMaximumPoolSize(this.databaseOptions.maximumPoolSize());
+            config.setMinimumIdle(this.databaseOptions.minimumIdle());
+            config.setConnectionTimeout(this.databaseOptions.connectionTimeout());
+            config.setIdleTimeout(600000);   // 10 minutes
+            config.setKeepaliveTime(this.databaseOptions.keepaliveTime());
+            config.setMaxLifetime(this.databaseOptions.maximumLifetime());
+            config.setValidationTimeout(5000); // 5 seconds
+            config.setConnectionTestQuery("SELECT 1");
+
+            this.databaseOptions.properties().forEach(config::addDataSourceProperty);
+
+            this.dataSource = new HikariDataSource(config);
         } else { // SQLITE
             File databaseFolder = new File(plugin.getDataFolder(), Constants.Files.DB_FOLDER);
             if (!databaseFolder.exists()) {
@@ -69,7 +87,11 @@ public class DatabaseHandler {
                 }
             }
             File dbFile = new File(databaseFolder, Constants.Files.SQLITE_DB_NAME);
-            connection = DriverManager.getConnection("jdbc:sqlite:" + dbFile.getAbsolutePath());
+            HikariConfig config = new HikariConfig();
+            config.setDataSourceClassName("org.sqlite.SQLiteDataSource");
+            config.setJdbcUrl("jdbc:sqlite:" + dbFile.getAbsolutePath());
+
+            dataSource = new HikariDataSource(config);
         }
         logger.info("Database connection established.");
         initializeTables();
@@ -79,17 +101,13 @@ public class DatabaseHandler {
     }
 
     public boolean isConnected() {
-        return connection != null;
+        return this.dataSource.isRunning();
     }
 
     public void disconnect() {
         if (isConnected()) {
-            try {
-                connection.close();
-                messagesHelper.sendDebugMessage(storageType.name() + " database connection closed successfully!");
-            } catch (SQLException e) {
-                logger.log(Level.SEVERE, "Failed to close the database connection.", e);
-            }
+            this.dataSource.close();
+            messagesHelper.sendDebugMessage(storageType.name() + " database connection closed successfully!");
         }
     }
 
@@ -110,6 +128,7 @@ public class DatabaseHandler {
             this.database = configHandler.getDatabase();
             this.username = configHandler.getUsername();
             this.password = configHandler.getPassword();
+            this.databaseOptions = configHandler.getDataBaseOptions();
         }
     }
 
@@ -148,8 +167,8 @@ public class DatabaseHandler {
      * verify its integrity, and then swap it with the live database.
      *
      * @param backupFileName The name of the backup file to import.
-     * @param sender The CommandSender who initiated the import.
-     * @param backupFile The actual File object representing the backup.
+     * @param sender         The CommandSender who initiated the import.
+     * @param backupFile     The actual File object representing the backup.
      */
     public void importFromBackup(String backupFileName, CommandSender sender, File backupFile) {
         logger.warning("Starting database import from backup: " + backupFileName);
@@ -181,7 +200,7 @@ public class DatabaseHandler {
                 logger.info("Backup file verified successfully.");
             } catch (SQLException e) {
                 // If verification fails, clean up and restart services with the OLD database.
-                messagesHelper.sendCommandSenderMessage(sender,"&cImport failed! The backup file appears corrupted. No changes were made.");
+                messagesHelper.sendCommandSenderMessage(sender, "&cImport failed! The backup file appears corrupted. No changes were made.");
                 logger.log(Level.SEVERE, "Could not verify backup file '" + backupFileName + "'. Aborting.", e);
                 if (!tempDbFile.delete()) logger.warning("Could not delete temporary DB file.");
                 this.initialize();
@@ -190,7 +209,8 @@ public class DatabaseHandler {
             }
 
             // 4. Commit the change
-            if (liveDbFile.exists() && !liveDbFile.delete()) throw new IOException("Could not delete old live DB file.");
+            if (liveDbFile.exists() && !liveDbFile.delete())
+                throw new IOException("Could not delete old live DB file.");
             if (!tempDbFile.renameTo(liveDbFile)) throw new IOException("Could not rename temp DB file.");
 
             logger.info("Successfully restored backup. Re-initializing services...");
@@ -201,7 +221,7 @@ public class DatabaseHandler {
             logger.info("Database import complete.");
 
         } catch (Exception e) {
-            messagesHelper.sendCommandSenderMessage(sender,"&cA critical error occurred during import. Check console. The server may need a restart.");
+            messagesHelper.sendCommandSenderMessage(sender, "&cA critical error occurred during import. Check console. The server may need a restart.");
             logger.log(Level.SEVERE, "Failed to perform database import.", e);
             // Attempt to restart services in a failed state
             try {
@@ -277,16 +297,19 @@ public class DatabaseHandler {
         String tableName = applyPrefix(Constants.Database.Tables.ELYTRA_FLIGHT_TIME);
         String query = "SELECT flight_time FROM " + tableName + " WHERE uuid = ?";
 
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setString(1, uuid.toString());
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt("flight_time");
+        return this.withConnection((connection) -> {
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                stmt.setString(1, uuid.toString());
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getInt("flight_time");
+                    }
                 }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
-        }
-
-        return 0;
+            return 0;
+        });
     }
 
     public void setPlayerFlightTime(UUID uuid, int time) throws SQLException {
@@ -299,16 +322,21 @@ public class DatabaseHandler {
             query = "REPLACE INTO " + tableName + " (uuid, flight_time) VALUES (?, ?)";
         }
 
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setString(1, uuid.toString());
-            stmt.setInt(2, time);
+        this.withConnection((connection) -> {
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                stmt.setString(1, uuid.toString());
+                stmt.setInt(2, time);
 
-            if (storageType == StorageType.MYSQL) {
-                stmt.setInt(3, time); // For ON DUPLICATE KEY UPDATE
+                if (storageType == StorageType.MYSQL) {
+                    stmt.setInt(3, time); // For ON DUPLICATE KEY UPDATE
+                }
+
+                stmt.executeUpdate();
+                return null;
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
-
-            stmt.executeUpdate();
-        }
+        });
     }
 
     public void addOwnedEffect(UUID playerUuid, String effectKey) throws SQLException {
@@ -321,65 +349,86 @@ public class DatabaseHandler {
             query = "INSERT OR IGNORE INTO " + tableName + " (player_uuid, effect_key, is_active) VALUES (?, ?, ?)";
         }
 
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setString(1, playerUuid.toString());
-            stmt.setString(2, effectKey);
-            stmt.setBoolean(3, false); // New effects are inactive by default
-            stmt.executeUpdate();
-        }
+        this.withConnection((connection) -> {
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                stmt.setString(1, playerUuid.toString());
+                stmt.setString(2, effectKey);
+                stmt.setBoolean(3, false); // New effects are inactive by default
+                stmt.executeUpdate();
+                return null;
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
     }
 
     /**
      * Removes a specific owned effect from a player.
+     *
      * @param playerUuid The UUID of the player.
-     * @param effectKey The key of the effect to remove.
+     * @param effectKey  The key of the effect to remove.
      * @throws SQLException If a database error occurs.
      */
     public void removeOwnedEffect(UUID playerUuid, String effectKey) throws SQLException {
         String tableName = applyPrefix(Constants.Database.Tables.OWNED_EFFECTS);
         String query = "DELETE FROM " + tableName + " WHERE player_uuid = ? AND effect_key = ?";
 
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setString(1, playerUuid.toString());
-            stmt.setString(2, effectKey);
-            stmt.executeUpdate();
-        }
+        this.withConnection((connection) -> {
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                stmt.setString(1, playerUuid.toString());
+                stmt.setString(2, effectKey);
+                stmt.executeUpdate();
+                return null;
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     public void updateOwnedEffect(UUID playerId, String effectKey, boolean isActive) throws SQLException {
         String tableName = applyPrefix(Constants.Database.Tables.OWNED_EFFECTS);
         String query = "UPDATE " + tableName + " SET is_active = ? WHERE player_uuid = ? AND effect_key = ?";
 
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setBoolean(1, isActive);
-            stmt.setString(2, playerId.toString());
-            stmt.setString(3, effectKey);
-            stmt.executeUpdate();
-        }
+        this.withConnection((connection) -> {
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                stmt.setBoolean(1, isActive);
+                stmt.setString(2, playerId.toString());
+                stmt.setString(3, effectKey);
+                stmt.executeUpdate();
+                return null;
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     public List<String> getOwnedEffectKeys(UUID playerId) throws SQLException {
-        List<String> ownedEffects = new ArrayList<>();
         String tableName = applyPrefix(Constants.Database.Tables.OWNED_EFFECTS);
         String query = "SELECT effect_key FROM " + tableName + " WHERE player_uuid = ?";
 
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setString(1, playerId.toString());
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    ownedEffects.add(rs.getString(Constants.NBT.EFFECT_KEY));
+        return this.withConnection((connection) -> {
+            List<String> ownedEffects = new ArrayList<>();
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                stmt.setString(1, playerId.toString());
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        ownedEffects.add(rs.getString(Constants.NBT.EFFECT_KEY));
+                    }
                 }
+                return ownedEffects;
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
-        }
-
-        return ownedEffects;
+        });
     }
 
+    @Nullable
     public String getPlayerActiveEffect(UUID playerId) throws SQLException {
         String tableName = applyPrefix(Constants.Database.Tables.OWNED_EFFECTS);
         String query = "SELECT effect_key FROM " + tableName + " WHERE player_uuid = ? AND is_active = 1";
 
-        if (storageType == StorageType.MYSQL || storageType == StorageType.SQLITE) {
+        return this.withConnection((connection) -> {
             try (PreparedStatement stmt = connection.prepareStatement(query)) {
                 stmt.setString(1, playerId.toString());
                 try (ResultSet rs = stmt.executeQuery()) {
@@ -387,9 +436,11 @@ public class DatabaseHandler {
                         return rs.getString(Constants.NBT.EFFECT_KEY);
                     }
                 }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
-        }
-        return null;
+            return null;
+        });
     }
 
 
@@ -405,30 +456,35 @@ public class DatabaseHandler {
         String tableName = applyPrefix(Constants.Database.Tables.PLAYER_STATS);
         String query = "SELECT * FROM " + tableName + " WHERE uuid = ?";
 
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setString(1, uuid.toString());
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    // Player found — load stats
-                    PlayerStats stats = new PlayerStats(uuid);
-                    stats.setTotalDistance(rs.getDouble("total_distance"));
-                    stats.setTotalTimeSeconds(rs.getLong("total_time_seconds"));
-                    stats.setLongestFlight(rs.getDouble("longest_flight"));
-                    stats.setBoostsUsed(rs.getInt("boosts_used"));
-                    stats.setSuperBoostsUsed(rs.getInt("super_boosts_used"));
-                    stats.setPluginSaves(rs.getInt("plugin_saves"));
-                    return stats;
+        return this.withConnection((connection) -> {
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                stmt.setString(1, uuid.toString());
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        // Player found — load stats
+                        PlayerStats stats = new PlayerStats(uuid);
+                        stats.setTotalDistance(rs.getDouble("total_distance"));
+                        stats.setTotalTimeSeconds(rs.getLong("total_time_seconds"));
+                        stats.setLongestFlight(rs.getDouble("longest_flight"));
+                        stats.setBoostsUsed(rs.getInt("boosts_used"));
+                        stats.setSuperBoostsUsed(rs.getInt("super_boosts_used"));
+                        stats.setPluginSaves(rs.getInt("plugin_saves"));
+                        return stats;
+                    }
                 }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
-        }
 
-        // Player not found — return default stats
-        return new PlayerStats(uuid);
+            // Player not found — return default stats
+            return new PlayerStats(uuid);
+        });
     }
 
     /**
      * Resets all statistics for a given player back to their default zero values
      * in both the stats and flight timetables.
+     *
      * @param uuid The UUID of the player to reset.
      * @throws SQLException If a database error occurs.
      */
@@ -449,51 +505,63 @@ public class DatabaseHandler {
                 "flight_time = 0 " +
                 "WHERE uuid = ?";
 
-        // Reset Player Stats Table
-        try (PreparedStatement stmt = connection.prepareStatement(resetStatsQuery)) {
-            stmt.setString(1, uuid.toString());
-            stmt.executeUpdate();
-        }
+        this.withConnection((connection) -> {
+            // Reset Player Stats Table
+            try (PreparedStatement stmt = connection.prepareStatement(resetStatsQuery)) {
+                stmt.setString(1, uuid.toString());
+                stmt.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
 
-        // Reset Flight Time Table
-        try (PreparedStatement stmt = connection.prepareStatement(resetFlightTimeQuery)) {
-            stmt.setString(1, uuid.toString());
-            stmt.executeUpdate();
-        }
+            // Reset Flight Time Table
+            try (PreparedStatement stmt = connection.prepareStatement(resetFlightTimeQuery)) {
+                stmt.setString(1, uuid.toString());
+                stmt.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+
+            return null;
+        });
     }
 
     /**
      * Retrieves the top N players for a specific statistic from the database.
      *
      * @param statColumn The name of the database column to order by (e.g., "total_distance").
-     * @param limit The number of top players to retrieve.
+     * @param limit      The number of top players to retrieve.
      * @return A LinkedHashMap of Player UUIDs to their scores, sorted in descending order.
      * @throws SQLException If a database error occurs.
      */
     public Map<UUID, Double> getTopStats(String statColumn, int limit) throws SQLException {
-        Map<UUID, Double> topStats = new LinkedHashMap<>();
         String tableName = applyPrefix(Constants.Database.Tables.PLAYER_STATS);
 
         // Query selects top players, ordered by the given stat column
         String query = "SELECT uuid, " + statColumn + " FROM " + tableName + " ORDER BY " + statColumn + " DESC LIMIT ?";
 
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setInt(1, limit);
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    UUID uuid = UUID.fromString(rs.getString("uuid"));
-                    double value = rs.getDouble(statColumn);
-                    topStats.put(uuid, value);
+        return this.withConnection((connection) -> {
+            Map<UUID, Double> topStats = new LinkedHashMap<>();
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                stmt.setInt(1, limit);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        UUID uuid = UUID.fromString(rs.getString("uuid"));
+                        double value = rs.getDouble(statColumn);
+                        topStats.put(uuid, value);
+                    }
                 }
+                return topStats;
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
-        }
-
-        return topStats;
+        });
     }
 
     /**
      * Calculates a player's rank for a specific statistic.
-     * @param uuid The UUID of the player.
+     *
+     * @param uuid       The UUID of the player.
      * @param statColumn The database column for the statistic.
      * @return The player's rank, or -1 if not ranked.
      * @throws SQLException If a database error occurs.
@@ -505,22 +573,26 @@ public class DatabaseHandler {
         String query = "SELECT COUNT(*) FROM " + tableName +
                 " WHERE " + statColumn + " > (SELECT " + statColumn + " FROM " + tableName + " WHERE uuid = ?)";
 
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setString(1, uuid.toString());
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1) + 1; // Rank is 1 + number of players better
+        return this.withConnection((connection) -> {
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                stmt.setString(1, uuid.toString());
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getInt(1) + 1; // Rank is 1 + number of players better
+                    }
                 }
+                return -1; // Player not found or error
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
-        }
-
-        return -1; // Player not found or error
+        });
     }
 
 
     /**
      * Saves a player's complete statistics to the database.
      * This will create a new row if one doesn't exist, or update the existing one.
+     *
      * @param stats The PlayerStats object to save.
      * @throws SQLException If a database error occurs.
      */
@@ -537,59 +609,69 @@ public class DatabaseHandler {
                     "VALUES (?, ?, ?, ?, ?, ?, ?)";
         }
 
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            // Set values for INSERT
-            stmt.setString(1, stats.getUuid().toString());
-            stmt.setDouble(2, stats.getTotalDistance());
-            stmt.setLong(3, stats.getTotalTimeSeconds());
-            stmt.setDouble(4, stats.getLongestFlight());
-            stmt.setInt(5, stats.getBoostsUsed());
-            stmt.setInt(6, stats.getSuperBoostsUsed());
-            stmt.setInt(7, stats.getPluginSaves());
+        this.withConnection((connection) -> {
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                // Set values for INSERT
+                stmt.setString(1, stats.getUuid().toString());
+                stmt.setDouble(2, stats.getTotalDistance());
+                stmt.setLong(3, stats.getTotalTimeSeconds());
+                stmt.setDouble(4, stats.getLongestFlight());
+                stmt.setInt(5, stats.getBoostsUsed());
+                stmt.setInt(6, stats.getSuperBoostsUsed());
+                stmt.setInt(7, stats.getPluginSaves());
 
-            // If MySQL, set values again for the UPDATE part
-            if (storageType == StorageType.MYSQL) {
-                stmt.setDouble(8, stats.getTotalDistance());
-                stmt.setLong(9, stats.getTotalTimeSeconds());
-                stmt.setDouble(10, stats.getLongestFlight());
-                stmt.setInt(11, stats.getBoostsUsed());
-                stmt.setInt(12, stats.getSuperBoostsUsed());
-                stmt.setInt(13, stats.getPluginSaves());
+                // If MySQL, set values again for the UPDATE part
+                if (storageType == StorageType.MYSQL) {
+                    stmt.setDouble(8, stats.getTotalDistance());
+                    stmt.setLong(9, stats.getTotalTimeSeconds());
+                    stmt.setDouble(10, stats.getLongestFlight());
+                    stmt.setInt(11, stats.getBoostsUsed());
+                    stmt.setInt(12, stats.getSuperBoostsUsed());
+                    stmt.setInt(13, stats.getPluginSaves());
+                }
+
+                stmt.executeUpdate();
+                return null;
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
-
-            stmt.executeUpdate();
-        }
+        });
     }
 
-    //<editor-fold desc="ACHIEVEMENTS">
+//<editor-fold desc="ACHIEVEMENTS">
 
     /**
      * Retrieves a set of all achievement IDs that a player has unlocked.
+     *
      * @param playerUuid The UUID of the player.
      * @return A Set of achievement ID strings.
      * @throws SQLException If a database error occurs.
      */
     public Set<String> getUnlockedAchievementIds(UUID playerUuid) throws SQLException {
-        Set<String> unlockedIds = new HashSet<>();
         String tableName = applyPrefix(Constants.Database.Tables.PLAYER_ACHIEVEMENTS);
 
         String query = "SELECT achievement_id FROM " + tableName + " WHERE player_uuid = ?";
 
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setString(1, playerUuid.toString());
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    unlockedIds.add(rs.getString("achievement_id"));
+        return this.withConnection((connection) -> {
+            Set<String> unlockedIds = new HashSet<>();
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                stmt.setString(1, playerUuid.toString());
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        unlockedIds.add(rs.getString("achievement_id"));
+                    }
                 }
+                return unlockedIds;
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
-        }
-
-        return unlockedIds;
+        });
     }
 
     /**
      * Checks if a player has already unlocked a specific achievement.
-     * @param playerUuid The UUID of the player.
+     *
+     * @param playerUuid    The UUID of the player.
      * @param achievementId The unique ID of the achievement.
      * @return true if the player has the achievement, false otherwise.
      * @throws SQLException If a database error occurs.
@@ -597,41 +679,51 @@ public class DatabaseHandler {
     public boolean hasAchievement(UUID playerUuid, String achievementId) throws SQLException {
         String tableName = applyPrefix(Constants.Database.Tables.PLAYER_ACHIEVEMENTS);
 
-        String query = "SELECT 1 FROM " + tableName + " WHERE player_uuid = ? AND achievement_id = ? LIMIT 1";
+        String query = "SELECT 1 FROM " + tableName + " WHERE player_uuid = ? AND achievement_id = ?";
 
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setString(1, playerUuid.toString());
-            stmt.setString(2, achievementId);
-            try (ResultSet rs = stmt.executeQuery()) {
-                return rs.next(); // True if a row exists
+        return this.withConnection((connection) -> {
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                stmt.setString(1, playerUuid.toString());
+                stmt.setString(2, achievementId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    return rs.next(); // True if a row exists
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
-        }
+        });
     }
 
     /**
      * Adds a completed achievement record for a player to the database.
-     * @param playerUuid The UUID of the player.
+     *
+     * @param playerUuid    The UUID of the player.
      * @param achievementId The unique ID of the achievement.
      * @throws SQLException If a database error occurs.
      */
     public void addAchievement(UUID playerUuid, String achievementId) throws SQLException {
         String tableName = applyPrefix(Constants.Database.Tables.PLAYER_ACHIEVEMENTS);
-        String query;
 
-        if (storageType == StorageType.MYSQL) {
-            query = "INSERT IGNORE INTO " + tableName + " (player_uuid, achievement_id) VALUES (?, ?)";
-        } else {
-            query = "INSERT OR IGNORE INTO " + tableName + " (player_uuid, achievement_id) VALUES (?, ?)";
+        String query = "INSERT INTO " + tableName + " (player_uuid, achievement_id) VALUES (?, ?)";
+
+        // Check if the achievement already exists
+        if (hasAchievement(playerUuid, achievementId)) {
+            return;
         }
 
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setString(1, playerUuid.toString());
-            stmt.setString(2, achievementId);
-            stmt.executeUpdate();
-        }
+        this.withConnection((connection) -> {
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                stmt.setString(1, playerUuid.toString());
+                stmt.setString(2, achievementId);
+                stmt.executeUpdate();
+                return null;
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
-    //</editor-fold>
+//</editor-fold>
 
     private void migrateOldTables() throws SQLException {
         migrateIfNeeded(Constants.Database.Tables.ELYTRA_FLIGHT_TIME, applyPrefix(Constants.Database.Tables.ELYTRA_FLIGHT_TIME));
@@ -648,19 +740,30 @@ public class DatabaseHandler {
             executeTableQuery(newTable);
 
             // Copy data
-            try (Statement stmt = connection.createStatement()) {
-                stmt.executeUpdate("INSERT INTO " + newTable + " SELECT * FROM " + oldTable + ";");
-            }
+            this.withConnection((connection) -> {
+                try (Statement stmt = connection.createStatement()) {
+                    stmt.executeUpdate("INSERT INTO " + newTable + " SELECT * FROM " + oldTable + ";");
+                    return null;
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            });
 
             logger.info("Migration complete for table: " + oldTable);
         }
     }
 
     private boolean tableExists(String tableName) throws SQLException {
-        DatabaseMetaData meta = connection.getMetaData();
-        try (ResultSet rs = meta.getTables(null, null, tableName, null)) {
-            return rs.next();
-        }
+        return this.withConnection((connection) -> {
+            try {
+                DatabaseMetaData meta = connection.getMetaData();
+                try (ResultSet rs = meta.getTables(null, null, tableName, null)) {
+                    return rs.next();
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     private void initializeTables() throws SQLException {
@@ -677,9 +780,14 @@ public class DatabaseHandler {
             plugin.getLogger().warning("A database setup issue was detected with table: " + tableName);
             return;
         }
-        try (Statement stmt = connection.createStatement()) {
-            stmt.executeUpdate(query);
-        }
+        this.withConnection((connection) -> {
+            try (Statement stmt = connection.createStatement()) {
+                stmt.executeUpdate(query);
+                return null;
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     private String getCreateTableQuery(String tableName) {
@@ -716,5 +824,20 @@ public class DatabaseHandler {
 
     private String applyPrefix(String tableName) {
         return prefix + tableName;
+    }
+
+    private <T> T withConnection(Function<Connection, T> action) throws SQLException {
+        Connection conn = null;
+        try {
+            conn = this.dataSource.getConnection();
+            return action.apply(conn);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException ignored) {
+                }
+            }
+        }
     }
 }
