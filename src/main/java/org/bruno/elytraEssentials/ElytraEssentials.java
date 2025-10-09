@@ -66,6 +66,7 @@ public final class ElytraEssentials extends JavaPlugin {
     private TandemHandler tandemHandler;
     private UpgradeGuiHandler upgradeGuiHandler;
     private UpgradeHandler upgradeHandler;
+    private JumpAnimationHandler jumpAnimationHandler = null;
 
     private MessagesHelper messagesHelper;
     private FileHelper fileHelper;
@@ -75,6 +76,7 @@ public final class ElytraEssentials extends JavaPlugin {
     private Economy economy = null;
     private boolean isEconomyEnabled = false;
     private ElytraEssentialsPlaceholders elytraStatsExpansion;
+    private boolean isPacketEventsEnabled = false;
 
     private ServerVersion serverVersion;
 
@@ -88,6 +90,7 @@ public final class ElytraEssentials extends JavaPlugin {
     public void onEnable() {
         try {
             setupEconomy();
+            setupPacketEvents();
             setupComponents();
             setupAPI();
             setupListeners();
@@ -179,6 +182,10 @@ public final class ElytraEssentials extends JavaPlugin {
         databaseHandler.initialize();
 
         // Handlers Initialization
+        if (isPacketEventsEnabled){
+            this.jumpAnimationHandler = new JumpAnimationHandler(this.foliaHelper, getLogger());
+        }
+
         this.upgradeHandler = new UpgradeHandler(this, fileHelper.getUpgradesConfig(), getLogger());
         this.tpsHandler = new TpsHandler(this.foliaHelper, this.messagesHelper);
         this.effectsHandler = new EffectsHandler(this, fileHelper.getShopConfig(), this.foliaHelper, this.databaseHandler,
@@ -189,7 +196,7 @@ public final class ElytraEssentials extends JavaPlugin {
                 this.messagesHelper, this.fileHelper.getAchievementsConfig(), getLogger(), this.messagesHandler);
 
         this.boostHandler = new BoostHandler(this, this.foliaHelper, this.messagesHelper, this.serverVersion,
-                this.statsHandler, this.configHandler, this.messagesHandler, this.upgradeHandler, this.armoredElytraHelper);
+                this.statsHandler, this.configHandler, this.messagesHandler, this.upgradeHandler, this.jumpAnimationHandler);
         this.flightHandler = new FlightHandler(getLogger(), this.configHandler, this.effectsHandler, this.boostHandler,
                 this.foliaHelper, this.messagesHelper, this.databaseHandler, this.statsHandler, this.messagesHandler,
                 this.upgradeHandler, armoredElytraHelper);
@@ -306,6 +313,15 @@ public final class ElytraEssentials extends JavaPlugin {
         this.isEconomyEnabled = true;
     }
 
+    private void setupPacketEvents(){
+        if (Bukkit.getPluginManager().getPlugin("packetevents") == null) {
+            getLogger().warning("PacketEvents not found — jump charge animation disabled.");
+            isPacketEventsEnabled = false;
+        } else {
+            isPacketEventsEnabled = true;
+        }
+    }
+
     private void registerPlaceholders() {
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
             this.elytraStatsExpansion = new ElytraEssentialsPlaceholders(this.flightHandler, this.statsHandler, this.configHandler, this.pluginInfoHandler);
@@ -363,6 +379,9 @@ public final class ElytraEssentials extends JavaPlugin {
         messagesHelper.sendConsoleMessage("    &7Economy: " + economyStatus);
         String papiStatus = (elytraStatsExpansion != null) ? "&aHooked" : "&cNot Found";
         messagesHelper.sendConsoleMessage("    &7Placeholders (PAPI): " + papiStatus);
+        if (isPacketEventsEnabled){
+            messagesHelper.sendConsoleMessage("    &7PacketEvents: &aHooked");
+        }
         messagesHelper.sendConsoleMessage(" ");
         messagesHelper.sendConsoleMessage("  &aPlugin has been enabled successfully!");
         messagesHelper.sendConsoleMessage(" ");

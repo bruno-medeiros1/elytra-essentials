@@ -7,7 +7,7 @@ load: STARTUP
 folia-supported: true
 description: A powerful plugin to manage Elytra flight and equipment features.
 website: https://www.spigotmc.org/resources/elytraessentials.126002/
-softdepend: [Vault, PlaceholderAPI]
+softdepend: [Vault, PlaceholderAPI, PacketEvents]
 commands:
   elytraessentials:
     description: Main command for ElytraEssentials.

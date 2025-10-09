@@ -13,6 +13,7 @@ import org.bruno.elytraEssentials.utils.PlayerStats;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -81,15 +82,14 @@ public class DatabaseHandler {
             this.dataSource = new HikariDataSource(config);
         } else { // SQLITE
             File databaseFolder = new File(plugin.getDataFolder(), Constants.Files.DB_FOLDER);
-            if (!databaseFolder.exists()) {
-                if (!databaseFolder.mkdirs()) {
-                    throw new SQLException("FATAL: Failed to create database folder. Please check file system permissions!");
-                }
+            if (!databaseFolder.exists() && !databaseFolder.mkdirs()) {
+                throw new SQLException("FATAL: Failed to create database folder...");
             }
             File dbFile = new File(databaseFolder, Constants.Files.SQLITE_DB_NAME);
             HikariConfig config = new HikariConfig();
-            config.setDataSourceClassName("org.sqlite.SQLiteDataSource");
             config.setJdbcUrl("jdbc:sqlite:" + dbFile.getAbsolutePath());
+            config.setMaximumPoolSize(1); // SQLite supports only a single connection
+            config.setPoolName("ElytraEssentials-SQLite");
 
             dataSource = new HikariDataSource(config);
         }
@@ -98,6 +98,23 @@ public class DatabaseHandler {
 
         // Run migration if old tables exist
         migrateOldTables();
+    }
+
+    private @NotNull HikariConfig getHikariConfig() {
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl("jdbc:mysql://" + this.host + ":" + this.port + "/" + this.database);
+        config.setUsername(this.username);
+        config.setPassword(this.password);
+
+        config.setMaximumPoolSize(this.databaseOptions.maximumPoolSize());
+        config.setMinimumIdle(this.databaseOptions.minimumIdle());
+        config.setConnectionTimeout(this.databaseOptions.connectionTimeout());
+        config.setIdleTimeout(600000);   // 10 minutes
+        config.setKeepaliveTime(this.databaseOptions.keepaliveTime());
+        config.setMaxLifetime(this.databaseOptions.maximumLifetime());
+        config.setValidationTimeout(5000); // 5 seconds
+        config.setConnectionTestQuery("SELECT 1");
+        return config;
     }
 
     public boolean isConnected() {
